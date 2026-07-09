@@ -31,5 +31,8 @@ These sources influenced the framework. Agents should use current primary source
 - Martin Fowler, "The Practical Test Pyramid": use different test granularities with many fast focused tests and fewer high-level tests. https://martinfowler.com/articles/practical-test-pyramid.html
 - Martin Fowler, "Continuous Integration": frequent integration verified by automated builds and tests. https://martinfowler.com/articles/continuousIntegration.html
 - OWASP Secure Coding Practices Checklist: validation, encoding, authentication, access control, cryptography, logging, data protection, and configuration guidance. https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/stable-en/02-checklist/05-checklist
+- OWASP AI Agent Security Cheat Sheet: agent identity, tool permissions, prompt injection, memory poisoning, and human approval for high-impact actions. https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html
+- OWASP Threat Modeling Cheat Sheet: lightweight structure for identifying what is being built, what can go wrong, mitigations, and adequacy checks. https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html
+- Google SRE, "Postmortem Culture": blameless incident learning and follow-up action discipline. https://sre.google/sre-book/postmortem-culture/
+- Google SRE Workbook, "Postmortem Culture": practical postmortem structure and learning practices. https://sre.google/workbook/postmortem-culture/
 - Conventional Commits: lightweight structured commit messages that support automation. https://www.conventionalcommits.org/en/v1.0.0/
-

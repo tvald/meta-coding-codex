@@ -9,6 +9,7 @@ Patch the framework when:
 - The product owner repeats the same instruction across tasks.
 - An agent makes the same mistake twice.
 - A review finds a missing standard or quality gate.
+- An incident, near miss, escaped defect, failed release, or repeated failed agent run reveals a missing guardrail.
 - A task stalls because required context had no obvious home.
 - A decision is rediscovered instead of referenced.
 - A process step is consistently skipped because it is too vague or too heavy.

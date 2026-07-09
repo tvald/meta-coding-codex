@@ -141,6 +141,9 @@ Responsibilities:
 - Review input validation, output encoding, authentication, authorization, secrets, logging, dependency risk, and data handling.
 - Check least privilege and safe failure behavior.
 - Identify prompt-injection or tool-use risks for AI features.
+- Classify source trust when issues, docs, logs, webpages, or model output may influence agent behavior.
+- Review CI/CD, dependency, generated-code, permission, and agent-instruction changes as potential trust-boundary changes.
+- Create or review threat model cards for security-sensitive changes.
 - Recommend mitigations with severity.
 
 Use when:

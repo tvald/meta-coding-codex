@@ -95,6 +95,30 @@ Run for security-sensitive changes:
 - Dependencies and transitive risks are acceptable.
 - AI tools cannot perform high-impact actions without appropriate guardrails.
 
+## Threat Model Card Trigger
+
+Use [templates/threat-model-card.md](templates/threat-model-card.md) before implementation or release when a change touches:
+
+- Authentication, authorization, permissions, secrets, payments, personal data, or regulated data.
+- External input, file upload/download, webhooks, plugins, browser automation, or AI tool calls.
+- CI/CD, deployment, infrastructure, production operations, or cross-system trust boundaries.
+- New dependencies, generated code paths, or agent instructions that could affect tool behavior.
+
+Keep the card lightweight: identify what is being built, what can go wrong, what will be done about it, and how the team knows the mitigations are enough. Use the verification manifest when the risk is high or critical.
+
+## Operational Readiness Mini-Gate
+
+For production-impacting changes, verify before release:
+
+- Rollback, disablement, or mitigation path is known.
+- Logs, metrics, traces, or audit records can show whether the change works or fails.
+- Operators can identify user impact and degraded states.
+- Migrations, queues, retries, and background jobs have safe failure behavior.
+- Configuration, secrets, and environment assumptions are documented.
+- Alerts or manual checks cover the most important failure mode.
+
+Skip only with an explicit reason in the verification manifest or final response.
+
 ## UI And UX Verification
 
 For user-facing UI:
@@ -129,6 +153,12 @@ When a defect is found:
 5. Run relevant checks.
 6. Add a note to assumptions, standards, or decisions if the defect revealed missing knowledge.
 7. Summarize impact and verification.
+
+## Incident And Near-Miss Learning
+
+Use [templates/incident-note.md](templates/incident-note.md) for production incidents, escaped defects with user impact, security near misses, failed releases, repeated failed agent runs, or checks that caught a serious issue late.
+
+The note should be blameless and short. Capture impact, detection, timeline, contributing factors, what worked, what failed, and concrete follow-up. At least one follow-up should consider whether a test, standard, decision record, runbook, verification manifest, or framework rule would prevent recurrence.
 
 ## Review Report
 
