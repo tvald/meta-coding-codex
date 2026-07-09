@@ -1,0 +1,11 @@
+{
+  "name": "meta-coding-codex",
+  "image": "debian",
+  "features": {
+    "ghcr.io/dc-powertools/features/sudo:latest": {},
+    "ghcr.io/dc-powertools/features/git:latest": {},
+    "ghcr.io/dc-powertools/features/node:latest": {},
+    "ghcr.io/dc-powertools/features/claude:latest": {},
+    "ghcr.io/dc-powertools/features/codex:latest": {}
+  }
+}

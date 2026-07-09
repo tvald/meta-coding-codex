@@ -1,0 +1,97 @@
+# Knowledge Ingestion
+
+Knowledge ingestion turns raw documents, conversations, tickets, code, and research into usable project memory. The goal is not to summarize everything. The goal is to preserve the information that changes product, architecture, implementation, or verification decisions.
+
+## Inputs
+
+Agents may ingest:
+
+- Product owner discussions.
+- Requirements documents, design docs, tickets, meeting notes, diagrams, and spreadsheets.
+- Existing source code, tests, telemetry, support reports, and incident notes.
+- API docs, standards, legal or compliance references, and vendor documentation.
+- Previous decision records, assumptions, and task notes.
+
+Use primary or official sources for technical APIs, regulations, security guidance, and vendor behavior when possible.
+
+## Ingestion Outputs
+
+Create or update these artifacts only when useful:
+
+- `readme/project-brief.md`: stable product context.
+- `readme/assumptions.md`: unresolved assumptions, confidence, owner, and validation plan.
+- `readme/glossary.md`: domain terms, acronyms, and canonical names.
+- `readme/task-notes/NNNN-topic.md`: working memory for long initiatives.
+- `readme/decisions/NNNN-title.md`: decisions that should not be rediscovered.
+- `readme/source-map.md`: important documents, links, owners, freshness, and reliability.
+
+## Product Owner Interview Loop
+
+Use this loop when the product goal is fuzzy:
+
+1. Restate the desired outcome in plain language.
+2. Identify the user, buyer, operator, or stakeholder affected.
+3. Ask for the smallest success signal: behavior, metric, acceptance test, or demo.
+4. Separate constraints from preferences.
+5. Surface risks and tradeoffs.
+6. Convert the answer into a task brief.
+7. Continue without further questions once the clarification window closes.
+
+Good questions:
+
+- "Who needs this, and what will they do differently when it works?"
+- "What is the smallest version you would accept as useful?"
+- "What must not change?"
+- "What examples should pass or fail?"
+
+Avoid broad questions like "Any preferences?" unless the implementation truly depends on style or policy.
+
+## Document Synthesis Loop
+
+Use this loop for documents or long discussions:
+
+1. Inventory sources: title, owner, date, reliability, and scope.
+2. Extract facts: requirements, constraints, workflows, definitions, edge cases, and open questions.
+3. Detect conflicts: find contradictions across sources or with the codebase.
+4. Synthesize decisions: identify what the team appears to have chosen and what remains undecided.
+5. Convert to project memory: update brief, glossary, assumptions, source map, or decision records.
+6. Validate against implementation: note where code differs from documented intent.
+7. Produce a short ingestion summary with changed artifacts and unresolved risks.
+
+Do not copy large source text into the repository. Preserve links, precise references, and distilled facts.
+
+## Brownfield Codebase Intake
+
+When entering an existing project:
+
+- Map the repository structure and main runtime entry points.
+- Identify build, test, lint, typecheck, migration, and run commands.
+- Read nearby code before editing.
+- Find existing conventions for error handling, logging, configuration, dependency injection, state management, styling, and tests.
+- Locate release, deployment, and environment assumptions.
+- Record only durable context that future agents will need.
+
+## Acceptance Criteria Synthesis
+
+For each feature or fix, derive acceptance criteria that are:
+
+- Observable: someone can inspect behavior or output.
+- Testable: each criterion has a pass/fail signal.
+- Scoped: criteria describe this slice, not the whole product vision.
+- User-relevant: criteria tie back to a real user, operator, or maintainer outcome.
+- Complete enough: includes important negative, error, permission, and edge cases.
+
+When useful, express examples in Given/When/Then form.
+
+## Conflict Handling
+
+If sources conflict:
+
+1. Prefer the most recent explicit user instruction for the current task.
+2. Prefer repository code and tests for current behavior, but do not assume they represent desired behavior.
+3. Prefer accepted decision records for architectural intent.
+4. Prefer official external documentation for third-party behavior.
+5. Record unresolved conflicts in assumptions or a task brief.
+
+For significant conflicts, create a decision record once a path is chosen.
+
