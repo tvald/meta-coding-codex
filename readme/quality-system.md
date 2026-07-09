@@ -13,6 +13,32 @@ The quality system ensures the repository improves over time while preserving ve
 
 Use the highest applicable risk level.
 
+## Risk-Based Approval Map
+
+| Risk Level | Approval Path |
+| --- | --- |
+| Low | Implementer self-check, relevant lightweight verification, final summary |
+| Medium | Implementer verification plus Reviewer or focused diff review |
+| High | Reviewer plus Architect, QA, Security, or release owner as relevant |
+| Critical | Explicit user approval or established release process before execution |
+
+Escalate the path when the change is hard to reverse, touches multiple ownership areas, or skips a normally required check.
+
+## Small-Batch And Large-Diff Triggers
+
+Small-batch target: one user outcome, one process decision, or one refactor theme that a reviewer can understand without reconstructing the whole project.
+
+Large-diff split triggers: split a change before review or commit when any trigger applies:
+
+- The diff combines unrelated behavior, refactor, formatting, or documentation changes.
+- The change touches more than two major subsystems or ownership areas.
+- The review requires different specialist gates, such as security and UX.
+- The verification matrix becomes too broad to run and explain clearly.
+- A reviewer cannot summarize the intent and risk in a short paragraph.
+- The diff is large enough that defects could hide in noise; prefer splitting around independently testable behavior.
+
+If a split trigger is intentionally ignored, record the reason in the verification manifest or final response.
+
 ## Standard Verification Matrix
 
 For each task, decide which checks apply:
@@ -32,6 +58,10 @@ For each task, decide which checks apply:
 - Manual inspection for UI or workflow changes.
 
 Run the smallest set that gives credible confidence. State skipped checks and why.
+
+## Verification Manifest
+
+Use [templates/verification-manifest.md](templates/verification-manifest.md) when a change is high or critical risk, release-bound, unusually large, split-triggered but kept together, or has important skipped checks. For low and medium changes, the final response may serve as the manifest if it lists scope, checks, skipped checks, and residual risk.
 
 ## Review Rubric
 
@@ -103,4 +133,3 @@ When a defect is found:
 ## Review Report
 
 Use [templates/review-report.md](templates/review-report.md) when a change needs formal review. Keep findings concrete and ordered by severity.
-

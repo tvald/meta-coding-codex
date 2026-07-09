@@ -16,14 +16,88 @@ Patch the framework when:
 
 Do not patch the framework for one-off preferences unless the user asks to make them durable.
 
-## Improvement Loop
+## Change Lifecycle
 
-1. Observe: capture the concrete failure, friction, or user feedback.
-2. Diagnose: identify whether the gap is instruction, template, knowledge, tooling, or verification.
-3. Patch: make the smallest markdown change that prevents recurrence.
-4. Check: verify the new rule does not conflict with existing guidance.
-5. Record: create a decision record if the process change is significant.
-6. Use: apply the improved framework on the current task if relevant.
+Use this lifecycle for non-trivial framework changes. Small typo fixes may skip directly to review and commit.
+
+1. Proposal: describe the observed problem, affected files, intended behavior, evidence, context cost, and verification plan. Use [templates/framework-change-proposal.md](templates/framework-change-proposal.md).
+2. Judge: a Framework Judge scores the proposal, checks hard rejects, and returns Adopt, Pilot, Revise, or Reject. Use [templates/framework-judge-report.md](templates/framework-judge-report.md).
+3. Implement: after judge acceptance, the Framework Maintainer edits the smallest useful markdown surface and keeps templates aligned.
+4. Review: run a consistency check against `AGENTS.md`, this framework, templates, and the request. For larger edits, use a verification manifest.
+5. Commit: commit only after required checks pass or residual risk is documented. Use a clear conventional commit message.
+
+## Hard Rejects
+
+Reject a proposal without scoring when it:
+
+- Contradicts `AGENTS.md`, the user request, or established project ownership.
+- Adds non-markdown dependencies, generated runtime behavior, or tooling to this markdown-only framework.
+- Duplicates guidance that already has a clear home instead of patching that home.
+- Creates vague duties that cannot be verified by another agent.
+- Requires product-owner babysitting for routine agent responsibilities.
+- Expands scope into unrelated deferred work.
+- Lowers an existing safety, verification, or documentation gate without evidence and replacement controls.
+
+## Evidence Ladder
+
+Prefer higher evidence, but do not require perfect evidence for reversible process improvements.
+
+| Level | Evidence | Typical Use |
+| --- | --- | --- |
+| 4 | Repeated observed failures, accepted review findings, or pilot results | Adopt when the rule is low-cost and scoped |
+| 3 | One concrete failure plus a clear recurrence path | Pilot or adopt a narrow rule |
+| 2 | Strong external practice or analogous project evidence | Pilot with explicit validation |
+| 1 | Plausible preference or speculative concern | Reject or ask for more evidence |
+
+Major process changes must include a before/after scenario showing how an agent would behave differently. If no scenario is practical, the proposal must state an explicit skip reason.
+
+## Judge Rubric
+
+Score proposals out of 100 after hard rejects:
+
+| Category | Points | Question |
+| --- | ---: | --- |
+| Problem clarity | 15 | Is the failure, friction, or user need concrete? |
+| Evidence strength | 20 | Does the proposal sit high enough on the evidence ladder for its risk? |
+| Outcome fit | 15 | Would the change prevent recurrence or improve execution? |
+| Scope control | 15 | Is the guidance in the right files with minimal overlap? |
+| Verifiability | 15 | Can agents check whether they followed it? |
+| Context cost | 10 | Is added reading burden justified by expected value? |
+| Maintainability | 10 | Is the wording short, durable, and easy to update? |
+
+Decision thresholds:
+
+- Adopt: 85-100 and no major unresolved risks.
+- Pilot: 70-84, or higher-scoring changes that need real-task validation.
+- Revise: 55-69 when a narrower or clearer version could pass.
+- Reject: below 55, hard reject, or no credible evidence path.
+
+Pilot rules:
+
+- State the pilot scope, owner, success signal, and review trigger.
+- Promote to Adopt only after the success signal is observed.
+- Reject or revise when the pilot adds drag, creates conflicts, or fails to change outcomes.
+
+## Context-Cost Budget
+
+Framework changes spend shared agent attention. Keep added root-path reading small:
+
+- Prefer one clear home over repeating the same rule across files.
+- Add templates for structured work instead of long procedural prose.
+- Keep new default instructions concise enough to scan during normal task setup.
+- Justify any rule that agents must read on every task.
+- Remove or compress stale guidance when adding an equivalent replacement.
+
+## Judge Calibration
+
+The Framework Judge should:
+
+- Score the substance before judging wording quality.
+- For close calls within 5 points of a threshold, choose the lower-ceremony outcome unless risk or evidence clearly favors adoption.
+- Check for verbosity bias: a long proposal is not stronger unless it adds relevant evidence.
+- Check for position bias: evaluate every option against the rubric, not against where it appears in the proposal.
+- Name the decisive evidence, not just the final score.
+- Require revision when the proposal is directionally good but too broad, duplicated, or expensive to keep in context.
 
 ## Rule Quality Bar
 
@@ -51,7 +125,7 @@ At the end of substantial work, agents should ask internally:
 - Should I patch the framework now?
 ```
 
-Patch immediately for small, clear improvements. For larger process changes, create a proposed decision record.
+Patch immediately for small, clear improvements. For larger process changes, use the change lifecycle above and create a decision record when the choice is significant or hard to reverse.
 
 ## Consistency Audit For Framework Changes
 
@@ -64,4 +138,3 @@ Before finalizing framework edits:
 - The framework remains markdown-only.
 - The root entrypoint stays concise.
 - The change helps automation rather than increasing babysitting.
-

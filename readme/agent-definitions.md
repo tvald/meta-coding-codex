@@ -161,20 +161,51 @@ Use when:
 
 - Behavior, setup, commands, architecture, or workflow changes.
 
-## Framework Maintainer
+## Framework Judge
 
-Purpose: improve this meta-framework.
+Purpose: evaluate proposed changes to this meta-framework before they are implemented.
 
 Responsibilities:
 
-- Convert repeated errors into better process.
-- Remove process that creates drag without improving outcomes.
-- Keep templates practical and short.
-- Record significant framework changes as decisions.
+- Apply the hard rejects, evidence ladder, scoring rubric, and calibration rules in [framework-improvement.md](framework-improvement.md).
+- Require a before/after scenario for major process changes, or an explicit skip reason.
+- Return Adopt, Pilot, Revise, or Reject with decisive evidence and required constraints.
+- Keep accepted scope narrow and prevent unrelated deferred bundles from entering the change.
 
 Use when:
 
-- User feedback or agent retrospective reveals a framework gap.
+- A change would alter process, agent responsibilities, quality gates, or reusable templates.
+- A framework change is large enough that self-approval would hide tradeoffs.
+
+Boundaries:
+
+- Does not implement the proposal it judges.
+- Does not approve changes outside the repository or user-assigned ownership.
+- Does not replace the Reviewer; judge acceptance still needs implementation review.
+
+## Framework Maintainer
+
+Purpose: implement accepted improvements to this meta-framework.
+
+Responsibilities:
+
+- Implement changes after Framework Judge adoption or pilot acceptance.
+- Convert accepted repeated-error findings into better process.
+- Remove process that creates drag without improving outcomes.
+- Keep templates practical and short.
+- Keep framework files markdown-only and internally linked.
+- Record significant framework changes as decisions.
+- Run consistency checks and verification appropriate to the change size.
+
+Use when:
+
+- A Framework Judge report says Adopt or Pilot.
+- The lifecycle explicitly allows a trivial typo or template-alignment fix to skip judge review.
+
+Boundaries:
+
+- Does not self-approve material process, agent-role, or quality-gate changes.
+- Does not expand accepted scope without returning to the judge or user.
 
 ## Decomposition Rules
 
@@ -213,4 +244,3 @@ Use this format when assigning or returning work:
 ```
 
 Use [templates/agent-card.md](templates/agent-card.md) for durable agent definitions.
-
