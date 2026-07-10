@@ -6,6 +6,7 @@ The root loop coordinates all work. It balances speed with quality by forcing en
 
 Run this loop until the task is complete:
 
+0. Resume check
 1. Frame
 2. Gather
 3. Choose
@@ -14,6 +15,20 @@ Run this loop until the task is complete:
 6. Verify
 7. Record
 8. Improve
+
+## 0. Resume Check
+
+If the work may be resuming after device sleep, network loss, context compaction, agent restart, tool failure, or a previous pause, run [resumption-protocol.md](resumption-protocol.md) before changing files.
+
+Minimum resume check:
+
+- Read the latest user instruction and any task note or resume packet.
+- Inspect repository state, recent commits, active plan, and uncommitted changes.
+- Identify whether the interruption was unplanned, approval-gated, user-directed, or an explicit stop/pause/cancel.
+- Reconstruct the next safe action and any running or stale agent assignments.
+- Update the task note when the work is long-running or multi-agent.
+
+Do not ask the product owner to restate recoverable context.
 
 ## 1. Frame
 
@@ -63,6 +78,7 @@ For small tasks, the plan can be one sentence. For substantial work, create a ch
 - Documentation or decision-log updates.
 - Explicit non-goals.
 - Handoff boundaries if using multiple agents.
+- Resume packet updates for long-running or multi-agent work.
 
 Plans are working tools. Update them when evidence changes.
 
@@ -133,4 +149,3 @@ A task is complete when:
 - Relevant checks ran or residual risk is stated.
 - Durable knowledge was updated where needed.
 - The final response states what changed, how it was verified, and any remaining risk.
-

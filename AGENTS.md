@@ -19,6 +19,8 @@ For every task, run this loop until the goal is genuinely handled:
 - Ask clarifying questions only when the answer is necessary and cannot be safely inferred from the repository or product context.
 - If the user gives a clarification window, ask bounded questions during that window, then continue with explicit assumptions.
 - Prefer making reversible, well-documented decisions over stopping for low-risk ambiguity.
+- When resuming after an interruption, reconstruct state from the repository, task notes, plan, agent roster, and latest user instruction before continuing.
+- When the user deliberately says stop, pause, cancel, or redirects the goal, halt conflicting work before continuing.
 - Do not require the product owner to maintain the framework. Agents are responsible for keeping the knowledge base, decision log, and process docs current as part of normal work.
 
 ## Quality Bar
@@ -35,6 +37,7 @@ For every task, run this loop until the goal is genuinely handled:
 - Knowledge management: [readme/knowledge-management.md](readme/knowledge-management.md)
 - Agent definitions: [readme/agent-definitions.md](readme/agent-definitions.md)
 - Automation policy: [readme/automation-policy.md](readme/automation-policy.md)
+- Resumption protocol: [readme/resumption-protocol.md](readme/resumption-protocol.md)
 - Development standards: [readme/development-standards.md](readme/development-standards.md)
 - Quality system: [readme/quality-system.md](readme/quality-system.md)
 - Framework improvement: [readme/framework-improvement.md](readme/framework-improvement.md)

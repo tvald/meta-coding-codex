@@ -7,6 +7,9 @@ These sources influenced the framework. Agents should use current primary source
 - Anthropic, "Building Effective AI Agents": simple workflow patterns, parallelization, orchestrator-workers, and evaluator-optimizer loops. https://www.anthropic.com/engineering/building-effective-agents
 - Anthropic, "Effective context engineering for AI agents": compaction and structured note-taking as persistent memory patterns. https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - OpenAI, "A practical guide to building agents": start with strong foundations, clear tools/instructions, incremental orchestration, guardrails, and evals. https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents/
+- OpenAI Agents SDK, "Human-in-the-loop": approval interruptions pause runs and serialized run state allows later resume from the original root run. https://openai.github.io/openai-agents-python/human_in_the_loop/
+- LangGraph docs, "Persistence": checkpointers and stores preserve state so agents can resume after interruption, failure, or across interactions. https://docs.langchain.com/oss/python/langgraph/persistence
+- LangGraph docs, "Interrupts": interrupts save graph state, wait for external input, and resume with a command against the same thread. https://docs.langchain.com/oss/python/langgraph/interrupts
 - OpenAI Codex docs, "Custom instructions with AGENTS.md": use layered, concise repository guidance. https://developers.openai.com/codex/guides/agents-md
 - OpenAI Codex docs, "Best practices": frame prompts with goal, context, constraints, and done criteria; use reusable guidance and verification loops. https://developers.openai.com/codex/learn/best-practices
 - AGENTS.md open format: project instructions as a README for agents. https://agents.md/

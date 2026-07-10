@@ -18,6 +18,7 @@ This framework seeds a new project with durable instructions for high-velocity, 
 - [knowledge-management.md](knowledge-management.md): decision logs, consistency checks, assumptions, standards, and living docs.
 - [agent-definitions.md](agent-definitions.md): standard agent roles, loops, handoffs, and delegation rules.
 - [automation-policy.md](automation-policy.md): what agents should do automatically and when they must stop.
+- [resumption-protocol.md](resumption-protocol.md): how agents resume interrupted work and handle deliberate user interrupts.
 - [development-standards.md](development-standards.md): coding, testing, security, documentation, and change-management standards.
 - [quality-system.md](quality-system.md): verification, review, risk gates, release readiness, and defect handling.
 - [framework-improvement.md](framework-improvement.md): how agents refine this framework from feedback and observed gaps.
@@ -31,6 +32,7 @@ This framework seeds a new project with durable instructions for high-velocity, 
 | Knowledge management, decisions, standards, and consistency checks | [knowledge-management.md](knowledge-management.md), [development-standards.md](development-standards.md), [templates/decision-record.md](templates/decision-record.md), [templates/consistency-check.md](templates/consistency-check.md) |
 | Standardized agents and loops | [agent-definitions.md](agent-definitions.md), [root-loop.md](root-loop.md), [templates/agent-card.md](templates/agent-card.md) |
 | Root orchestration across speed and quality | [root-loop.md](root-loop.md), [quality-system.md](quality-system.md), [templates/verification-manifest.md](templates/verification-manifest.md) |
+| Resumption, interruption handling, and agent re-spawn | [resumption-protocol.md](resumption-protocol.md), [automation-policy.md](automation-policy.md), [templates/task-notes.md](templates/task-notes.md) |
 | Agentic risk, operational readiness, and incident learning | [quality-system.md](quality-system.md), [development-standards.md](development-standards.md), [templates/threat-model-card.md](templates/threat-model-card.md), [templates/incident-note.md](templates/incident-note.md) |
 | Ongoing framework refinement and judge review | [framework-improvement.md](framework-improvement.md), [agent-definitions.md](agent-definitions.md), [templates/framework-change-proposal.md](templates/framework-change-proposal.md), [templates/framework-judge-report.md](templates/framework-judge-report.md) |
 | Automation with minimal product-owner maintenance | [automation-policy.md](automation-policy.md), [knowledge-management.md](knowledge-management.md) |

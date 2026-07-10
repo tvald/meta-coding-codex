@@ -28,8 +28,10 @@ Purpose: own the goal end to end.
 Responsibilities:
 
 - Run the root loop.
+- Run the resume check before continuing interrupted work.
 - Decide whether work stays single-agent or is decomposed.
 - Maintain the plan, quality bar, and final integration.
+- Maintain the agent roster for multi-agent work: assignment, ownership, status, last known output, and restart policy.
 - Assign clear scopes to specialist agents.
 - Resolve conflicts between agent outputs.
 - Ensure verification, docs, and decision records are complete.
@@ -218,9 +220,21 @@ Decompose only when it improves speed, quality, or focus:
 - Give each agent one clear owner area.
 - Avoid assigning multiple agents to edit the same files concurrently.
 - Give each agent explicit outputs and verification expectations.
+- Record each agent's assignment, owned files, expected output, and restart policy in the task note when work may span interruptions.
 - Integrate through the root orchestrator.
 
 Do not create specialized agents for tiny tasks. Coordination overhead is real.
+
+## Re-Spawn Rules
+
+After an interruption, the Root Orchestrator decides whether to resume, redirect, close, or re-spawn agents:
+
+- Poll or inspect existing agent results when handles or notifications are still available.
+- Do not assume a stale or missing agent completed work.
+- Re-spawn only work that is still needed, still independent, and not already represented in the repository or completed results.
+- Give replacement agents the original assignment, latest user guidance, owned files, prior findings, current repository state, and explicit instructions not to redo or revert unrelated work.
+- If the user deliberately redirected or paused the task, halt or redirect child agents before integrating their output.
+- Close or ignore stale agents whose assignments are obsolete, conflicting, or superseded by newer guidance.
 
 ## Handoff Format
 
@@ -236,6 +250,7 @@ Use this format when assigning or returning work:
 - Expected output:
 - Verification:
 - Knowledge updates:
+- Resume/restart policy:
 
 ## Result
 - Summary:
