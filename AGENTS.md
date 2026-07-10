@@ -18,6 +18,12 @@ ownership was assigned explicitly.
 
 - `readme/meta/` is reusable framework policy. Do not put project facts or task history
   there.
+- Optional files under `.codex/agents/` and `.claude/agents/` are harness adapters only;
+  [readme/meta/agent-definitions.md](readme/meta/agent-definitions.md) remains the role
+  and delegation authority.
+- During the adapter pilot, prefer a matching named adapter only when an applicable
+  quality gate and the canonical decomposition rules already justify independent work;
+  never delegate merely to advance the pilot counter.
 - Mutable project documentation lives in the categorized `readme/` siblings described
   by the meta README, with `readme/README.md` as its always-read cursor.
 - Run the [root loop](readme/meta/root-loop.md), choose one route from

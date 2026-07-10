@@ -25,6 +25,15 @@ These sources influenced the framework. Agents should use current primary source
 - LangGraph docs, "Interrupts": interrupts save graph state, wait for external input, and resume with a command against the same thread. https://docs.langchain.com/oss/python/langgraph/interrupts
 - OpenAI Codex docs, "Custom instructions with AGENTS.md": use layered, concise repository guidance. https://developers.openai.com/codex/guides/agents-md
 - OpenAI Codex docs, "Best practices": frame prompts with goal, context, constraints, and done criteria; use reusable guidance and verification loops. https://developers.openai.com/codex/learn/best-practices
+- OpenAI, "Subagents": project-scoped custom Codex agents, configuration layers,
+  sandbox controls, and multi-agent coordination (checked 2026-07-10):
+  https://learn.chatgpt.com/docs/agent-configuration/subagents
+- Anthropic, "Create custom subagents": project-scoped Claude Code agent files, tool
+  restrictions, permission modes, and delegation behavior (checked 2026-07-10):
+  https://code.claude.com/docs/en/sub-agents
+- Anthropic, "How Claude remembers your project": Claude Code loads `CLAUDE.md`, and a
+  project can import an existing `AGENTS.md` owner (checked 2026-07-10):
+  https://code.claude.com/docs/en/memory
 - AGENTS.md open format: project instructions as a README for agents. https://agents.md/
 
 ## Product And Requirements

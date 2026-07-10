@@ -1,8 +1,10 @@
 # AI Coding Meta-Framework
 
-This directory is the self-contained, reusable entrypoint for a portable, markdown-only
-framework that gives coding agents an operating loop, durable project memory,
-risk-scaled quality gates, and explicit autonomy boundaries without a runtime dependency.
+This directory is the self-contained, reusable entrypoint for a portable, Markdown-only
+framework core that gives coding agents an operating loop, durable project memory,
+risk-scaled quality gates, and explicit autonomy boundaries without a runtime
+dependency. Optional declarative harness adapters may expose selected roles without
+becoming framework policy.
 
 Every primary harness session and every delegated agent must read this file before task
 work. This file explains what is reusable, what belongs to the host project, and which
@@ -44,6 +46,27 @@ The host project's agent-maintained documentation uses these mutable paths:
 Create optional files and directories only when they will contain useful information.
 Established host documentation may remain at its required conventional location; link
 to its canonical owner instead of copying facts into framework-managed records.
+
+## Optional Harness Adapters
+
+The portable core is complete with this `readme/meta/` tree and the merged root
+`AGENTS.md` startup instruction. A root `CLAUDE.md` may import `AGENTS.md` so Claude Code
+loads the same owner. Project files under `.codex/agents/` and `.claude/agents/` may
+expose selected roles through native discovery.
+
+These files are optional integration surfaces, not additional policy owners. They:
+
+- point to [agent-definitions.md](agent-definitions.md) and other canonical process
+  owners instead of copying their rules;
+- contain only vendor-required discovery metadata and least-privilege capability
+  settings;
+- do not add executable code, dependencies, model pins, MCP servers, hooks, permission
+  bypasses, or integration ownership; and
+- can be omitted or removed without changing the core framework workflow.
+
+The current adapter pilot covers Reviewer, QA And Verification Agent, and Security And
+Risk Agent. The source framework's decision and changelog own its promotion or sunset;
+host projects may omit the pilot entirely.
 
 ## Principles
 
@@ -107,10 +130,13 @@ every project artifact only after it has useful content.
 
 ## Package And Bootstrap
 
-A clean add-on package contains this `readme/meta/` tree and a merged root AGENTS startup
-instruction. It excludes `readme/README.md` and every mutable project-documentation
-sibling. Packaging is the supported reset path; do not delete an existing project's
-documentation to simulate a reset.
+A clean core package contains this `readme/meta/` tree and a merged root AGENTS startup
+instruction. For Claude Code, merge a root `CLAUDE.md` import of `AGENTS.md`. Optionally
+merge the matching `.codex/agents/` or `.claude/agents/` files when the destination uses
+those harnesses. Never overwrite an established instruction or same-name agent file.
+The package excludes `readme/README.md` and every mutable project-documentation sibling.
+Packaging is the supported reset path; do not delete an existing project's documentation
+to simulate a reset.
 
 On first use:
 

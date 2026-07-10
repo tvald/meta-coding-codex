@@ -23,6 +23,35 @@ Every agent must:
 - Prefer evidence over preference.
 - Escalate only concrete blockers.
 
+## Optional Harness Adapter Contract
+
+This file is the canonical owner for framework roles, triggers, boundaries, and handoff
+behavior. Native files under `.codex/agents/` or `.claude/agents/` are optional discovery
+and capability adapters; they are not independent role definitions.
+
+An adapter may contain only:
+
+- the vendor-required agent name and a narrow trigger description;
+- least-privilege tool, sandbox, or permission settings that do not widen the parent's
+  authority; and
+- concise instructions to read this file and the relevant canonical process owner.
+
+Adapters do not copy full responsibilities, pin models, configure MCP servers or hooks,
+enable recursive delegation, bypass approvals, own integration, or write shared project
+knowledge. Omitting all adapters leaves the core framework behavior unchanged.
+
+The current optional pilot maps three bounded, independently useful roles:
+
+| Adapter Name | Canonical Role | Write Boundary |
+| --- | --- | --- |
+| `reviewer` | [Reviewer](#reviewer) | Read-only default and no-write instruction; reports findings to the Root Orchestrator |
+| `verifier` | [QA And Verification Agent](#qa-and-verification-agent) | Runs declared checks; does not edit source and reports command-created artifacts |
+| `security-reviewer` | [Security And Risk Agent](#security-and-risk-agent) | Read-only default and no-write instruction; returns findings and proposed record updates |
+
+The Root Orchestrator still decides whether decomposition is justified, supplies the
+assignment and ownership boundary, and integrates results. Native discovery never
+overrides the single-agent default or the decomposition rules below.
+
 ## Root Orchestrator
 
 Purpose: own the goal end to end.

@@ -18,7 +18,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0005](0005-pilot-optional-agent-adapters.md), only where the package
+  boundary excludes a Claude entrypoint bridge and optional vendor-native agent
+  adapters.
 
 ## Context
 

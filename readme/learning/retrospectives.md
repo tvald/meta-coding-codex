@@ -23,6 +23,19 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-10-03
+
+- What happened: The portable package used only `AGENTS.md` as its root launcher even
+  though Claude Code reads `CLAUDE.md` by default, and the framework's specialist roles
+  were not discoverable through either supported harness-native agent directory.
+- Framework or knowledge gap: The package had neither a non-duplicative Claude startup
+  bridge nor a bounded policy for optional vendor-native role adapters.
+- Change made or follow-up: Added a `CLAUDE.md` import bridge and a three-role Codex and
+  Claude Code adapter pilot, with canonical ownership, least-privilege, packaging, and
+  sunset controls in Decision 0005.
+- Tags: portability, instruction-discovery, subagents, codex, claude-code, adapters
+- Earlier occurrence: None
+
 ### R-2026-07-10-02
 
 - What happened: Packaging the framework for an existing project would also copy this

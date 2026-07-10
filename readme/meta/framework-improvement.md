@@ -58,7 +58,10 @@ change when risk and available tooling justify it; role ceremony is not mandator
 Reject or revise a proposal when it:
 
 - contradicts the user, `AGENTS.md`, accepted ownership, or higher-priority policy;
-- adds non-markdown runtime behavior or dependencies to this portable framework;
+- adds non-Markdown runtime behavior or dependencies to the portable core; optional
+  vendor-native declarative adapters are allowed only under the contract in
+  [agent-definitions.md](agent-definitions.md#optional-harness-adapter-contract) and may
+  not add executable code, dependencies, policy ownership, or broader authority;
 - duplicates guidance with a clear canonical owner;
 - creates vague duties another agent cannot verify;
 - requires product-owner babysitting for routine agent responsibilities;
@@ -119,6 +122,9 @@ Before closing framework edits, confirm:
 - new guidance has one home and removed copies leave working links;
 - templates match process docs and remain within the ten-template catalog;
 - significant choices and every framework edit are recorded;
+- optional harness adapters remain thin, removable, schema-valid, and subordinate to
+  their canonical Markdown owners;
 - required checks passed and completion status is accurate;
 - budgets, pilot terms, and maintenance triggers are explicit; and
-- the framework remains markdown-only and reduces product-owner maintenance.
+- the portable core remains Markdown-only and the framework reduces product-owner
+  maintenance.

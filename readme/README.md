@@ -34,12 +34,14 @@ Keep at most five entries.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
+| 2026-07-10 | Added the optional Codex and Claude Code three-role agent-adapter pilot | [Decision 0005](decisions/0005-pilot-optional-agent-adapters.md) |
 | 2026-07-10 | Packaged the reusable framework under `readme/meta/` and separated categorized project documentation | [Decision 0004](decisions/0004-package-framework-as-addon.md) |
 | 2026-07-10 | Dispositioned all framework critique concerns and aligned the framework | [Decision 0003](decisions/0003-address-framework-critique.md) |
 
 ## Next Actions
 
-- None.
+- Agent-adapter pilot: 0/5 eligible tasks. Review by 2026-08-09 or immediately after a
+  trust-boundary or client-discovery failure; use [Decision 0005](decisions/0005-pilot-optional-agent-adapters.md).
 
 ## Documentation Map
 
@@ -56,5 +58,5 @@ Keep at most five entries.
 ## Hygiene
 
 - Last consistency and pruning pass: 2026-07-10
-- Completed repository-changing tasks since that pass: 0 (reset by this task's full framework consistency pass)
+- Completed repository-changing tasks since that pass: 1
 - Next pass due: 2026-08-09 or after 10 completed repository-changing tasks, whichever comes first
