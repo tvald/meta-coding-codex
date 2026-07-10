@@ -77,7 +77,10 @@ Create `readme/automation-backlog.md` only after the first real candidate exists
 
 ## Verification Automation
 
-Every project should converge toward one documented command per verification layer:
+Every project should converge toward one canonical command catalog with an exact command
+per verification layer. Prefer `readme/standards.md` unless the repository already has
+an established canonical command section in `AGENTS.md` or another project instruction
+file. Choose one owner and link to it elsewhere rather than copying commands.
 
 - Install dependencies.
 - Run unit tests.
@@ -88,7 +91,10 @@ Every project should converge toward one documented command per verification lay
 - Build/package.
 - Start local app.
 
-If commands are missing or unreliable, agents should document the gap and improve the command path when it is in scope.
+Record a command only after executing it in the relevant environment. Include required
+prerequisites and a verification date when environment or version drift could matter.
+If commands are missing or unreliable, agents should document the gap and improve the
+command path when it is in scope.
 
 ## Human Attention Budget
 
@@ -100,3 +106,7 @@ Escalations should be concise and decision-oriented:
 - Ask only for information that changes the next action.
 
 Do not ask the product owner to restate facts already available in the repository.
+
+A required approval blocks the dependent action, not unrelated safe work within the
+existing scope. Checkpoint the gated item, continue independent work when useful, and
+batch compatible decision requests so the product owner can resolve them together.

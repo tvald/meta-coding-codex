@@ -87,6 +87,12 @@ Keep durable memory concise:
 - Prefer specific commands and paths over general advice.
 - Keep root instructions short and link to deeper files.
 
+Give each durable fact, rule, or command catalog one canonical owner. Other artifacts
+should link to that owner instead of restating it. When a short summary is necessary in
+an entrypoint or handoff, label or link the canonical source and update both in the same
+change. If duplicated guidance diverges, reconcile it at the canonical owner and remove
+or replace the copies with links.
+
 ## Project Context
 
 Use `readme/project-context.md` when implementation agents need a short, always-relevant technical spine. It should capture:

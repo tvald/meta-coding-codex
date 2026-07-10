@@ -32,6 +32,8 @@ Minimum fields:
 - Repository state: changed files, recent commits, uncommitted diff summary, and relevant commands already run.
 - Agent roster: agent id or label, assignment, owned files, status, last known output, and restart policy.
 - Decisions and assumptions made since the task began.
+- Failed approaches worth avoiding: observed evidence, why each was abandoned, and what
+  new condition would justify retrying it.
 - Verification already completed and checks still needed.
 - Next safe action.
 - Stop conditions or approvals required before continuing.
@@ -48,8 +50,10 @@ When resuming:
 4. Reconstruct the active plan and update it before editing files.
 5. Reconcile the agent roster: completed, running, stale, missing, obsolete, or needs replacement.
 6. Re-run only the checks needed to establish the current state.
-7. Continue from the next safe action, or stop with a concise blocker if continuing would violate the newest instruction.
-8. Update the resume packet after meaningful progress, before waiting on agents, and before any long pause.
+7. Review recorded failed approaches before retrying them; retry only when new evidence
+   or a changed condition addresses the recorded reason for failure.
+8. Continue from the next safe action, or stop with a concise blocker if continuing would violate the newest instruction.
+9. Update the resume packet after meaningful progress, before waiting on agents, and before any long pause.
 
 ## Re-Spawning Agents
 

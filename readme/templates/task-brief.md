@@ -58,6 +58,8 @@ Out of scope:
 - Automated checks:
 - Manual checks:
 - Documentation checks:
+- Baseline or counterfactual evidence for new regression/behavior tests:
+- Amendments after implementation starts, with reason and impact:
 
 ## Done When
 

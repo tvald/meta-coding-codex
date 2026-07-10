@@ -25,6 +25,14 @@ Severity:
 | --- | --- | --- |
 | | | |
 
+## Verification Integrity
+
+- Request and acceptance criteria read before implementation diff: Yes / No / Not applicable
+- Criteria or planned checks amended after implementation began:
+- Amendment rationale and impact are adequate: Yes / No / Not applicable
+- Counterfactual evidence for new regression or behavior tests:
+- Flaky results and disposition:
+
 ## Open Questions
 
 - 
@@ -32,4 +40,3 @@ Severity:
 ## Summary
 
 - 
-

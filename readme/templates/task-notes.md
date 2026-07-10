@@ -40,6 +40,14 @@ Use for long-running or paused work that future agents may need to resume.
 | --- | --- | --- |
 | YYYY-MM-DD | | |
 
+## Attempts And Dead Ends
+
+Record only failures worth preventing a future agent from repeating.
+
+| Attempt | Observed Evidence | Why Abandoned | Retry Only If |
+| --- | --- | --- | --- |
+| | | | |
+
 ## Key Context
 
 -

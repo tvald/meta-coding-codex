@@ -59,6 +59,26 @@ For each task, decide which checks apply:
 
 Run the smallest set that gives credible confidence. State skipped checks and why.
 
+## Verification Integrity
+
+For medium-, high-, or critical-risk behavior changes, and whenever verification could
+be tailored to an already-known implementation, protect the integrity of the evidence:
+
+- Declare acceptance criteria and the verification method before implementation when
+  practical. If discovery changes them, record the reason and impact; use the
+  correct-course path when the change affects scope or promised behavior.
+- Treat unexplained weakening or removal of an acceptance criterion or planned check as
+  a review finding. Legitimate amendments are allowed when their rationale is visible.
+- Record observed results, not only commands that someone intended to run.
+- For a new regression or behavior test, establish counterfactual confidence when safe
+  and practical: show that it fails against the pre-change behavior, reproduce the
+  failure before the fix, use a focused negative control or mutation, or explain why an
+  equivalent method is more appropriate. Do not manipulate a shared worktree or risky
+  environment merely to prove the counterfactual.
+- A check that fails and then passes on unchanged code is evidence of a flake, not a
+  clean pass. Investigate and record it. Quarantine only with a named owner or follow-up,
+  bounded impact, and explicit residual risk; do not silently rerun until green.
+
 ## Verification Manifest
 
 Use [templates/verification-manifest.md](templates/verification-manifest.md) when a change is high or critical risk, release-bound, unusually large, split-triggered but kept together, or has important skipped checks. For low and medium changes, the final response may serve as the manifest if it lists scope, checks, skipped checks, and residual risk.
@@ -89,6 +109,11 @@ Review changes in this order:
 8. Consistency: does it match decisions, standards, and product language?
 
 Prefer approving work that improves code health even if it is not perfect. Block issues that create real bugs, regressions, security risk, or misleading documentation.
+
+Read the request, task brief, acceptance criteria, and applicable decisions before the
+implementation diff when practical. This reduces anchoring on the builder's chosen
+solution. Review verification amendments and counterfactual evidence as part of the
+Tests item above.
 
 ## Structured Second Pass
 
