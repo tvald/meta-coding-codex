@@ -9,7 +9,7 @@ Run this loop until the task is complete:
 0. Resume check
 1. Frame
 2. Gather
-3. Choose
+3. Route
 4. Plan
 5. Execute
 6. Verify
@@ -54,9 +54,9 @@ Inspect the minimum context needed to make a good decision:
 
 Stop gathering when additional context is unlikely to change the next action. Record missing but important context in assumptions rather than blocking unnecessarily.
 
-## 3. Choose
+## 3. Route
 
-Pick the work mode:
+Pick the work mode and scale-adaptive path. Use [workflow-routing.md](workflow-routing.md) for substantial or unclear work.
 
 | Mode | Use When | Output |
 | --- | --- | --- |
@@ -66,6 +66,14 @@ Pick the work mode:
 | Architecture decision | The change is hard to reverse or affects quality attributes | Decision record |
 | Spike | Feasibility is uncertain and a cheap experiment reduces risk | Notes, recommendation, discarded code unless useful |
 | Multi-agent decomposition | Work can be split into independent research or implementation lanes | Agent briefs, integration plan, verification |
+
+| Path | Use When | Output |
+| --- | --- | --- |
+| Quick | Small, well-understood, low-risk work | Short task frame and focused patch |
+| Spec slice | Clear goal but missing examples, edge cases, or acceptance criteria | Task brief or spec section |
+| Full product | New product area, cross-cutting feature, or high ambiguity | Product brief, decisions, implementation slices |
+| Brownfield | Existing system with important conventions | Project context and compatibility constraints |
+| Correct-course | New evidence invalidates current plan or upstream artifacts | Change impact and revised plan |
 
 Default to the simplest mode that can finish the task safely.
 
@@ -79,6 +87,7 @@ For small tasks, the plan can be one sentence. For substantial work, create a ch
 - Explicit non-goals.
 - Handoff boundaries if using multiple agents.
 - Resume packet updates for long-running or multi-agent work.
+- Workflow status updates for long-running initiatives.
 
 Plans are working tools. Update them when evidence changes.
 
@@ -103,6 +112,7 @@ Verification must match risk:
 - Data migrations: test forward path, rollback path, and representative data.
 - Security-sensitive work: run the security checklist in [quality-system.md](quality-system.md).
 - Agent/process changes: run a consistency check against this framework.
+- Major or cross-cutting work: run the implementation readiness gate in [quality-system.md](quality-system.md) before implementation.
 
 If a check cannot run, record why and what residual risk remains.
 
@@ -113,6 +123,8 @@ Update durable knowledge while the context is fresh:
 - Decision record for significant product, architecture, dependency, process, or policy choices.
 - `readme/assumptions.md` for unresolved assumptions and validation plans.
 - Product brief or glossary for durable domain knowledge.
+- `readme/project-context.md` for concise implementation conventions and conflict-prone decisions.
+- `readme/workflow-status.md` for long-running phase, artifact, slice, risk, and next-action status.
 - Task notes for multi-step efforts that may resume later.
 - Standards or framework docs when a new rule prevents likely repeat mistakes.
 
@@ -148,4 +160,5 @@ A task is complete when:
 - The requested outcome is implemented or the blocker is proven.
 - Relevant checks ran or residual risk is stated.
 - Durable knowledge was updated where needed.
+- The next action is clear when work continues beyond this task.
 - The final response states what changed, how it was verified, and any remaining risk.

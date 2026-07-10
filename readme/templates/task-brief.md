@@ -12,11 +12,11 @@ What context, user need, incident, metric, document, or decision led to this tas
 
 In scope:
 
-- 
+-
 
 Out of scope:
 
-- 
+-
 
 ## Users And Workflows
 
@@ -26,13 +26,20 @@ Out of scope:
 
 ## Acceptance Criteria
 
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
+- [ ]
 
 ## Constraints
 
-- 
+-
+
+## Workflow Route
+
+- Path: Quick / Spec slice / Full product / Brownfield / Correct-course
+- Current phase: Explore / Define / Design / Slice / Implement / Review / Learn
+- Upstream artifacts required:
+- Next action after this task:
 
 ## Risks
 
@@ -54,5 +61,4 @@ Out of scope:
 
 ## Done When
 
-- 
-
+-

@@ -33,6 +33,7 @@ For every task, run this loop until the goal is genuinely handled:
 
 - Framework index: [readme/README.md](readme/README.md)
 - Root orchestration loop: [readme/root-loop.md](readme/root-loop.md)
+- Workflow routing: [readme/workflow-routing.md](readme/workflow-routing.md)
 - Knowledge ingestion: [readme/knowledge-ingestion.md](readme/knowledge-ingestion.md)
 - Knowledge management: [readme/knowledge-management.md](readme/knowledge-management.md)
 - Agent definitions: [readme/agent-definitions.md](readme/agent-definitions.md)

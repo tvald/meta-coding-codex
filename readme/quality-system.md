@@ -63,6 +63,18 @@ Run the smallest set that gives credible confidence. State skipped checks and wh
 
 Use [templates/verification-manifest.md](templates/verification-manifest.md) when a change is high or critical risk, release-bound, unusually large, split-triggered but kept together, or has important skipped checks. For low and medium changes, the final response may serve as the manifest if it lists scope, checks, skipped checks, and residual risk.
 
+## Implementation Readiness Gate
+
+Use [templates/implementation-readiness.md](templates/implementation-readiness.md) before implementation when work is major, cross-cutting, high-risk, ambiguous, or depends on several upstream artifacts.
+
+The gate checks whether product outcome, scope, acceptance criteria, architecture, project context, data/security concerns, slicing, verification, and rollback/readiness are sufficient. Verdicts:
+
+- Ready: implementation can proceed.
+- Ready with concerns: proceed only if concerns are recorded and bounded.
+- Not ready: repair product, architecture, context, or slicing before coding.
+
+Skip the gate for quick-path work unless review, testing, or user feedback shows the plan is under-specified.
+
 ## Review Rubric
 
 Review changes in this order:
@@ -77,6 +89,17 @@ Review changes in this order:
 8. Consistency: does it match decisions, standards, and product language?
 
 Prefer approving work that improves code health even if it is not perfect. Block issues that create real bugs, regressions, security risk, or misleading documentation.
+
+## Structured Second Pass
+
+For high-stakes product, architecture, readiness, or review artifacts, run one focused second pass instead of a vague "improve this" retry. Pick a lens that matches the risk:
+
+- Pre-mortem: assume the plan failed and identify why.
+- Inversion: ask how to guarantee failure, then avoid those causes.
+- Adversarial review: require concrete findings or a justified zero-finding result.
+- Stakeholder lens: re-check from user, operator, maintainer, buyer, or attacker perspective.
+
+Treat second-pass findings as candidates, not truth. Filter false positives and keep only issues tied to the current scope.
 
 ## Security Checklist
 

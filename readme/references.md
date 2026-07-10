@@ -4,6 +4,11 @@ These sources influenced the framework. Agents should use current primary source
 
 ## Agentic Workflows And Instructions
 
+- BMad Method, "Workflow Map": progressive context across analysis, planning, solutioning, implementation, quick flow, and project context. https://github.com/bmad-code-org/bmad-method/blob/main/docs/reference/workflow-map.md
+- BMad Method, "Manage Project Context": concise implementation rules and project conventions for agents. https://github.com/bmad-code-org/bmad-method/blob/main/docs/how-to/project-context.md
+- BMad Method, "Quick Dev": intent compression, smallest safe path routing, longer autonomous execution, and correction at the right layer. https://github.com/bmad-code-org/bmad-method/blob/main/docs/explanation/quick-dev.md
+- BMad Method, "Implementation Readiness": alignment gate before implementation across product, architecture, epics, and stories. https://github.com/bmad-code-org/bmad-method/blob/main/src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/SKILL.md
+- BMad Method, "Sprint Status": artifact status, risk detection, and recommended next workflow action. https://github.com/bmad-code-org/bmad-method/blob/main/src/bmm-skills/4-implementation/bmad-sprint-status/SKILL.md
 - Anthropic, "Building Effective AI Agents": simple workflow patterns, parallelization, orchestrator-workers, and evaluator-optimizer loops. https://www.anthropic.com/engineering/building-effective-agents
 - Anthropic, "Effective context engineering for AI agents": compaction and structured note-taking as persistent memory patterns. https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - OpenAI, "A practical guide to building agents": start with strong foundations, clear tools/instructions, incremental orchestration, guardrails, and evals. https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents/

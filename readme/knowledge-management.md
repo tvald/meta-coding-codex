@@ -8,6 +8,8 @@ Knowledge management keeps agents consistent across sessions. The repository sho
 | --- | --- | --- |
 | `AGENTS.md` | Root instructions and framework links | Agents maintain, humans approve major policy shifts |
 | `readme/project-brief.md` | Product purpose, users, outcomes, constraints | Agents update from product evidence |
+| `readme/project-context.md` | Concise technical conventions, stack choices, and conflict-prone implementation rules | Agents update from codebase and architecture evidence |
+| `readme/workflow-status.md` | Phase, artifact, slice, risk, and next-action state for long-running initiatives | Root Orchestrator updates when work spans phases |
 | `readme/standards.md` | Project-specific standards extending defaults | Agents update when patterns stabilize |
 | `readme/assumptions.md` | Open assumptions with confidence and validation path | Agents update during work |
 | `readme/glossary.md` | Canonical domain language | Agents update during ingestion |
@@ -85,6 +87,30 @@ Keep durable memory concise:
 - Prefer specific commands and paths over general advice.
 - Keep root instructions short and link to deeper files.
 
+## Project Context
+
+Use `readme/project-context.md` when implementation agents need a short, always-relevant technical spine. It should capture:
+
+- Technology stack and versions.
+- Critical implementation rules.
+- Conflict-prone decisions that multiple agents might otherwise make inconsistently.
+- Key paths and patterns to follow.
+- Pitfalls that are not obvious from local code.
+
+Keep product goals in `readme/project-brief.md`, broad standards in `readme/standards.md`, and task-specific context in task notes. Project context should stay lean enough to load before implementation work.
+
+## Workflow Status
+
+Use `readme/workflow-status.md` only for initiatives that span multiple phases, artifacts, slices, or agents. It should answer:
+
+- What phase and path are active?
+- Which artifacts are current, missing, or stale?
+- Which slice is in progress, in review, blocked, or done?
+- What risks or blockers exist?
+- What is the recommended next action?
+
+Do not create workflow status for one-off tasks.
+
 ## Standards Management
 
 Standards should become durable when:
@@ -108,4 +134,3 @@ Some knowledge decays quickly:
 - Release processes and environment configuration.
 
 When these facts matter, verify from current primary sources and update `readme/source-map.md` with the lookup date.
-

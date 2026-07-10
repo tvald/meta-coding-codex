@@ -82,6 +82,7 @@ When entering an existing project:
 - Read nearby code before editing.
 - Find existing conventions for error handling, logging, configuration, dependency injection, state management, styling, and tests.
 - Locate release, deployment, and environment assumptions.
+- Create or update `readme/project-context.md` when discovered conventions are important enough for future implementation agents.
 - Record only durable context that future agents will need.
 
 ## Acceptance Criteria Synthesis

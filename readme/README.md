@@ -14,6 +14,7 @@ This framework seeds a new project with durable instructions for high-velocity, 
 ## File Map
 
 - [root-loop.md](root-loop.md): the orchestration process used for every task.
+- [workflow-routing.md](workflow-routing.md): scale-adaptive path selection, next-action routing, status, and correct-course triggers.
 - [knowledge-ingestion.md](knowledge-ingestion.md): how agents absorb documents, discussions, and product context.
 - [knowledge-management.md](knowledge-management.md): decision logs, consistency checks, assumptions, standards, and living docs.
 - [agent-definitions.md](agent-definitions.md): standard agent roles, loops, handoffs, and delegation rules.
@@ -31,7 +32,8 @@ This framework seeds a new project with durable instructions for high-velocity, 
 | Knowledge ingestion from documents and product-owner discussion | [knowledge-ingestion.md](knowledge-ingestion.md), [templates/product-brief.md](templates/product-brief.md), [templates/task-brief.md](templates/task-brief.md) |
 | Knowledge management, decisions, standards, and consistency checks | [knowledge-management.md](knowledge-management.md), [development-standards.md](development-standards.md), [templates/decision-record.md](templates/decision-record.md), [templates/consistency-check.md](templates/consistency-check.md) |
 | Standardized agents and loops | [agent-definitions.md](agent-definitions.md), [root-loop.md](root-loop.md), [templates/agent-card.md](templates/agent-card.md) |
-| Root orchestration across speed and quality | [root-loop.md](root-loop.md), [quality-system.md](quality-system.md), [templates/verification-manifest.md](templates/verification-manifest.md) |
+| Root orchestration across speed and quality | [root-loop.md](root-loop.md), [workflow-routing.md](workflow-routing.md), [quality-system.md](quality-system.md), [templates/verification-manifest.md](templates/verification-manifest.md) |
+| Scale-adaptive planning, readiness, and status | [workflow-routing.md](workflow-routing.md), [templates/project-context.md](templates/project-context.md), [templates/workflow-status.md](templates/workflow-status.md), [templates/implementation-readiness.md](templates/implementation-readiness.md) |
 | Resumption, interruption handling, and agent re-spawn | [resumption-protocol.md](resumption-protocol.md), [automation-policy.md](automation-policy.md), [templates/task-notes.md](templates/task-notes.md) |
 | Agentic risk, operational readiness, and incident learning | [quality-system.md](quality-system.md), [development-standards.md](development-standards.md), [templates/threat-model-card.md](templates/threat-model-card.md), [templates/incident-note.md](templates/incident-note.md) |
 | Ongoing framework refinement and judge review | [framework-improvement.md](framework-improvement.md), [agent-definitions.md](agent-definitions.md), [templates/framework-change-proposal.md](templates/framework-change-proposal.md), [templates/framework-judge-report.md](templates/framework-judge-report.md) |
@@ -45,6 +47,9 @@ Templates live under [templates/](templates/):
 - [glossary.md](templates/glossary.md)
 - [source-map.md](templates/source-map.md)
 - [standards.md](templates/standards.md)
+- [project-context.md](templates/project-context.md)
+- [workflow-status.md](templates/workflow-status.md)
+- [implementation-readiness.md](templates/implementation-readiness.md)
 - [task-notes.md](templates/task-notes.md)
 - [decision-record.md](templates/decision-record.md)
 - [agent-card.md](templates/agent-card.md)
@@ -70,6 +75,8 @@ Each project using this framework should converge toward these markdown artifact
 
 - `AGENTS.md`: concise operating instructions and links to deeper docs.
 - `readme/project-brief.md`: current product purpose, users, outcomes, constraints, and glossary.
+- `readme/project-context.md`: concise implementation rules, technology choices, and conflict-prone conventions.
+- `readme/workflow-status.md`: phase, artifact, slice, risk, and next-action status for long-running initiatives.
 - `readme/decisions/NNNN-title.md`: append-only decision records.
 - `readme/assumptions.md`: unresolved assumptions, confidence, and validation path.
 - `readme/glossary.md`: canonical domain terms, acronyms, and naming.
