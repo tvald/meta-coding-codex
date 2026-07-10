@@ -1,12 +1,11 @@
 # Root Orchestration Loop
 
-The root loop coordinates all work. It balances speed with quality by forcing enough context, explicit verification, and durable knowledge capture without turning every task into a ceremony.
+The root loop coordinates every task. It aims for the smallest safe change while keeping
+repository state, verification, documentation, and durable decisions consistent.
 
 ## Loop Summary
 
-Run this loop until the task is complete:
-
-0. Resume check
+0. Resume
 1. Frame
 2. Gather
 3. Route
@@ -15,168 +14,128 @@ Run this loop until the task is complete:
 6. Verify
 7. Record
 8. Improve
-9. Commit
+9. Commit and close
 
-## 0. Resume Check
+## 0. Resume
 
-If the work may be resuming after device sleep, network loss, context compaction, agent restart, tool failure, or a previous pause, run [resumption-protocol.md](resumption-protocol.md) before changing files.
-
-Minimum resume check:
-
-- Read the latest user instruction and any task note or resume packet.
-- Inspect repository state, recent commits, active plan, and uncommitted changes.
-- Identify whether the interruption was unplanned, approval-gated, user-directed, or an explicit stop/pause/cancel.
-- Reconstruct the next safe action and any running or stale agent assignments.
-- Update the task note when the work is long-running or multi-agent.
-
-Do not ask the product owner to restate recoverable context.
+Read [state.md](state.md) at every session start, then the latest user instruction and
+any task note it points to. Inspect repository status and recent commits before editing.
+If work is interrupted, approval-gated, redirected, or has stale workers, follow
+[resumption-protocol.md](resumption-protocol.md). Never ask the product owner to restate
+recoverable context.
 
 ## 1. Frame
 
-Produce a short internal task frame:
+Create a short working frame:
 
-- Goal: what user-visible or project-visible outcome is required?
-- Scope: what files, systems, workflows, or personas are likely involved?
-- Constraints: what did the user explicitly require or forbid?
-- Risk: what could break, leak data, waste time, or create rework?
-- Done when: what must be true before final response?
+- Goal: the user- or project-visible outcome.
+- Scope and non-goals: affected and protected surfaces.
+- Constraints: explicit requirements, policies, and compatibility boundaries.
+- Risk: likely failure, data, security, external-action, and rework costs.
+- Done when: observable criteria and required verification.
 
-For fuzzy product requests, use the knowledge ingestion process before implementation.
+Use product clarification only when the missing answer materially changes the outcome or
+safety. Otherwise proceed with a reversible, recorded assumption.
 
 ## 2. Gather
 
-Inspect the minimum context needed to make a good decision:
+Inspect the minimum evidence likely to change the next action:
 
-- `AGENTS.md`, this framework, and project-specific docs.
-- Existing implementation patterns and nearby tests.
-- Decision records that could constrain the change.
-- Product brief, glossary, assumptions, and task notes.
-- Current external facts when the request depends on recent, legal, financial, security, product, API, or pricing information.
+- project instructions, state, relevant product and technical knowledge;
+- nearby implementation, tests, command catalog, and accepted decisions;
+- current working-tree and integration state; and
+- current primary sources when facts are freshness-sensitive.
 
-Stop gathering when additional context is unlikely to change the next action. Record missing but important context in assumptions rather than blocking unnecessarily.
+Apply [knowledge-ingestion.md](knowledge-ingestion.md) to source trust and conflicts.
+Stop gathering when more context is unlikely to change the route or first safe step.
 
 ## 3. Route
 
-Pick the work mode and scale-adaptive path. Use [workflow-routing.md](workflow-routing.md) for substantial or unclear work.
-
-| Mode | Use When | Output |
-| --- | --- | --- |
-| Direct change | Scope is clear and low risk | Patch plus verification |
-| Discovery | Goal is clear but implementation surface is unknown | Findings plus plan or patch |
-| Product clarification | Outcome, user, or acceptance criteria are ambiguous | Product brief or task brief |
-| Architecture decision | The change is hard to reverse or affects quality attributes | Decision record |
-| Spike | Feasibility is uncertain and a cheap experiment reduces risk | Notes, recommendation, discarded code unless useful |
-| Multi-agent decomposition | Work can be split into independent research or implementation lanes | Agent briefs, integration plan, verification |
-
-| Path | Use When | Output |
-| --- | --- | --- |
-| Quick | Small, well-understood, low-risk work | Short task frame and focused patch |
-| Spec slice | Clear goal but missing examples, edge cases, or acceptance criteria | Task brief or spec section |
-| Full product | New product area, cross-cutting feature, or high ambiguity | Product brief, decisions, implementation slices |
-| Brownfield | Existing system with important conventions | Project context and compatibility constraints |
-| Correct-course | New evidence invalidates current plan or upstream artifacts | Change impact and revised plan |
-
-Default to the simplest mode that can finish the task safely.
+Choose exactly one provisional route using the canonical table in
+[workflow-routing.md](workflow-routing.md), then apply the independent risk gate in
+[quality-system.md](quality-system.md). Re-route on surprise; do not classify the task
+again by separate mode, scale, and phase menus.
 
 ## 4. Plan
 
-For small tasks, the plan can be one sentence. For substantial work, create a checklist with:
+Use a sentence for a small task or a tracked checklist for substantial work. Include:
 
-- Ordered implementation steps.
-- Verification steps.
-- Documentation or decision-log updates.
-- Explicit non-goals.
-- Handoff boundaries if using multiple agents.
-- Resume packet updates for long-running or multi-agent work.
-- Workflow status updates for long-running initiatives.
+- ordered implementation and verification steps;
+- documentation and decision updates;
+- explicit non-goals;
+- integration boundaries for parallel work; and
+- state or task-note checkpoints for resumable work.
 
 Plans are working tools. Update them when evidence changes.
 
 ## 5. Execute
 
-Work in narrow increments:
+Work in narrow, reversible increments:
 
-- Preserve existing conventions unless a decision record justifies a change.
-- Keep unrelated refactors separate from behavior changes.
-- Prefer simple, boring implementations that can be verified.
-- Add or update tests with the production change when practical.
-- Update user-facing docs, product docs, or standards when behavior changes.
-- Avoid irreversible actions unless the user requested them or the repository process clearly allows them.
+- preserve established behavior and conventions unless the task changes them;
+- separate unrelated refactors and formatting;
+- add or update tests with changed behavior when practical;
+- update user, operator, and developer documentation with the behavior; and
+- pause gated actions without stalling unrelated safe work.
+
+Follow [agent-definitions.md](agent-definitions.md) when decomposing work.
 
 ## 6. Verify
 
-Verification must match risk:
+Declare required checks before material implementation when practical. Run the smallest
+set that provides credible evidence for the applicable risk gate, then inspect the
+result and diff. [quality-system.md](quality-system.md) owns the check matrix,
+counterfactual and flake rules, review order, and completion statuses.
 
-- Low-risk docs or config: lint, link check, or careful read-through.
-- Code behavior: relevant unit, integration, type, lint, and build checks.
-- UI behavior: run the app and inspect key viewports or states.
-- Data migrations: test forward path, rollback path, and representative data.
-- Security-sensitive work: run the security checklist in [quality-system.md](quality-system.md).
-- Agent/process changes: run a consistency check against this framework.
-- Major or cross-cutting work: run the implementation readiness gate in [quality-system.md](quality-system.md) before implementation.
-
-If a check cannot run, record why and what residual risk remains.
+A failing required check keeps the task open. If a required check is genuinely
+impossible in the environment, record the exact check, reason, and unblocking condition
+and close as **Needs verification**, not Done. Residual-risk prose never substitutes for
+a required passing result.
 
 ## 7. Record
 
-Update durable knowledge while the context is fresh:
+While context is fresh:
 
-- Decision record for significant product, architecture, dependency, process, or policy choices.
-- `readme/assumptions.md` for unresolved assumptions and validation plans.
-- Product brief or glossary for durable domain knowledge.
-- `readme/project-context.md` for concise implementation conventions and conflict-prone decisions.
-- `readme/workflow-status.md` for long-running phase, artifact, slice, risk, and next-action status.
-- Task notes for multi-step efforts that may resume later.
-- Standards or framework docs when a new rule prevents likely repeat mistakes.
+- update [state.md](state.md) with focus, next action, approvals, and completion;
+- create or update a task note for long-running or paused work;
+- record significant choices in `readme/decisions/`;
+- update the canonical product, technical, assumption, glossary, source, or standards
+  home when durable facts changed; and
+- avoid storing transient tool output or duplicating facts across artifacts.
 
-Do not record transient tool output unless it explains a durable choice.
+Use [knowledge-management.md](knowledge-management.md) for owners, budgets, and archive
+rules.
 
 ## 8. Improve
 
-After verification, ask:
+For substantial work, check whether there was a concrete correction, repeated friction,
+missing context home, late check, or unnecessary ceremony. Search
+[retrospectives.md](retrospectives.md) and its archives before appending a learning. Use
+[framework-improvement.md](framework-improvement.md) when the evidence warrants a rule,
+template, or process change.
 
-- Did the agent need information that should have been easier to find?
-- Did ambiguity cause avoidable delay or rework?
-- Did a check catch something that should become a standard gate?
-- Did user feedback reveal a wrong default?
-- Did the framework create unnecessary ceremony?
+## 9. Commit And Close
 
-Patch the relevant markdown file when the answer implies future value. Prefer small improvements tied to observed evidence.
+For a completed file-changing task in Git, follow
+[automation-policy.md](automation-policy.md#local-commit-completion). Review and stage
+only task-owned changes, inspect the staged diff, commit, and confirm `HEAD` and status.
 
-## 9. Commit
+Refresh `state.md` at close: clear or repoint current focus, record the outcome, increment
+the hygiene task count, and set the next action. Close with one status:
 
-When a completed task changed files in a Git repository, follow
-[automation-policy.md](automation-policy.md#local-commit-completion): review and stage
-only task-owned changes, inspect the staged diff, create the local commit, and confirm
-the resulting commit and repository status before the final response.
+- **Done:** requested outcome achieved and all required runnable checks passed.
+- **Needs verification:** implementation is present but a named required check is
+  impossible in the current environment.
+- **Blocked:** a concrete unresolved condition prevents progress.
+- **Cancelled:** the user ended or replaced the goal.
 
-If the user opted out or a repository, technical, or safety blocker prevents the commit,
-provide an explicitly uncommitted, incomplete handoff that names the affected task files
-and exact exception. Do not report completion while task-owned changes remain
-uncommitted.
+Only Done is completion. Needs verification and Blocked are explicit incomplete
+handoffs. The final response states the status, changes, observed check results, commit
+when applicable, and exact remaining condition.
 
 ## Clarification Window
 
-When a task starts with a product owner available:
-
-- Ask at most three high-value questions.
-- Ask only questions that change implementation or acceptance criteria.
-- Time-box the interview if the user set a window.
-- After the window, continue with explicit assumptions.
-
-After the window closes, do not stop for additional input unless continuing would risk data loss, security exposure, legal harm, or direct contradiction of user intent.
-
-## Completion Criteria
-
-A task is complete when:
-
-- The requested outcome is implemented or the blocker is proven.
-- Relevant checks ran or residual risk is stated.
-- Durable knowledge was updated where needed.
-- Task-owned file changes in a Git repository are committed locally.
-- The next action is clear when work continues beyond this task.
-- The final response states what changed, how it was verified, and any remaining risk.
-
-When an explicit opt-out or blocker leaves task-owned changes uncommitted, stop with an
-uncommitted, incomplete handoff that names the affected files and exact reason. That
-handoff is not task completion.
+Ask at most three high-value questions in a clarification round. Lead with the inferred
+default and evidence; ask only questions that change implementation or acceptance. When
+the window closes, continue with explicit assumptions unless doing so would risk harm or
+contradict the user.

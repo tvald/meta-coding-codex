@@ -6,7 +6,7 @@ Date: YYYY-MM-DD
 
 Owners:
 
-- 
+-
 
 Supersedes:
 
@@ -34,15 +34,15 @@ What did we choose?
 
 Positive:
 
-- 
+-
 
 Negative:
 
-- 
+-
 
 Neutral or follow-up:
 
-- 
+-
 
 ## Confidence
 
@@ -54,9 +54,8 @@ Why:
 
 Revisit this decision when:
 
-- 
+-
 
 ## Sources
 
-- 
-
+-

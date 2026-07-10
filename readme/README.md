@@ -1,87 +1,99 @@
 # AI Coding Meta-Framework
 
-This framework seeds a new project with durable instructions for high-velocity, high-quality AI-assisted development. It is markdown-only by design so it can be copied into any repository without runtime dependencies.
+This portable, markdown-only framework gives coding agents a durable operating loop,
+project memory, risk-scaled quality gates, and explicit autonomy boundaries without
+requiring a runtime dependency.
 
 ## Principles
 
-- Outcome first: every task starts from the user or business outcome, not from a preferred implementation.
-- Context before code: agents inspect existing product knowledge, code, tests, and decisions before changing behavior.
-- Small reversible steps: prefer narrow slices with fast verification over large speculative rewrites.
-- Quality is a loop: implementation, tests, review, docs, and decision records move together.
-- Memory is maintained by agents: product owners should not babysit context hygiene.
-- Improve the system: repeated mistakes become better rules, templates, or checks.
+- Outcome first; context before code.
+- One provisional workflow route, with risk as an independent safety overlay.
+- Small reversible steps and observed verification results.
+- One canonical home for each fact, rule, decision, and command catalog.
+- Repository-backed state and learning instead of assumed session memory.
+- Agents maintain process memory; product owners make consequential product decisions.
+- Repeated failures improve the system, with every framework edit auditable.
 
-## File Map
+## Always-Read Entry
 
-- [root-loop.md](root-loop.md): the orchestration process used for every task.
-- [workflow-routing.md](workflow-routing.md): scale-adaptive path selection, next-action routing, status, and correct-course triggers.
-- [knowledge-ingestion.md](knowledge-ingestion.md): how agents absorb documents, discussions, and product context.
-- [knowledge-management.md](knowledge-management.md): decision logs, consistency checks, assumptions, standards, and living docs.
-- [agent-definitions.md](agent-definitions.md): standard agent roles, loops, handoffs, and delegation rules.
-- [automation-policy.md](automation-policy.md): what agents should do automatically and when they must stop.
-- [resumption-protocol.md](resumption-protocol.md): how agents resume interrupted work and handle deliberate user interrupts.
-- [development-standards.md](development-standards.md): coding, testing, security, documentation, and change-management standards.
-- [quality-system.md](quality-system.md): verification, review, risk gates, release readiness, and defect handling.
-- [framework-improvement.md](framework-improvement.md): how agents refine this framework from feedback and observed gaps.
-- [references.md](references.md): research basis behind the practical rules.
+Every session starts with root `AGENTS.md` and [state.md](state.md). State is the bounded
+cursor for current focus, next action, parked approvals, relevant dead ends, recent
+outcomes, and hygiene cadence. It points to a task note when more detail is needed.
 
-## Responsibility Coverage
+## Process Map
 
-| Responsibility | Primary Files |
-| --- | --- |
-| Knowledge ingestion from documents and product-owner discussion | [knowledge-ingestion.md](knowledge-ingestion.md), [templates/product-brief.md](templates/product-brief.md), [templates/task-brief.md](templates/task-brief.md) |
-| Knowledge management, decisions, standards, and consistency checks | [knowledge-management.md](knowledge-management.md), [development-standards.md](development-standards.md), [templates/decision-record.md](templates/decision-record.md), [templates/consistency-check.md](templates/consistency-check.md) |
-| Standardized agents and loops | [agent-definitions.md](agent-definitions.md), [root-loop.md](root-loop.md), [templates/agent-card.md](templates/agent-card.md) |
-| Root orchestration across speed and quality | [root-loop.md](root-loop.md), [workflow-routing.md](workflow-routing.md), [quality-system.md](quality-system.md), [templates/verification-manifest.md](templates/verification-manifest.md) |
-| Scale-adaptive planning, readiness, and status | [workflow-routing.md](workflow-routing.md), [templates/project-context.md](templates/project-context.md), [templates/workflow-status.md](templates/workflow-status.md), [templates/implementation-readiness.md](templates/implementation-readiness.md) |
-| Resumption, interruption handling, and agent re-spawn | [resumption-protocol.md](resumption-protocol.md), [automation-policy.md](automation-policy.md), [templates/task-notes.md](templates/task-notes.md) |
-| Agentic risk, operational readiness, and incident learning | [quality-system.md](quality-system.md), [development-standards.md](development-standards.md), [templates/threat-model-card.md](templates/threat-model-card.md), [templates/incident-note.md](templates/incident-note.md) |
-| Ongoing framework refinement and judge review | [framework-improvement.md](framework-improvement.md), [agent-definitions.md](agent-definitions.md), [templates/framework-change-proposal.md](templates/framework-change-proposal.md), [templates/framework-judge-report.md](templates/framework-judge-report.md) |
-| Automation with minimal product-owner maintenance | [automation-policy.md](automation-policy.md), [knowledge-management.md](knowledge-management.md) |
+- [root-loop.md](root-loop.md): the operating loop for every task.
+- [workflow-routing.md](workflow-routing.md): the single route table and escalation
+  triggers.
+- [onboarding.md](onboarding.md): cold-start inventory, verified command derivation,
+  knowledge ingestion, owner interview, and state seeding.
+- [knowledge-ingestion.md](knowledge-ingestion.md): source trust, document synthesis,
+  acceptance criteria, and conflict handling.
+- [knowledge-management.md](knowledge-management.md): canonical artifacts, state,
+  one-home rule, budgets, archives, and maintenance cadence.
+- [automation-policy.md](automation-policy.md): standing authority, approval boundaries,
+  parked decisions, canonical commands, and local commits.
+- [resumption-protocol.md](resumption-protocol.md): interruption and worker recovery.
+- [agent-definitions.md](agent-definitions.md): optional roles, decomposition, integration,
+  and shared-work safety.
+- [development-standards.md](development-standards.md): default engineering standards.
+- [quality-system.md](quality-system.md): risk gates, verification integrity, review,
+  security, readiness, and completion statuses.
+- [framework-improvement.md](framework-improvement.md): evidence-based framework edits,
+  pilots, sunset checks, and qualitative disposition.
+- [retrospectives.md](retrospectives.md): append-only cross-session learning signals.
+- [framework-changelog.md](framework-changelog.md): auditable framework edits.
+- [references.md](references.md): primary research basis.
 
-Templates live under [templates/](templates/):
+## Ten-Template Catalog
 
-- [product-brief.md](templates/product-brief.md)
-- [task-brief.md](templates/task-brief.md)
-- [assumptions.md](templates/assumptions.md)
-- [glossary.md](templates/glossary.md)
-- [source-map.md](templates/source-map.md)
-- [standards.md](templates/standards.md)
-- [project-context.md](templates/project-context.md)
-- [workflow-status.md](templates/workflow-status.md)
-- [implementation-readiness.md](templates/implementation-readiness.md)
-- [task-notes.md](templates/task-notes.md)
-- [decision-record.md](templates/decision-record.md)
-- [agent-card.md](templates/agent-card.md)
-- [review-report.md](templates/review-report.md)
-- [consistency-check.md](templates/consistency-check.md)
-- [verification-manifest.md](templates/verification-manifest.md)
-- [threat-model-card.md](templates/threat-model-card.md)
-- [incident-note.md](templates/incident-note.md)
-- [framework-change-proposal.md](templates/framework-change-proposal.md)
-- [framework-judge-report.md](templates/framework-judge-report.md)
+- [project-brief.md](templates/project-brief.md): product outcomes and constraints, with
+  links to canonical assumptions, terms, sources, and technical context.
+- [task-brief.md](templates/task-brief.md): scoped outcome and acceptance criteria.
+- [task-notes.md](templates/task-notes.md): long-running status, resume state, slices,
+  approvals, workers, and dead ends.
+- [project-context.md](templates/project-context.md): concise technical conventions.
+- [standards.md](templates/standards.md): project rules and verified command catalog.
+- [assumptions.md](templates/assumptions.md): consequential uncertainty.
+- [decision-record.md](templates/decision-record.md): significant choices.
+- [quality-record.md](templates/quality-record.md): readiness, acceptance, verification,
+  review, consistency, and completion in one record.
+- [threat-model-card.md](templates/threat-model-card.md): lightweight agent-aware threats.
+- [incident-note.md](templates/incident-note.md): blameless incident and near-miss
+  learning.
 
-## Bootstrap In A New Project
+Blank templates are schemas, not additional homes for project facts. Do not instantiate
+one until it will contain useful information.
 
-1. Copy `AGENTS.md` and the `readme/` directory into the repository.
-2. Create `readme/project-brief.md` from [templates/product-brief.md](templates/product-brief.md) when the first product task needs stable context.
-3. Create `readme/decisions/` and add the first decision record when the project has a meaningful architectural, product, or process choice.
-4. Add project-specific build, test, lint, and run commands to `AGENTS.md` or a repo-specific standards file.
-5. Ask the agent to run the root loop on the first real goal and update this framework when it finds gaps.
+## Bootstrap A Project
+
+1. Copy `AGENTS.md` and `readme/`, merging rather than replacing existing instructions.
+2. Clear copied project-specific entries from `readme/state.md`, then run
+   [onboarding.md](onboarding.md).
+3. Derive commands from manifests and CI, execute candidates, and record only successful
+   invocations in `readme/standards.md` from [templates/standards.md](templates/standards.md).
+4. Seed the project brief, project context, decisions, and other memory only with facts
+   established during onboarding.
+5. Confirm a new agent can recover the outcome, current focus, next action, commands,
+   constraints, and approvals from the repository alone.
+
+For greenfield work, decide and record product or technology choices instead of
+pretending to derive them. Record commands only after their tooling exists and they run.
 
 ## Required Project State
 
-Each project using this framework should converge toward these markdown artifacts:
+Every project has `AGENTS.md` and the bounded `readme/state.md`. It should converge on
+these files only as real content appears:
 
-- `AGENTS.md`: concise operating instructions and links to deeper docs.
-- `readme/project-brief.md`: current product purpose, users, outcomes, constraints, and glossary.
-- `readme/project-context.md`: concise implementation rules, technology choices, and conflict-prone conventions.
-- `readme/workflow-status.md`: phase, artifact, slice, risk, and next-action status for long-running initiatives.
-- `readme/decisions/NNNN-title.md`: append-only decision records.
-- `readme/assumptions.md`: unresolved assumptions, confidence, and validation path.
-- `readme/glossary.md`: canonical domain terms, acronyms, and naming.
-- `readme/source-map.md`: important sources, owners, freshness, and reliability.
-- `readme/standards.md`: project-specific standards that extend the shared defaults.
-- `readme/task-notes/`: durable notes for large or paused initiatives.
+- `readme/project-brief.md`: product purpose, users, outcomes, and constraints.
+- `readme/project-context.md`: implementation choices and conflict-prone conventions.
+- `readme/standards.md`: project-specific standards and canonical verified commands.
+- `readme/decisions/`: append-only significant decisions.
+- `readme/assumptions.md`, `readme/glossary.md`, and `readme/source-map.md`: their
+  canonical fact sets.
+- `readme/task-notes/`: detail for long-running, paused, or parallel work.
+- `readme/retrospectives.md` and `readme/framework-changelog.md`: durable process
+  learning and framework audit history.
 
-If an artifact is missing, the agent should create it when a task first needs it. Do not create empty process files that no task uses.
+Use the owners, budgets, overflow rules, and maintenance cadence in
+[knowledge-management.md](knowledge-management.md). Do not create empty process files.

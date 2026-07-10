@@ -1,141 +1,124 @@
 # Framework Improvement
 
-This framework is a living system. Agents are expected to improve it when evidence shows that the current process causes avoidable mistakes, ambiguity, or drag.
+Improve this framework when evidence shows avoidable mistakes, ambiguity, or drag. The
+repository—not session memory—is the runtime for detecting recurrence and evaluating
+whether a rule earned its context cost.
 
 ## Improvement Triggers
 
-Patch the framework when:
+Consider a framework change when:
 
-- The product owner repeats the same instruction across tasks.
-- An agent makes the same mistake twice.
-- A review finds a missing standard or quality gate.
-- An incident, near miss, escaped defect, failed release, or repeated failed agent run reveals a missing guardrail.
-- A task stalls because required context had no obvious home.
-- A decision is rediscovered instead of referenced.
-- A process step is consistently skipped because it is too vague or too heavy.
-- New tooling changes how agents should build, test, research, or verify.
+- the product owner repeats an instruction across tasks;
+- [retrospectives.md](retrospectives.md) or its archives show the same correction or
+  process failure more than once;
+- a review, incident, near miss, escaped defect, failed release, or repeated failed run
+  reveals a missing guardrail;
+- work stalls because context, approval, or ownership has no clear home;
+- a decision is rediscovered instead of referenced;
+- a process is skipped because it is vague or disproportionate; or
+- tooling changes how agents should build, research, or verify.
 
-Do not patch the framework for one-off preferences unless the user asks to make them durable.
-
-## Change Lifecycle
-
-Use this lifecycle for non-trivial framework changes. Small typo fixes may skip directly to review and commit.
-
-1. Proposal: describe the observed problem, affected files, intended behavior, evidence, context cost, and verification plan. Use [templates/framework-change-proposal.md](templates/framework-change-proposal.md).
-2. Judge: a Framework Judge scores the proposal, checks hard rejects, and returns Adopt, Pilot, Revise, or Reject. Use [templates/framework-judge-report.md](templates/framework-judge-report.md).
-3. Implement: after judge acceptance, the Framework Maintainer edits the smallest useful markdown surface and keeps templates aligned.
-4. Review: run a consistency check against `AGENTS.md`, this framework, templates, and the request. For larger edits, use a verification manifest.
-5. Commit: commit only after required checks pass or residual risk is documented. Use a clear conventional commit message.
-
-## Hard Rejects
-
-Reject a proposal without scoring when it:
-
-- Contradicts `AGENTS.md`, the user request, or established project ownership.
-- Adds non-markdown dependencies, generated runtime behavior, or tooling to this markdown-only framework.
-- Duplicates guidance that already has a clear home instead of patching that home.
-- Creates vague duties that cannot be verified by another agent.
-- Requires product-owner babysitting for routine agent responsibilities.
-- Expands scope into unrelated deferred work.
-- Lowers an existing safety, verification, or documentation gate without evidence and replacement controls.
+Do not create durable rules for one-off preferences unless the user explicitly asks.
 
 ## Evidence Ladder
 
-Prefer higher evidence, but do not require perfect evidence for reversible process improvements.
-
-| Level | Evidence | Typical Use |
+| Level | Evidence | Default Disposition |
 | --- | --- | --- |
-| 4 | Repeated observed failures, accepted review findings, or pilot results | Adopt when the rule is low-cost and scoped |
-| 3 | One concrete failure plus a clear recurrence path | Pilot or adopt a narrow rule |
-| 2 | Strong external practice or analogous project evidence | Pilot with explicit validation |
-| 1 | Plausible preference or speculative concern | Reject or ask for more evidence |
+| 4 | Repeated observed failure, accepted review finding, direct durable user instruction, or successful pilot | Adopt a scoped rule when its cost is justified |
+| 3 | One concrete failure with a credible recurrence path | Adopt a very small control or Pilot |
+| 2 | Strong primary-source practice or analogous project evidence | Pilot with an observable success signal |
+| 1 | Plausible preference or speculative concern | Reject, defer, or gather evidence |
 
-Major process changes must include a before/after scenario showing how an agent would behave differently. If no scenario is practical, the proposal must state an explicit skip reason.
+Evidence level informs judgment; it is not a numeric score. Name the decisive evidence.
 
-## Judge Rubric
+## Change Lifecycle
 
-Score proposals out of 100 after hard rejects:
+1. **Find the signal.** Search the retrospective log, decisions, changelog, and current
+   framework before adding guidance. Record new concrete learning in the retrospective.
+2. **Screen the proposal.** Apply the hard rejects below. For a material change, state
+   the problem, before/after behavior, affected canonical owners, context cost,
+   verification, and possible sunset.
+3. **Choose a disposition.** Use Adopt, Pilot, Revise, or Reject with decisive evidence
+   and constraints. Direct user decisions and level-4 findings may be Adopted; reversible
+   level-2 or level-3 defaults should usually be Pilots.
+4. **Change the smallest owner.** Routine reversible edits can be applied directly.
+   Create a decision record for significant process, safety, authority, or ownership
+   choices. Keep templates aligned.
+5. **Log every framework edit.** Append status, evidence, change, success signal, and
+   review or sunset trigger to [framework-changelog.md](framework-changelog.md).
+6. **Verify and close.** Run link, template, consistency, line-budget, and request review
+   as applicable. All required checks must pass before Done.
 
-| Category | Points | Question |
-| --- | ---: | --- |
-| Problem clarity | 15 | Is the failure, friction, or user need concrete? |
-| Evidence strength | 20 | Does the proposal sit high enough on the evidence ladder for its risk? |
-| Outcome fit | 15 | Would the change prevent recurrence or improve execution? |
-| Scope control | 15 | Is the guidance in the right files with minimal overlap? |
-| Verifiability | 15 | Can agents check whether they followed it? |
-| Context cost | 10 | Is added reading burden justified by expected value? |
-| Maintainability | 10 | Is the wording short, durable, and easy to update? |
+This qualitative lifecycle replaces numeric self-scoring and dedicated Judge/Maintainer
+roles. A focused Reviewer or independent agent can still reduce anchoring for a material
+change when risk and available tooling justify it; role ceremony is not mandatory.
 
-Decision thresholds:
+## Hard Rejects
 
-- Adopt: 85-100 and no major unresolved risks.
-- Pilot: 70-84, or higher-scoring changes that need real-task validation.
-- Revise: 55-69 when a narrower or clearer version could pass.
-- Reject: below 55, hard reject, or no credible evidence path.
+Reject or revise a proposal when it:
 
-Pilot rules:
+- contradicts the user, `AGENTS.md`, accepted ownership, or higher-priority policy;
+- adds non-markdown runtime behavior or dependencies to this portable framework;
+- duplicates guidance with a clear canonical owner;
+- creates vague duties another agent cannot verify;
+- requires product-owner babysitting for routine agent responsibilities;
+- bundles unrelated deferred work;
+- lowers a safety, verification, or documentation gate without evidence and replacement
+  controls; or
+- has context or maintenance cost disproportionate to its evidence.
 
-- State the pilot scope, owner, success signal, and review trigger.
-- Promote to Adopt only after the success signal is observed.
-- Reject or revise when the pilot adds drag, creates conflicts, or fails to change outcomes.
+## Pilot Rules
 
-## Context-Cost Budget
+Every Pilot names:
 
-Framework changes spend shared agent attention. Keep added root-path reading small:
+- scope and owner;
+- the behavior expected to change;
+- an observable success or failure signal;
+- a review date, task-count trigger, or event trigger; and
+- the rule or artifact to remove if the signal does not justify promotion.
 
-- Prefer one clear home over repeating the same rule across files.
-- Add templates for structured work instead of long procedural prose.
-- Keep new default instructions concise enough to scan during normal task setup.
-- Justify any rule that agents must read on every task.
-- Remove or compress stale guidance when adding an equivalent replacement.
+The scheduled hygiene pass in
+[knowledge-management.md](knowledge-management.md#maintenance-cadence) reviews due pilots
+and sunset triggers. Promote, revise, or remove them; do not let Pilot become permanent
+by neglect.
 
-## Judge Calibration
+## Context-Cost And Calibration Checks
 
-The Framework Judge should:
+Before accepting a change:
 
-- Score the substance before judging wording quality.
-- For close calls within 5 points of a threshold, choose the lower-ceremony outcome unless risk or evidence clearly favors adoption.
-- Check for verbosity bias: a long proposal is not stronger unless it adds relevant evidence.
-- Check for position bias: evaluate every option against the rubric, not against where it appears in the proposal.
-- Name the decisive evidence, not just the final score.
-- Require revision when the proposal is directionally good but too broad, duplicated, or expensive to keep in context.
+- prefer one canonical home and links over repetition;
+- stay within the artifact budgets in
+  [knowledge-management.md](knowledge-management.md#artifact-budgets-and-overflow);
+- compress or remove superseded guidance in the same change;
+- check verbosity bias: more prose is not more evidence;
+- check position and author bias: compare options against the same evidence;
+- choose the lower-ceremony adequate control on a close call;
+- require a before/after scenario for a major change, or state why none is practical; and
+- name the evidence that decides the disposition.
 
 ## Rule Quality Bar
 
-A good framework rule is:
+A framework rule is actionable, verifiable, scoped, concise, evidence-based,
+non-conflicting, canonically owned, and paired with a trigger or cadence when it requires
+maintenance.
 
-- Actionable: an agent can follow it without interpretation gymnastics.
-- Verifiable: success or failure can be checked.
-- Scoped: it says when it applies.
-- Short: it does not bloat the root context.
-- Evidence-based: it came from observed need or strong external practice.
-- Non-conflicting: it does not contradict higher-priority project rules.
+## Durable Retrospective
 
-## Retrospective Prompt
+At the end of substantial work, ask whether something slowed the work, was caught late,
+had to be inferred, supplied confidence, or exposed a missing check. When the answer is
+a concrete cross-session learning, search for an earlier occurrence and append the
+three-field entry to [retrospectives.md](retrospectives.md). A repeated signal invokes
+the improvement lifecycle; an isolated observation can remain evidence without forcing
+a new rule.
 
-At the end of substantial work, agents should ask internally:
+## Consistency Audit
 
-```md
-## Retrospective
-- What slowed the work down?
-- What mistake was caught late?
-- What did I have to infer that should be documented?
-- What check gave the most confidence?
-- What check was missing?
-- What framework rule or template would reduce future rework?
-- Should I patch the framework now?
-```
+Before closing framework edits, confirm:
 
-Patch immediately for small, clear improvements. For larger process changes, use the change lifecycle above and create a decision record when the choice is significant or hard to reverse.
-
-## Consistency Audit For Framework Changes
-
-Before finalizing framework edits:
-
-- Root `AGENTS.md` still points to the right files.
-- New guidance has one clear home.
-- No duplicate rule conflicts with another file.
-- Templates still match process docs.
-- The framework remains markdown-only.
-- The root entrypoint stays concise.
-- The change helps automation rather than increasing babysitting.
+- root entrypoints and state point to the right owners;
+- new guidance has one home and removed copies leave working links;
+- templates match process docs and remain within the ten-template catalog;
+- significant choices and every framework edit are recorded;
+- required checks passed and completion status is accurate;
+- budgets, pilot terms, and maintenance triggers are explicit; and
+- the framework remains markdown-only and reduces product-owner maintenance.

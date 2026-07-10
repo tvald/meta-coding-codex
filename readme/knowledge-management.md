@@ -1,142 +1,132 @@
 # Knowledge Management
 
-Knowledge management keeps agents consistent across sessions. The repository should contain enough durable memory for a new agent to act without repeatedly interviewing the product owner.
+Repository memory must let a cold-start agent find the current cursor, durable facts,
+decisions, and recurrence evidence without asking the product owner to reconstruct them.
 
 ## Canonical Artifacts
 
-| Artifact | Purpose | Owner |
+| Artifact | Canonical Purpose | Owner |
 | --- | --- | --- |
-| `AGENTS.md` | Root instructions and framework links | Agents maintain, humans approve major policy shifts |
-| `readme/project-brief.md` | Product purpose, users, outcomes, constraints | Agents update from product evidence |
-| `readme/project-context.md` | Concise technical conventions, stack choices, and conflict-prone implementation rules | Agents update from codebase and architecture evidence |
-| `readme/workflow-status.md` | Phase, artifact, slice, risk, and next-action state for long-running initiatives | Root Orchestrator updates when work spans phases |
-| `readme/standards.md` | Project-specific standards extending defaults | Agents update when patterns stabilize |
-| `readme/assumptions.md` | Open assumptions with confidence and validation path | Agents update during work |
-| `readme/glossary.md` | Canonical domain language | Agents update during ingestion |
-| `readme/source-map.md` | Important sources and freshness | Agents update during research |
-| `readme/decisions/` | Append-only decisions | Agents create for durable choices |
-| `readme/task-notes/` | Long-running initiative memory | Agents create when work spans sessions |
+| `readme/state.md` | Always-read current focus, next actions, parked approvals, recent outcomes, and maintenance cursor | Root Orchestrator, every session and close |
+| `readme/project-brief.md` | Product purpose, users, outcomes, and constraints | Agents update from product evidence |
+| `readme/project-context.md` | Concise stack, technical conventions, and conflict-prone implementation rules | Agents update from code and decisions |
+| `readme/standards.md` | Project-specific rules and the sole canonical command catalog | Agents update only from observed practice and executed commands |
+| `readme/assumptions.md` | Open uncertainty, confidence, impact, and validation | Agent that introduces or resolves the assumption |
+| `readme/glossary.md` | Canonical domain terms and deprecated synonyms | Agent ingesting or changing domain language |
+| `readme/source-map.md` | Important sources, trust, ownership, and freshness | Agent relying on the source |
+| `readme/decisions/` | Append-only significant choices and consequences | Decision owner or Root Orchestrator |
+| `readme/task-notes/` | Status and resume detail for long-running, paused, or parallel work | Root Orchestrator |
+| `readme/retrospectives.md` | Searchable cross-session correction and process-learning signals | Agent observing the signal |
+| `readme/framework-changelog.md` | Auditable framework edits, pilots, and sunset triggers | Agent changing the framework |
 
-Create artifacts only when they carry real content.
+`state.md` is mandatory because it is the cold-start index. Create every other project
+artifact only when it has real content.
+
+## One Home Per Fact
+
+Give each durable fact, rule, decision, or command catalog one canonical home. Other
+artifacts link to that owner instead of restating it. A short entrypoint or handoff
+summary is allowed only when it links the canonical source and is updated in the same
+change. If copies diverge, reconcile the owner and replace the copies with links.
+
+Templates define structure; instantiated project artifacts own facts. A fact appearing
+in a blank example is not a second home, but product-specific values must not be copied
+between the brief, assumptions, glossary, and source map.
+
+## State Rules
+
+Read `state.md` at every session start and refresh it at every task close. During active
+work it answers:
+
+- What outcome is active, by which route, and where is the detailed task note?
+- What is the next safe action?
+- Which approvals are parked, and what action does each gate?
+- Which dead ends are still relevant?
+- What recently completed, and what durable record explains it?
+- When is the next hygiene pass due?
+
+Keep one current focus, at most five recently completed entries, and only currently
+relevant dead ends. Detail belongs in the linked task note or decision.
 
 ## Decision Records
 
-Create a decision record when a choice:
+Create a decision record for a choice that is hard to reverse; materially changes
+product scope, architecture, security, privacy, reliability, cost, workflow, or policy;
+selects a major dependency; or resolves an important conflict.
 
-- Is hard to reverse.
-- Affects architecture, security, privacy, reliability, performance, cost, developer workflow, or product scope.
-- Selects or removes a major dependency.
-- Resolves a disagreement or source conflict.
-- Changes this framework's process in a meaningful way.
-
-Rules:
-
-- One decision per file.
-- Use `readme/decisions/NNNN-short-title.md`.
+- One decision per `readme/decisions/NNNN-short-title.md`.
 - Status is `Proposed`, `Accepted`, `Superseded`, or `Rejected`.
-- Accepted records are append-only. If the decision changes, create a new record and link the old one.
-- Include context, options, decision, consequences, confidence, and review trigger.
+- Accepted records are append-only. Supersede them with a linked new record.
+- Include context, options, decision, consequences, confidence, sources, and trigger.
 
 Use [templates/decision-record.md](templates/decision-record.md).
 
-## Assumptions
+## Assumptions, Terms, And Sources
 
-Track assumptions when work can proceed safely but uncertainty remains.
+Use [templates/assumptions.md](templates/assumptions.md) for uncertainty that can proceed
+safely. A low-confidence, high-impact assumption becomes a question, spike, or decision.
 
-Each assumption should include:
+When first needed, use these minimal tables in the canonical files:
 
-- Statement.
-- Confidence: High, Medium, or Low.
-- Impact if wrong.
-- Validation path.
-- Date recorded.
-- Status: Open, Validated, Invalidated, or Obsolete.
+```md
+# Glossary
+| Term | Meaning | Use Instead Of | Source | Last Checked |
+| --- | --- | --- | --- | --- |
 
-Low-confidence assumptions that could materially change implementation should become clarification questions or spikes.
+# Source Map
+| ID | Source | Owner/Publisher | Date Checked | Trust Tier | Scope | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+```
+
+Mark stale sources and deprecated terms; do not erase history that explains decisions.
+Re-check current vendor, legal, security, pricing, release, and API facts from primary
+sources when they matter.
 
 ## Consistency Checks
 
-Run a consistency check when:
+Run a consistency pass when finishing a multi-file or behavior change, changing this
+framework or a decision, resolving a major defect, preparing a release, or when the
+maintenance cadence below fires. Check the request, acceptance criteria, implementation,
+tests, brief, decisions, standards, assumptions, commands, docs, and state as applicable.
+Use the consistency section of [templates/quality-record.md](templates/quality-record.md)
+when the result needs a durable record.
 
-- Finishing a multi-file feature.
-- Changing product behavior.
-- Updating standards, framework docs, or decisions.
-- Resolving a major bug.
-- Preparing a release.
+## Artifact Budgets And Overflow
 
-Check consistency across:
+Budgets are defaults except for the two hard cursors. Exceed a default only with a short
+rationale in the artifact; otherwise compress active material and archive history
+without changing it.
 
-- User request and delivered behavior.
-- Acceptance criteria and tests.
-- Product brief and UI/API behavior.
-- Decision records and implementation.
-- Standards and code style.
-- Documentation and current commands.
-- Assumptions and final response.
+| Artifact | Budget | Overflow Rule | Maintenance Owner |
+| --- | ---: | --- | --- |
+| `AGENTS.md` | 120 lines, hard | Move detail to an owning process doc and link it | Root Orchestrator |
+| `state.md` | 80 lines, hard | Move detail to task notes or decisions; retain only current pointers | Root Orchestrator |
+| Project brief | 200 lines | Split stable technical detail to project context | Product Analyst or Root Orchestrator |
+| Project context | 160 lines | Move broad standards or decision rationale to their owners | Architect or Root Orchestrator |
+| Standards and command catalog | 240 lines | Split topic-specific standards only when one owner remains explicit | Root Orchestrator |
+| Assumptions | 120 lines | Archive closed rows to `readme/archive/` | Root Orchestrator |
+| Glossary | 160 lines | Archive deprecated terms after dependent docs migrate | Documentarian |
+| Source map | 200 lines | Archive stale sources while preserving decision links | Research owner |
+| Active task note | 300 lines | Move completed chronology to a dated archive; keep resume state | Root Orchestrator |
+| Decision record | 220 lines each | Prefer linked supporting evidence; never truncate an accepted decision | Decision owner |
+| Retrospective or framework changelog | 20 entries or 160 lines | Move old entries unchanged to a dated archive and link it | Root Orchestrator |
+| Core framework process doc | 300 lines | Split only by a clear ownership boundary and update the index | Root Orchestrator |
 
-Use [templates/consistency-check.md](templates/consistency-check.md).
+Archive under `readme/archive/` with a date or sequence in the filename. Do not create an
+empty archive directory. Archives are read on a targeted lookup, not every task.
 
-## Context Hygiene
+## Maintenance Cadence
 
-Keep durable memory concise:
+The Root Orchestrator runs a consistency and pruning pass after 10 completed
+repository-changing tasks or 30 days since the last pass, whichever occurs first. The
+state file holds both counters. The pass must:
 
-- Store facts, decisions, and rationale, not chat transcripts.
-- Remove or supersede stale guidance when it becomes misleading.
-- Link to source documents instead of copying long content.
-- Mark freshness-sensitive information with date and source.
-- Prefer specific commands and paths over general advice.
-- Keep root instructions short and link to deeper files.
+1. validate state pointers, parked approvals, and canonical command links;
+2. find budgets over limit and apply their overflow rules;
+3. mark or supersede stale guidance and sources;
+4. search retrospective repeats and evaluate due framework pilots or sunsets;
+5. reconcile duplicated or conflicting guidance at its canonical owner; and
+6. record the date, reset the task counter, and name any incomplete maintenance action.
 
-Give each durable fact, rule, or command catalog one canonical owner. Other artifacts
-should link to that owner instead of restating it. When a short summary is necessary in
-an entrypoint or handoff, label or link the canonical source and update both in the same
-change. If duplicated guidance diverges, reconcile it at the canonical owner and remove
-or replace the copies with links.
-
-## Project Context
-
-Use `readme/project-context.md` when implementation agents need a short, always-relevant technical spine. It should capture:
-
-- Technology stack and versions.
-- Critical implementation rules.
-- Conflict-prone decisions that multiple agents might otherwise make inconsistently.
-- Key paths and patterns to follow.
-- Pitfalls that are not obvious from local code.
-
-Keep product goals in `readme/project-brief.md`, broad standards in `readme/standards.md`, and task-specific context in task notes. Project context should stay lean enough to load before implementation work.
-
-## Workflow Status
-
-Use `readme/workflow-status.md` only for initiatives that span multiple phases, artifacts, slices, or agents. It should answer:
-
-- What phase and path are active?
-- Which artifacts are current, missing, or stale?
-- Which slice is in progress, in review, blocked, or done?
-- What risks or blockers exist?
-- What is the recommended next action?
-
-Do not create workflow status for one-off tasks.
-
-## Standards Management
-
-Standards should become durable when:
-
-- The same review comment appears more than once.
-- A defect reveals a missing rule.
-- A project-specific convention becomes clear.
-- A tool command or setup step is required for reliable work.
-- A human explicitly asks for a preference to persist.
-
-Do not add standards for one-off opinions. Standards must be actionable and verifiable.
-
-## Knowledge Freshness
-
-Some knowledge decays quickly:
-
-- Third-party API behavior.
-- Security guidance.
-- Legal or compliance rules.
-- Pricing, limits, model names, and vendor capabilities.
-- Release processes and environment configuration.
-
-When these facts matter, verify from current primary sources and update `readme/source-map.md` with the lookup date.
+This scheduled pass owns pruning; agents should still correct dangerous stale guidance
+immediately when they encounter it.

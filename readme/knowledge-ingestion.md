@@ -38,6 +38,10 @@ Create or update these artifacts only when useful:
 - `readme/decisions/NNNN-title.md`: decisions that should not be rediscovered.
 - `readme/source-map.md`: important documents, links, owners, freshness, and reliability.
 
+Use the canonical ownership and minimal schemas in
+[knowledge-management.md](knowledge-management.md); do not duplicate glossary,
+assumption, or source facts inside the project brief.
+
 ## Product Owner Interview Loop
 
 Use this loop when the product goal is fuzzy:
@@ -75,10 +79,12 @@ Do not copy large source text into the repository. Preserve links, precise refer
 
 ## Brownfield Codebase Intake
 
-When entering an existing project:
+When entering an existing project, run the full procedure in
+[onboarding.md](onboarding.md). During later brownfield discovery:
 
 - Map the repository structure and main runtime entry points.
-- Identify build, test, lint, typecheck, migration, and run commands.
+- Identify build, test, lint, typecheck, migration, and run candidates; execute them
+  before recording successes in the canonical `readme/standards.md` catalog.
 - Read nearby code before editing.
 - Find existing conventions for error handling, logging, configuration, dependency injection, state management, styling, and tests.
 - Locate release, deployment, and environment assumptions.

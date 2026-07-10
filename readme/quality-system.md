@@ -37,7 +37,8 @@ Large-diff split triggers: split a change before review or commit when any trigg
 - A reviewer cannot summarize the intent and risk in a short paragraph.
 - The diff is large enough that defects could hide in noise; prefer splitting around independently testable behavior.
 
-If a split trigger is intentionally ignored, record the reason in the verification manifest or final response.
+If a split trigger is intentionally ignored, record the reason in the quality record or
+final response.
 
 ## Standard Verification Matrix
 
@@ -57,7 +58,24 @@ For each task, decide which checks apply:
 - Documentation link or command validation.
 - Manual inspection for UI or workflow changes.
 
-Run the smallest set that gives credible confidence. State skipped checks and why.
+Declare which checks are required for the task before material implementation when
+practical. Run the smallest required set that gives credible confidence. Mark unrelated
+checks Not applicable; do not call a required check optional after seeing its result.
+
+## Verification Outcomes
+
+- **Pass:** the check ran and its observed result met the criterion.
+- **Fail:** the check ran and did not meet the criterion; fix the issue or keep the task
+  open or Blocked.
+- **Not run:** name the concrete environment or access limitation and the condition that
+  will unblock it. If the check is required, the task status is Needs verification.
+- **Not applicable:** the check was not required for the scoped behavior or risk.
+
+Done requires every required runnable check to pass. A residual-risk statement records
+what passing checks do not establish; it cannot replace a result. A genuinely impossible
+required check produces an explicit **Needs verification** handoff, not Done. An
+established approval path may change which risk is accepted, but must not relabel an
+unexecuted required check as passing.
 
 ## Verification Integrity
 
@@ -66,7 +84,7 @@ be tailored to an already-known implementation, protect the integrity of the evi
 
 - Declare acceptance criteria and the verification method before implementation when
   practical. If discovery changes them, record the reason and impact; use the
-  correct-course path when the change affects scope or promised behavior.
+  Correct course route when the change affects scope or promised behavior.
 - Treat unexplained weakening or removal of an acceptance criterion or planned check as
   a review finding. Legitimate amendments are allowed when their rationale is visible.
 - Record observed results, not only commands that someone intended to run.
@@ -79,13 +97,20 @@ be tailored to an already-known implementation, protect the integrity of the evi
   clean pass. Investigate and record it. Quarantine only with a named owner or follow-up,
   bounded impact, and explicit residual risk; do not silently rerun until green.
 
-## Verification Manifest
+## Quality Record
 
-Use [templates/verification-manifest.md](templates/verification-manifest.md) when a change is high or critical risk, release-bound, unusually large, split-triggered but kept together, or has important skipped checks. For low and medium changes, the final response may serve as the manifest if it lists scope, checks, skipped checks, and residual risk.
+Use [templates/quality-record.md](templates/quality-record.md) when a change is high or
+critical risk, major or cross-cutting, release-bound, unusually large, kept together
+despite a split trigger, formally reviewed, or Needs verification. Its applicable
+sections provide one home for readiness, acceptance, checks, review findings,
+consistency, and residual risk. Low and medium changes may use the final response when
+it records scope and observed required results.
 
 ## Implementation Readiness Gate
 
-Use [templates/implementation-readiness.md](templates/implementation-readiness.md) before implementation when work is major, cross-cutting, high-risk, ambiguous, or depends on several upstream artifacts.
+Use the readiness section of [templates/quality-record.md](templates/quality-record.md)
+before implementation when work is major, cross-cutting, high-risk, ambiguous, or
+depends on several upstream artifacts.
 
 The gate checks whether product outcome, scope, acceptance criteria, architecture, project context, data/security concerns, slicing, verification, and rollback/readiness are sufficient. Verdicts:
 
@@ -93,7 +118,8 @@ The gate checks whether product outcome, scope, acceptance criteria, architectur
 - Ready with concerns: proceed only if concerns are recorded and bounded.
 - Not ready: repair product, architecture, context, or slicing before coding.
 
-Skip the gate for quick-path work unless review, testing, or user feedback shows the plan is under-specified.
+Skip the gate for Quick change work unless review, testing, or user feedback shows the
+plan is under-specified.
 
 ## Review Rubric
 
@@ -152,7 +178,9 @@ Use [templates/threat-model-card.md](templates/threat-model-card.md) before impl
 - CI/CD, deployment, infrastructure, production operations, or cross-system trust boundaries.
 - New dependencies, generated code paths, or agent instructions that could affect tool behavior.
 
-Keep the card lightweight: identify what is being built, what can go wrong, what will be done about it, and how the team knows the mitigations are enough. Use the verification manifest when the risk is high or critical.
+Keep the card lightweight: identify what is being built, what can go wrong, what will be
+done about it, and how the team knows the mitigations are enough. Use the quality record
+when the risk is high or critical.
 
 ## Operational Readiness Mini-Gate
 
@@ -165,7 +193,8 @@ For production-impacting changes, verify before release:
 - Configuration, secrets, and environment assumptions are documented.
 - Alerts or manual checks cover the most important failure mode.
 
-Skip only with an explicit reason in the verification manifest or final response.
+If a readiness item is required and cannot be checked, close as Needs verification and
+record the reason in the quality record. Mark genuinely irrelevant items Not applicable.
 
 ## UI And UX Verification
 
@@ -206,8 +235,13 @@ When a defect is found:
 
 Use [templates/incident-note.md](templates/incident-note.md) for production incidents, escaped defects with user impact, security near misses, failed releases, repeated failed agent runs, or checks that caught a serious issue late.
 
-The note should be blameless and short. Capture impact, detection, timeline, contributing factors, what worked, what failed, and concrete follow-up. At least one follow-up should consider whether a test, standard, decision record, runbook, verification manifest, or framework rule would prevent recurrence.
+The note should be blameless and short. Capture impact, detection, timeline,
+contributing factors, what worked, what failed, and concrete follow-up. At least one
+follow-up should consider whether a test, standard, decision record, runbook, quality
+record, or framework rule would prevent recurrence.
 
-## Review Report
+## Formal Review Record
 
-Use [templates/review-report.md](templates/review-report.md) when a change needs formal review. Keep findings concrete and ordered by severity.
+Use the review section of [templates/quality-record.md](templates/quality-record.md)
+when a change needs a durable formal review. Keep findings concrete and ordered by
+severity.

@@ -1,103 +1,81 @@
 # Resumption Protocol
 
-Interrupted work should resume from durable state, not from the product owner's memory. This protocol applies after device sleep, network loss, context compaction, tool failure, agent restart, long approval waits, or deliberate user interruption.
-
-## Principles
-
-- Latest instruction wins: the newest user message controls the current turn.
-- Root continuity: resume the root goal first, then decide what to do with child agents.
-- Durable cursor: task notes, plans, repository state, commits, and agent rosters are the markdown equivalent of a runtime checkpoint.
-- No duplicate side effects: do not rerun risky commands, migrations, external actions, or broad edits until the previous state is understood.
-- Low babysitting: ask the product owner only for decisions that cannot be recovered or safely inferred.
+Interrupted work resumes from durable repository state, not the product owner's memory.
+This protocol applies after device or network loss, context compaction, tool failure,
+agent restart, approval waits, and deliberate user interruption.
 
 ## Interruption Types
 
 | Type | Examples | Required Response |
 | --- | --- | --- |
-| Unplanned pause | device sleep, network loss, context compaction, tool/session restart | Reconstruct state, update resume packet, continue from next safe action |
-| Approval wait | high-risk command, release action, sensitive tool call | Keep work paused until the decision is received, then resume from the recorded checkpoint |
-| User guidance | new constraints, corrected goal, extra examples | Halt conflicting work, reframe, update plan and agent assignments |
-| User stop | stop, pause, cancel, wait, hold on | Stop nonessential work, save state, close or suspend child agents, do not continue until resumed |
-| Agent loss | stale child agent, missing result, crashed tool | Poll if possible; otherwise re-spawn only still-needed work from the latest checkpoint |
+| Unplanned pause | Sleep, network loss, compaction, session restart | Reconstruct from state and repository evidence; continue from the next safe action |
+| Approval wait | Release, destructive action, sensitive permission | Park the gated action; continue independent safe work; resume it only after the decision |
+| User guidance | Changed constraint, goal, example, or priority | Halt conflicting work, reframe, update state, plan, and assignments |
+| User stop | Stop, pause, cancel, wait, hold on | Stop nonessential work, checkpoint state, close or suspend workers, and do not continue |
+| Worker loss | Stale worker, missing result, crashed tool | Reconcile shared state; recover only work still needed and safe to own |
 
-## Resume Packet
+## Durable Cursor
 
-For long-running, risky, or multi-agent work, maintain a resume packet in `readme/task-notes/NNNN-topic.md` or the current task note.
+[state.md](state.md) is the first pointer. For long-running, risky, paused, or parallel
+work, it links one active `readme/task-notes/NNNN-topic.md` created from
+[templates/task-notes.md](templates/task-notes.md). The note contains:
 
-Minimum fields:
+- latest user instruction, goal, route, criteria, and plan;
+- work-item and artifact status;
+- changed files, commits, commands already run, and observed results;
+- worker roster and non-overlapping ownership;
+- decisions and assumptions made during the task;
+- failed approaches worth avoiding, with evidence and retry conditions;
+- verification completed and required checks remaining;
+- next safe action; and
+- stop conditions and parked approvals.
 
-- Latest user instruction.
-- Goal and completion criteria.
-- Current plan with completed, active, and pending steps.
-- Repository state: changed files, recent commits, uncommitted diff summary, and relevant commands already run.
-- Agent roster: agent id or label, assignment, owned files, status, last known output, and restart policy.
-- Decisions and assumptions made since the task began.
-- Failed approaches worth avoiding: observed evidence, why each was abandoned, and what
-  new condition would justify retrying it.
-- Verification already completed and checks still needed.
-- Next safe action.
-- Stop conditions or approvals required before continuing.
-
-For small single-turn tasks, the active plan and final response can serve as the resume packet.
+Small single-turn work needs no task note when state, the active plan, and final response
+are enough to recover it.
 
 ## Resume Loop
 
-When resuming:
+1. Read `AGENTS.md`, [state.md](state.md), the latest user message, and the active task
+   note if linked.
+2. Classify the interruption and apply the newest instruction before older plans.
+3. Inspect `git status`, recent commits, relevant diffs, running tools, and integration
+   state. Do not repeat a risky side effect until its prior result is known.
+4. Reconstruct and update the plan, next safe action, parked approvals, and worker
+   roster before editing.
+5. Review recorded dead ends. Retry only when new evidence addresses the observed reason
+   for failure.
+6. Re-run only the checks needed to establish current state, then continue or report the
+   concrete blocker.
+7. Refresh state and the task note after meaningful progress and before a long pause.
 
-1. Read `AGENTS.md`, the root loop, this protocol, and any task note.
-2. Read the latest user message and classify the interruption type.
-3. Inspect `git status`, recent commits, relevant diffs, and changed files.
-4. Reconstruct the active plan and update it before editing files.
-5. Reconcile the agent roster: completed, running, stale, missing, obsolete, or needs replacement.
-6. Re-run only the checks needed to establish the current state.
-7. Review recorded failed approaches before retrying them; retry only when new evidence
-   or a changed condition addresses the recorded reason for failure.
-8. Continue from the next safe action, or stop with a concise blocker if continuing would violate the newest instruction.
-9. Update the resume packet after meaningful progress, before waiting on agents, and before any long pause.
+## Worker And Worktree Recovery
 
-## Re-Spawning Agents
+[agent-definitions.md](agent-definitions.md#parallel-integration-and-recovery) owns the
+rules for WIP limits, shared-file writers, isolated-context publication, integration
+checks, and orphaned branch or worktree recovery. On resume, do not reassign work until
+the repository and worker roster show that it is absent or unusable. Preserve unknown
+commits and uncommitted changes until ownership is established.
 
-Only the Root Orchestrator re-spawns agents after interruption.
-
-Re-spawn when:
-
-- The original agent is unavailable or stale.
-- The work is still needed after applying the latest user guidance.
-- The assignment has an independent ownership boundary.
-- Repeating the work cannot overwrite or conflict with completed changes.
-
-Do not re-spawn when:
-
-- The user explicitly paused or cancelled the task.
-- The work is obsolete under newer guidance.
-- The repository already contains the result.
-- The original assignment touched files now changed by someone else and needs re-planning.
-
-Replacement assignment must include:
-
-- Original goal and latest user guidance.
-- Owned files or domains.
-- Prior findings and outputs to preserve.
-- Current repository state and changed files.
-- What not to redo or revert.
-- Expected output, verification, and handoff format.
+Replacement work receives the original goal, newest guidance, ownership boundary,
+prior evidence, current repository state, what not to redo or revert, verification, and
+handoff format. Do not recover obsolete work after a user stop or redirect.
 
 ## Deliberate User Interrupts
 
-When the user interrupts deliberately:
+The newest user message controls the current turn:
 
-- Stop executing the stale plan immediately.
-- Do not start new child agents or long-running commands until the new instruction is classified.
-- If the message is guidance, integrate it into the plan and continue only where compatible.
-- If the message is a hard stop, save state and halt.
-- If child agents later return output based on the old plan, review it as stale evidence before using it.
-- If the user asks a question, answer it, then resume compatible work unless they asked to pause or the answer changes the plan.
+- A status question gets a status answer; compatible work continues unless the user
+  asked only for a report or pause.
+- New guidance stops conflicting actions, updates the plan and state, and permits only
+  compatible continuation.
+- Stop, pause, cancel, wait, or hold on stops nonessential actions and new workers until
+  the user resumes.
+- Output from a worker following an older plan is stale evidence until reviewed against
+  the new instruction.
+- The final response addresses the newest request and status, not the superseded plan.
 
 ## Resume Verification
 
-Before finalizing resumed work, verify:
-
-- The final answer addresses the newest user request.
-- No stale agent output was integrated without review.
-- Checks account for work done before and after the interruption.
-- The task note or final response records any unresolved state, skipped checks, or remaining approval.
+Before closing resumed work, confirm that the latest request is satisfied, stale worker
+output was reviewed before use, checks cover work from both sides of the interruption,
+and state records remaining verification, approvals, or blockers.

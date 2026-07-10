@@ -36,9 +36,11 @@ Out of scope:
 
 ## Workflow Route
 
-- Path: Quick / Spec slice / Full product / Brownfield / Correct-course
-- Current phase: Explore / Define / Design / Slice / Implement / Review / Learn
+- Route: Quick change / Clarify / Discover / Decide / Initiative / Correct course
+- Why this route:
+- Risk gate: Low / Medium / High / Critical
 - Upstream artifacts required:
+- Escalation trigger:
 - Next action after this task:
 
 ## Risks

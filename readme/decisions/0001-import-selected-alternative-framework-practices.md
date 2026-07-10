@@ -16,6 +16,9 @@ Supersedes:
 Superseded by:
 
 - [0002: Make Local Task Commits The Default Completion Step](0002-default-local-task-commits.md), only for the statement that the imported controls do not authorize commits. All other parts of this decision remain accepted.
+- [0003: Address The Framework Critique](0003-address-framework-critique.md), for the
+  earlier choice not to require global state and for template terminology consolidated
+  into the quality record. The seven selected integrity practices remain accepted.
 
 ## Context
 

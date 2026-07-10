@@ -1,6 +1,8 @@
 # Agent Definitions
 
-This framework works with one capable agent or a coordinated set of specialized agents. Prefer a single agent until complexity, context size, or verification risk justifies decomposition.
+This framework works with one capable agent or a coordinated set of specialized agents.
+Roles are optional responsibility bundles within a workflow route, not another menu that
+every task must classify. Prefer one agent until decomposition has a clear benefit.
 
 ## Shared Agent Contract
 
@@ -166,52 +168,6 @@ Use when:
 
 - Behavior, setup, commands, architecture, or workflow changes.
 
-## Framework Judge
-
-Purpose: evaluate proposed changes to this meta-framework before they are implemented.
-
-Responsibilities:
-
-- Apply the hard rejects, evidence ladder, scoring rubric, and calibration rules in [framework-improvement.md](framework-improvement.md).
-- Require a before/after scenario for major process changes, or an explicit skip reason.
-- Return Adopt, Pilot, Revise, or Reject with decisive evidence and required constraints.
-- Keep accepted scope narrow and prevent unrelated deferred bundles from entering the change.
-
-Use when:
-
-- A change would alter process, agent responsibilities, quality gates, or reusable templates.
-- A framework change is large enough that self-approval would hide tradeoffs.
-
-Boundaries:
-
-- Does not implement the proposal it judges.
-- Does not approve changes outside the repository or user-assigned ownership.
-- Does not replace the Reviewer; judge acceptance still needs implementation review.
-
-## Framework Maintainer
-
-Purpose: implement accepted improvements to this meta-framework.
-
-Responsibilities:
-
-- Implement changes after Framework Judge adoption or pilot acceptance.
-- Convert accepted repeated-error findings into better process.
-- Remove process that creates drag without improving outcomes.
-- Keep templates practical and short.
-- Keep framework files markdown-only and internally linked.
-- Record significant framework changes as decisions.
-- Run consistency checks and verification appropriate to the change size.
-
-Use when:
-
-- A Framework Judge report says Adopt or Pilot.
-- The lifecycle explicitly allows a trivial typo or template-alignment fix to skip judge review.
-
-Boundaries:
-
-- Does not self-approve material process, agent-role, or quality-gate changes.
-- Does not expand accepted scope without returning to the judge or user.
-
 ## Decomposition Rules
 
 Decompose only when it improves speed, quality, or focus:
@@ -222,19 +178,36 @@ Decompose only when it improves speed, quality, or focus:
 - Give each agent explicit outputs and verification expectations.
 - Record each agent's assignment, owned files, expected output, and restart policy in the task note when work may span interruptions.
 - Integrate through the root orchestrator.
+- Keep at most three child workers active by default. Integrate or close work before
+  adding more unless project policy sets a different evidence-based cap.
 
 Do not create specialized agents for tiny tasks. Coordination overhead is real.
 
-## Re-Spawn Rules
+## Parallel Integration And Recovery
 
-After an interruption, the Root Orchestrator decides whether to resume, redirect, close, or re-spawn agents:
+Before starting a worker, make its assignment and shared context durable and visible in
+that worker's execution model. A saved task note is enough in a shared worktree. An
+isolated checkout needs an approved shared commit, patch, or equivalent transfer; if no
+safe transfer exists, do not decompose. Do not create unauthorized checkpoint commits
+merely to satisfy parallelism.
 
-- Poll or inspect existing agent results when handles or notifications are still available.
-- Do not assume a stale or missing agent completed work.
-- Re-spawn only work that is still needed, still independent, and not already represented in the repository or completed results.
-- Give replacement agents the original assignment, latest user guidance, owned files, prior findings, current repository state, and explicit instructions not to redo or revert unrelated work.
-- If the user deliberately redirected or paused the task, halt or redirect child agents before integrating their output.
-- Close or ignore stale agents whose assignments are obsolete, conflicting, or superseded by newer guidance.
+- Use one writer at a time for `state.md`, task notes, decisions, command catalogs, and
+  other shared knowledge files. Workers return proposed knowledge updates to the Root
+  Orchestrator unless explicitly assigned ownership.
+- Integrate the smallest coherent worker result first. Run its focused checks before
+  integration, then the affected integration checks after each merge or integration
+  batch. Run the full task-required suite after all results are combined.
+- After interruption, inspect worker handles, `git status`, recent commits,
+  `git worktree list`, and relevant branches before replacing work. Never assume a
+  missing worker failed or completed.
+- Treat orphaned branches, worktrees, commits, and uncommitted changes as owned until
+  proven otherwise. Record them in the task note, recover needed results, and remove
+  nothing without repository authority and a confirmed safe disposition.
+- Reassign only work still needed, independent, and absent from integrated results.
+  Replacement instructions include prior evidence, current state, owned files, what not
+  to redo or revert, checks, and handoff format.
+- User stop or redirect makes old worker output stale. Halt or redirect workers when
+  possible and review later output against the new instruction before integration.
 
 ## Handoff Format
 
@@ -261,4 +234,6 @@ Use this format when assigning or returning work:
 - Follow-up:
 ```
 
-Use [templates/agent-card.md](templates/agent-card.md) for durable agent definitions.
+Add a durable project-specific role only after repeated use justifies it, and keep its
+purpose, triggers, inputs, boundaries, loop, verification, and output format in the
+project's canonical agent-definition file.

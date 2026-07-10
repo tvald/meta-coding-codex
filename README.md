@@ -42,7 +42,8 @@ For each task, the agent follows the same basic loop:
    or high-risk work receives more discovery and review.
 4. **Make focused changes.** It preserves project conventions, avoids unrelated edits,
    and updates tests and documentation with the behavior they describe.
-5. **Verify the result.** It runs checks proportionate to the risk and inspects the diff.
+5. **Verify the result.** It runs the declared required checks, observes their results,
+   and inspects the diff.
 6. **Preserve useful knowledge.** It records durable decisions, assumptions, or project
    conventions when future work would benefit from them.
 7. **Commit completed file changes.** In a Git repository, it creates a local commit
@@ -64,7 +65,7 @@ The framework deliberately avoids giving every task the same amount of ceremony.
 | Existing or unfamiliar codebase | Inspection of local patterns, commands, tests, and compatibility constraints before editing |
 | Hard-to-reverse choice | Options and tradeoffs recorded in a decision record before the choice becomes difficult to undo |
 | Security-sensitive or production-impacting work | Deeper review, risk-specific checks, and a rollback or mitigation path |
-| Long-running or interrupted work | Durable task notes and a reconstructed next step rather than asking you to repeat recoverable context |
+| Long-running or interrupted work | A bounded always-read state file points to durable task notes and the reconstructed next step |
 
 A single capable agent is the default. Specialized agents may be coordinated when the
 task and available tooling justify the extra overhead, but you continue to interact with
@@ -95,15 +96,20 @@ enough state to resume safely later.
 
 A task is complete when:
 
-- the requested outcome is implemented, or a concrete blocker is demonstrated;
-- relevant checks have passed, or skipped checks and their residual risk are stated;
+- the requested outcome is implemented;
+- all required runnable checks have passed;
 - code, tests, documentation, and durable decisions agree where applicable;
 - task-owned file changes in a Git repository are locally committed; and
 - the final response tells you what changed, how it was verified, and what remains.
 
-If an explicit opt-out or blocker leaves task-owned changes uncommitted, the agent
+If a required check is genuinely impossible in the current environment, the agent
+reports **Needs verification** with the exact check, reason, and unblocking condition;
+it does not call the task done. If an explicit opt-out or blocker leaves task-owned
+changes uncommitted, the agent
 reports an uncommitted, incomplete handoff with the affected files and exact reason. It
 does not describe that handoff as complete delivery.
+
+A concrete blocker is a valid **Blocked** handoff, not a completed task.
 
 The exact evidence depends on the change. A documentation edit may need only a careful
 read-through and link check. A behavior change may need tests, linting, type checks, a
@@ -112,10 +118,11 @@ readiness checks as appropriate.
 
 ## Project Memory Without Babysitting
 
-As a project grows, agents create and maintain only the records that carry useful
-information. These can include a product brief, technical project context, open
-assumptions, decision records, workflow status, and resumable task notes. Empty process
-files are not created just to satisfy a checklist.
+Every session begins from a small `readme/state.md` containing the current focus, next
+action, parked approvals, relevant dead ends, and recent outcomes. As a project grows,
+agents create and maintain only records that carry useful detail: a product brief,
+technical project context, open assumptions, decisions, retrospective signals, and
+resumable task notes. Empty process files are not created just to satisfy a checklist.
 
 This repository-based memory helps a new or returning agent recover context from the
 project itself. You remain the authority on goals and consequential choices, but you are
@@ -125,10 +132,11 @@ not expected to act as the framework's note-taker.
 
 1. Copy [`AGENTS.md`](AGENTS.md) and the [`readme/`](readme/README.md) directory into the
    project, merging with any existing project instructions rather than discarding them.
-2. Add project-specific build, test, lint, and run commands to the repository's canonical
-   instruction or standards file as they are verified.
-3. Give the agent a real goal. It will create project briefs, decision records, or other
-   memory files only when the work first needs them.
+2. Clear copied project-specific state, then ask the agent to run the onboarding
+   procedure.
+3. The agent inventories the project, executes candidate build/test/lint/run commands,
+   records successful commands in `readme/standards.md`, and seeds useful project state.
+4. Give the agent a real goal. It creates further records only when work needs them.
 
 For the complete process, file map, and templates, see the
 [`readme/README.md`](readme/README.md) framework index.

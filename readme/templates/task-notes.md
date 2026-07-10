@@ -1,67 +1,59 @@
 # Task Notes
 
-Use for long-running or paused work that future agents may need to resume.
+Use for long-running, paused, or parallel work. `readme/state.md` points to the one active
+note; this file owns the detail that would overflow state.
 
-## Task
+## Task Cursor
 
 - Name:
 - Started:
-- Current status:
+- Last updated:
+- Status: Active / Parked / Needs verification / Blocked / Done / Cancelled
+- Route: Quick change / Clarify / Discover / Decide / Initiative / Correct course
 - Latest user instruction:
-- Related task brief:
-- Related decisions:
+- Goal and completion criteria:
+- Next safe action:
 
-## Goal
-
-## Current Plan
+## Plan
 
 - [ ]
 
-## Resume Packet
+## Artifact And Work Status
 
-- Last updated:
-- Interruption type: None / Unplanned pause / Approval wait / User guidance / User stop / Agent loss
+| Artifact Or Slice | Status | Owner | Files Or Domains | Required Checks | Next Step |
+| --- | --- | --- | --- | --- | --- |
+| | Backlog / Ready / Active / Review / Needs verification / Blocked / Done | | | | |
+
+## Repository And Verification State
+
 - Changed files:
 - Recent commits:
-- Commands already run:
+- Commands already run and observed results:
+- Required checks remaining:
 - Decisions and assumptions since start:
-- Next safe action:
-- Stop conditions or approvals required:
 
-## Agent Roster
+## Parked Approvals
 
-| Agent | Assignment | Owned Files/Domains | Status | Last Known Output | Restart Policy |
+| ID | Proposal | Default | Yes Consequence | No Consequence | Dependent Work |
 | --- | --- | --- | --- | --- | --- |
-| | | | Planned / Running / Complete / Stale / Obsolete / Needs replacement | | |
+| | | | | | |
+
+## Worker Roster
+
+| Worker | Assignment | Owned Files Or Domains | Status | Last Output | Restart Policy |
+| --- | --- | --- | --- | --- | --- |
+| | | | Planned / Running / Complete / Stale / Obsolete / Replace | | |
+
+## Attempts And Dead Ends
+
+Record only failures worth preventing another agent from repeating.
+
+| Attempt | Observed Evidence | Why Abandoned | Retry Only If |
+| --- | --- | --- | --- |
+| | | | |
 
 ## Progress Log
 
 | Date | Update | Evidence |
 | --- | --- | --- |
 | YYYY-MM-DD | | |
-
-## Attempts And Dead Ends
-
-Record only failures worth preventing a future agent from repeating.
-
-| Attempt | Observed Evidence | Why Abandoned | Retry Only If |
-| --- | --- | --- | --- |
-| | | | |
-
-## Key Context
-
--
-
-## Open Questions
-
--
-
-## Next Best Action
-
--
-
-## Verification So Far
-
-| Check | Result | Notes |
-| --- | --- | --- |
-| | | |

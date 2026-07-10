@@ -1,15 +1,16 @@
-# Product Brief
+# Project Brief
 
-## Product
+## Project
 
 - Name:
 - One-sentence purpose:
 - Current stage:
 - Primary repository or service:
+- Last updated:
 
 ## Users And Stakeholders
 
-| Group | Needs | Current Pain | Success Signal |
+| Group | Need | Current Pain | Success Signal |
 | --- | --- | --- | --- |
 | | | | |
 
@@ -30,10 +31,10 @@
 
 - Technical:
 - Product:
-- Legal/compliance:
-- Security/privacy:
-- Performance/reliability:
-- Budget/time:
+- Legal or compliance:
+- Security or privacy:
+- Performance or reliability:
+- Budget or time:
 
 ## Acceptance Defaults
 
@@ -42,21 +43,13 @@
 - Required docs:
 - Release or demo expectations:
 
-## Glossary
+## Canonical Knowledge Links
 
-| Term | Meaning | Source |
-| --- | --- | --- |
-| | | |
+- Open assumptions: `readme/assumptions.md` or None
+- Glossary: `readme/glossary.md` or None
+- Source map: `readme/source-map.md` or None
+- Project context: `readme/project-context.md` or None
 
-## Open Assumptions
-
-| Assumption | Confidence | Impact If Wrong | Validation |
-| --- | --- | --- | --- |
-| | | | |
-
-## Source Map
-
-| Source | Owner | Date | Reliability | Notes |
-| --- | --- | --- | --- | --- |
-| | | | | |
+Do not copy assumption, glossary, source, or technical-context facts into this brief.
+Link their canonical home.
 
