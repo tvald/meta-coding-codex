@@ -9,7 +9,7 @@ whether a rule earned its context cost.
 Consider a framework change when:
 
 - the product owner repeats an instruction across tasks;
-- [retrospectives.md](retrospectives.md) or its archives show the same correction or
+- `readme/learning/retrospectives.md` or its archives show the same correction or
   process failure more than once;
 - a review, incident, near miss, escaped defect, failed release, or repeated failed run
   reveals a missing guardrail;
@@ -45,7 +45,7 @@ Evidence level informs judgment; it is not a numeric score. Name the decisive ev
    Create a decision record for significant process, safety, authority, or ownership
    choices. Keep templates aligned.
 5. **Log every framework edit.** Append status, evidence, change, success signal, and
-   review or sunset trigger to [framework-changelog.md](framework-changelog.md).
+   review or sunset trigger to `readme/learning/framework-changelog.md`.
 6. **Verify and close.** Run link, template, consistency, line-budget, and request review
    as applicable. All required checks must pass before Done.
 
@@ -107,7 +107,7 @@ maintenance.
 At the end of substantial work, ask whether something slowed the work, was caught late,
 had to be inferred, supplied confidence, or exposed a missing check. When the answer is
 a concrete cross-session learning, search for an earlier occurrence and append the
-three-field entry to [retrospectives.md](retrospectives.md). A repeated signal invokes
+three-field entry to `readme/learning/retrospectives.md`. A repeated signal invokes
 the improvement lifecycle; an isolated observation can remain evidence without forcing
 a new rule.
 

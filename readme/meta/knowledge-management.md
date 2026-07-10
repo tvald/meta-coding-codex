@@ -7,20 +7,25 @@ decisions, and recurrence evidence without asking the product owner to reconstru
 
 | Artifact | Canonical Purpose | Owner |
 | --- | --- | --- |
-| `readme/state.md` | Always-read current focus, next actions, parked approvals, recent outcomes, and maintenance cursor | Root Orchestrator, every session and close |
-| `readme/project-brief.md` | Product purpose, users, outcomes, and constraints | Agents update from product evidence |
-| `readme/project-context.md` | Concise stack, technical conventions, and conflict-prone implementation rules | Agents update from code and decisions |
-| `readme/standards.md` | Project-specific rules and the sole canonical command catalog | Agents update only from observed practice and executed commands |
-| `readme/assumptions.md` | Open uncertainty, confidence, impact, and validation | Agent that introduces or resolves the assumption |
-| `readme/glossary.md` | Canonical domain terms and deprecated synonyms | Agent ingesting or changing domain language |
-| `readme/source-map.md` | Important sources, trust, ownership, and freshness | Agent relying on the source |
+| `readme/README.md` | Always-read current focus, next actions, parked approvals, recent outcomes, and maintenance cursor | Root Orchestrator, every session and close |
+| `readme/project/brief.md` | Product purpose, users, outcomes, and constraints | Agents update from product evidence |
+| `readme/project/context.md` | Concise stack, technical conventions, and conflict-prone implementation rules | Agents update from code and decisions |
+| `readme/project/standards.md` | Project-specific rules and the sole canonical command catalog | Agents update only from observed practice and executed commands |
+| `readme/project/assumptions.md` | Open uncertainty, confidence, impact, and validation | Agent that introduces or resolves the assumption |
+| `readme/project/glossary.md` | Canonical domain terms and deprecated synonyms | Agent ingesting or changing domain language |
+| `readme/project/source-map.md` | Important sources, trust, ownership, and freshness | Agent relying on the source |
+| `readme/project/automation-backlog.md` | Evidence-backed candidates for removing repeated manual work | Agent observing the candidate |
+| `readme/project/agents.md` | Durable project-specific roles or agent rules justified by repeated use | Root Orchestrator |
 | `readme/decisions/` | Append-only significant choices and consequences | Decision owner or Root Orchestrator |
-| `readme/task-notes/` | Status and resume detail for long-running, paused, or parallel work | Root Orchestrator |
-| `readme/retrospectives.md` | Searchable cross-session correction and process-learning signals | Agent observing the signal |
-| `readme/framework-changelog.md` | Auditable framework edits, pilots, and sunset triggers | Agent changing the framework |
+| `readme/tasks/` | Status and resume detail for long-running, paused, or parallel work | Root Orchestrator |
+| `readme/quality/` | Durable readiness, verification, review, and completion evidence | Root Orchestrator or QA owner |
+| `readme/threat-models/` | Security and trust-boundary analysis | Security or risk owner |
+| `readme/incidents/` | Blameless incident and near-miss learning | Incident owner |
+| `readme/learning/retrospectives.md` | Searchable cross-session correction and process-learning signals | Agent observing the signal |
+| `readme/learning/framework-changelog.md` | Auditable framework edits, pilots, and sunset triggers | Agent changing the framework |
 
-`state.md` is mandatory because it is the cold-start index. Create every other project
-artifact only when it has real content.
+`readme/README.md` is mandatory after onboarding because it is the cold-start cursor and
+documentation index. Create every other project artifact only when it has real content.
 
 ## One Home Per Fact
 
@@ -35,8 +40,8 @@ between the brief, assumptions, glossary, and source map.
 
 ## State Rules
 
-Read `state.md` at every session start and refresh it at every task close. During active
-work it answers:
+Read `readme/README.md` at every session start and refresh it at every task close. During
+active work it answers:
 
 - What outcome is active, by which route, and where is the detailed task note?
 - What is the next safe action?
@@ -100,7 +105,7 @@ without changing it.
 | Artifact | Budget | Overflow Rule | Maintenance Owner |
 | --- | ---: | --- | --- |
 | `AGENTS.md` | 120 lines, hard | Move detail to an owning process doc and link it | Root Orchestrator |
-| `state.md` | 80 lines, hard | Move detail to task notes or decisions; retain only current pointers | Root Orchestrator |
+| `readme/README.md` | 80 lines, hard | Move detail to task notes or decisions; retain only current pointers | Root Orchestrator |
 | Project brief | 200 lines | Split stable technical detail to project context | Product Analyst or Root Orchestrator |
 | Project context | 160 lines | Move broad standards or decision rationale to their owners | Architect or Root Orchestrator |
 | Standards and command catalog | 240 lines | Split topic-specific standards only when one owner remains explicit | Root Orchestrator |
@@ -119,9 +124,9 @@ empty archive directory. Archives are read on a targeted lookup, not every task.
 
 The Root Orchestrator runs a consistency and pruning pass after 10 completed
 repository-changing tasks or 30 days since the last pass, whichever occurs first. The
-state file holds both counters. The pass must:
+project cursor holds both counters. The pass must:
 
-1. validate state pointers, parked approvals, and canonical command links;
+1. validate cursor pointers, parked approvals, and canonical command links;
 2. find budgets over limit and apply their overflow rules;
 3. mark or supersede stale guidance and sources;
 4. search retrospective repeats and evaluate due framework pilots or sunsets;

@@ -45,10 +45,10 @@
 
 ## Canonical Knowledge Links
 
-- Open assumptions: `readme/assumptions.md` or None
-- Glossary: `readme/glossary.md` or None
-- Source map: `readme/source-map.md` or None
-- Project context: `readme/project-context.md` or None
+- Open assumptions: `readme/project/assumptions.md` or None
+- Glossary: `readme/project/glossary.md` or None
+- Source map: `readme/project/source-map.md` or None
+- Project context: `readme/project/context.md` or None
 
 Do not copy assumption, glossary, source, or technical-context facts into this brief.
 Link their canonical home.

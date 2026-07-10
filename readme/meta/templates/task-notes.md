@@ -1,7 +1,7 @@
 # Task Notes
 
-Use for long-running, paused, or parallel work. `readme/state.md` points to the one active
-note; this file owns the detail that would overflow state.
+Use for long-running, paused, or parallel work. `readme/README.md` points to the one
+active note; this file owns detail that would overflow the project cursor.
 
 ## Task Cursor
 

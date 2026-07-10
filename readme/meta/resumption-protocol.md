@@ -16,8 +16,8 @@ agent restart, approval waits, and deliberate user interruption.
 
 ## Durable Cursor
 
-[state.md](state.md) is the first pointer. For long-running, risky, paused, or parallel
-work, it links one active `readme/task-notes/NNNN-topic.md` created from
+`readme/README.md` is the first pointer. For long-running, risky, paused, or parallel
+work, it links one active `readme/tasks/NNNN-topic-notes.md` created from
 [templates/task-notes.md](templates/task-notes.md). The note contains:
 
 - latest user instruction, goal, route, criteria, and plan;
@@ -35,8 +35,8 @@ are enough to recover it.
 
 ## Resume Loop
 
-1. Read `AGENTS.md`, [state.md](state.md), the latest user message, and the active task
-   note if linked.
+1. Read `AGENTS.md`, the meta README, `readme/README.md`, the latest user message, and
+   the active task note if linked.
 2. Classify the interruption and apply the newest instruction before older plans.
 3. Inspect `git status`, recent commits, relevant diffs, running tools, and integration
    state. Do not repeat a risky side effect until its prior result is known.

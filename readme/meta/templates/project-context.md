@@ -1,6 +1,6 @@
 # Project Context
 
-Use this file as the concise implementation context that agents load before code changes. It complements `readme/project-brief.md`: the brief explains product intent, while this file captures technical conventions that prevent inconsistent implementation.
+Use this file as the concise implementation context that agents load before code changes. It complements `readme/project/brief.md`: the brief explains product intent, while this file captures technical conventions that prevent inconsistent implementation.
 
 ## Scope
 

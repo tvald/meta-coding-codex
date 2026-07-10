@@ -1,11 +1,13 @@
 # Project Standards
 
-This file extends the shared standards in `readme/development-standards.md`. Add only project-specific rules that are actionable and verifiable.
+This file extends the shared standards in `readme/meta/development-standards.md`. Add
+only project-specific rules that are actionable and verifiable.
 
 ## Commands
 
-The instantiated `readme/standards.md` is the sole canonical command catalog. Add only
-commands verified by successful execution; link here instead of copying them elsewhere.
+The instantiated `readme/project/standards.md` is the sole canonical command catalog.
+Add only commands verified by successful execution; link here instead of copying them
+elsewhere.
 
 | Action | Exact Command | Prerequisites | Observed Result | Last Verified |
 | --- | --- | --- | --- | --- |

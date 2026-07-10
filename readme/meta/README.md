@@ -1,0 +1,130 @@
+# AI Coding Meta-Framework
+
+This directory is the self-contained, reusable entrypoint for a portable, markdown-only
+framework that gives coding agents an operating loop, durable project memory,
+risk-scaled quality gates, and explicit autonomy boundaries without a runtime dependency.
+
+Every primary harness session and every delegated agent must read this file before task
+work. This file explains what is reusable, what belongs to the host project, and which
+process owner to load next.
+
+## Startup Order
+
+1. Read the applicable root `AGENTS.md` instructions.
+2. Read this meta README in full.
+3. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
+4. Read only the process and project documents relevant to the assignment.
+
+If `readme/README.md` is missing or does not begin with `# Project State`, the add-on is
+not fully onboarded. A primary session follows [onboarding.md](onboarding.md), preserving
+any colliding documentation, and creates the cursor from
+[project-state.md](templates/project-state.md). A delegated agent does not initialize
+shared documentation unless the orchestrator assigned that ownership.
+
+## Directory Contract
+
+`readme/meta/` contains only reusable framework policy, references, and blank templates.
+Project facts, decisions, commands, active work, reviews, learning, and archives never
+become part of the reusable package.
+
+The host project's agent-maintained documentation uses these mutable paths:
+
+| Path | Purpose |
+| --- | --- |
+| `readme/README.md` | Always-read current focus, next action, approvals, recent outcomes, and documentation index |
+| `readme/project/` | Stable project brief, context, standards, assumptions, glossary, source map, automation backlog, and project-specific agent guidance |
+| `readme/decisions/` | Append-only significant project or local-framework decisions |
+| `readme/tasks/` | Task briefs and resumable task notes |
+| `readme/quality/` | Durable readiness, verification, and review records |
+| `readme/threat-models/` | Lightweight security and trust-boundary analyses |
+| `readme/incidents/` | Incident and near-miss records |
+| `readme/learning/` | Retrospectives and the local framework changelog |
+| `readme/archive/` | Overflow moved from active artifacts without rewriting history |
+
+Create optional files and directories only when they will contain useful information.
+Established host documentation may remain at its required conventional location; link
+to its canonical owner instead of copying facts into framework-managed records.
+
+## Principles
+
+- Outcome first; context before code.
+- One provisional workflow route, with risk as an independent safety overlay.
+- Small reversible steps and observed verification results.
+- One canonical home for each fact, rule, decision, and command catalog.
+- Repository-backed state and learning instead of assumed session memory.
+- Agents maintain process memory; product owners make consequential product decisions.
+- Repeated failures improve the system, with every local framework edit auditable.
+
+## Process Map
+
+- [root-loop.md](root-loop.md): operating loop for every task.
+- [workflow-routing.md](workflow-routing.md): single route table and escalation triggers.
+- [onboarding.md](onboarding.md): cold-start inventory, command derivation, ingestion,
+  state initialization, and cold-start proof.
+- [knowledge-ingestion.md](knowledge-ingestion.md): source trust, synthesis, acceptance
+  criteria, and conflict handling.
+- [knowledge-management.md](knowledge-management.md): canonical artifacts, budgets,
+  archives, and maintenance cadence.
+- [automation-policy.md](automation-policy.md): standing authority, approvals, commands,
+  and local commits.
+- [resumption-protocol.md](resumption-protocol.md): interruption and worker recovery.
+- [agent-definitions.md](agent-definitions.md): optional roles, decomposition,
+  integration, and shared-work safety.
+- [development-standards.md](development-standards.md): default engineering standards.
+- [quality-system.md](quality-system.md): risk gates, verification, review, security, and
+  completion statuses.
+- [framework-improvement.md](framework-improvement.md): evidence-based local framework
+  edits, pilots, and sunset checks.
+- [references.md](references.md): primary research basis.
+
+## Eleven-Template Catalog
+
+- [project-state.md](templates/project-state.md) → `readme/README.md`: bounded project
+  cursor and documentation index.
+- [project-brief.md](templates/project-brief.md) → `readme/project/brief.md`: product
+  outcomes and constraints.
+- [project-context.md](templates/project-context.md) → `readme/project/context.md`:
+  concise technical conventions.
+- [standards.md](templates/standards.md) → `readme/project/standards.md`: project rules
+  and verified command catalog.
+- [assumptions.md](templates/assumptions.md) → `readme/project/assumptions.md`:
+  consequential uncertainty.
+- [decision-record.md](templates/decision-record.md) → `readme/decisions/`: significant
+  choices.
+- [task-brief.md](templates/task-brief.md) and
+  [task-notes.md](templates/task-notes.md) → `readme/tasks/`: scoped outcomes and
+  resumable work.
+- [quality-record.md](templates/quality-record.md) → `readme/quality/`: readiness,
+  verification, review, consistency, and completion evidence.
+- [threat-model-card.md](templates/threat-model-card.md) → `readme/threat-models/`:
+  lightweight agent-aware threats.
+- [incident-note.md](templates/incident-note.md) → `readme/incidents/`: blameless
+  incident and near-miss learning.
+
+Blank templates are schemas, not additional homes for project facts. The glossary and
+source-map schemas live in [knowledge-management.md](knowledge-management.md); create
+every project artifact only after it has useful content.
+
+## Package And Bootstrap
+
+A clean add-on package contains this `readme/meta/` tree and a merged root AGENTS startup
+instruction. It excludes `readme/README.md` and every mutable project-documentation
+sibling. Packaging is the supported reset path; do not delete an existing project's
+documentation to simulate a reset.
+
+On first use:
+
+1. The primary session reads root instructions and this file.
+2. It runs [onboarding.md](onboarding.md) because the project cursor is absent or
+   recognizes and safely resolves an existing non-cursor file at that path.
+3. It instantiates the project cursor from
+   [project-state.md](templates/project-state.md).
+4. It derives commands from manifests and CI, executes safe candidates, and records
+   only observed successes in `readme/project/standards.md`.
+5. It creates project knowledge categories only when inventory produces real content.
+6. It proves a new agent can recover the outcome, focus, next action, commands,
+   constraints, and approvals from repository evidence.
+
+For greenfield work, record product and technology choices as decisions rather than
+pretending to derive them. For an established project, preserve existing instruction
+and documentation owners and link them from the appropriate project records.

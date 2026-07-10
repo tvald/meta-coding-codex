@@ -41,8 +41,8 @@ Re-route immediately when:
 
 ## Next-Action Router
 
-At the end of substantial work, record one concrete next action in [state.md](state.md)
-or the active task note:
+At the end of substantial work, record one concrete next action in `readme/README.md` or
+the active task note:
 
 - implement the next ready slice;
 - review a named diff or artifact;

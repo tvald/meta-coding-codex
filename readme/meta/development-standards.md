@@ -1,6 +1,6 @@
 # Development Standards
 
-These standards apply unless the project has a more specific standard in `readme/standards.md` or an accepted decision record.
+These standards apply unless the project has a more specific standard in `readme/project/standards.md` or an accepted decision record.
 
 ## General Engineering
 

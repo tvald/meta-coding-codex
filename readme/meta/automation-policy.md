@@ -19,7 +19,7 @@ Agents may do these without asking when they are relevant to the current task:
 - Install local development utilities needed to inspect, test, or format the project when repository policy allows it.
 - Refactor narrowly when required to implement the requested change safely.
 - Patch this framework when a clear repeated gap or user preference should become durable.
-- Read and maintain `readme/state.md`; append concrete learnings and framework edits to
+- Read and maintain `readme/README.md`; append concrete learnings and framework edits to
   their canonical logs when triggered.
 - Create a local, task-scoped commit after completing and verifying file changes in a Git repository, following [Local Commit Completion](#local-commit-completion).
 - Continue after a clarification window using explicit assumptions.
@@ -96,22 +96,22 @@ response behavior.
 
 At the end of each non-trivial task, the agent should decide whether to update:
 
-- `readme/state.md` for the current cursor, recent outcome, and hygiene counter.
-- `readme/project-brief.md` for stable product facts.
-- `readme/assumptions.md` for unresolved uncertainty.
-- `readme/source-map.md` for important sources and freshness.
-- `readme/glossary.md` for domain vocabulary.
+- `readme/README.md` for the current cursor, recent outcome, and hygiene counter.
+- `readme/project/brief.md` for stable product facts.
+- `readme/project/assumptions.md` for unresolved uncertainty.
+- `readme/project/source-map.md` for important sources and freshness.
+- `readme/project/glossary.md` for domain vocabulary.
 - `readme/decisions/` for meaningful choices.
-- `readme/standards.md` for project-specific rules.
-- `readme/task-notes/` for resumable work.
-- `readme/retrospectives.md` for concrete cross-session learning signals.
+- `readme/project/standards.md` for project-specific rules.
+- `readme/tasks/` for resumable work.
+- `readme/learning/retrospectives.md` for concrete cross-session learning signals.
 - This framework for process improvements.
 
 If no durable knowledge changed, do not create noise.
 
 ## Automation Backlog
 
-When an agent notices a repeatable manual step that cannot be automated immediately, it should record it in the relevant task note or `readme/automation-backlog.md`:
+When an agent notices a repeatable manual step that cannot be automated immediately, it should record it in the relevant task note or `readme/project/automation-backlog.md`:
 
 ```md
 ## Automation Candidate
@@ -124,11 +124,11 @@ When an agent notices a repeatable manual step that cannot be automated immediat
 - Status:
 ```
 
-Create `readme/automation-backlog.md` only after the first real candidate exists.
+Create `readme/project/automation-backlog.md` only after the first real candidate exists.
 
 ## Verification Automation
 
-`readme/standards.md` is the sole canonical command catalog. Existing manifests, task
+`readme/project/standards.md` is the sole canonical command catalog. Existing manifests, task
 runners, CI files, or instruction docs remain executable sources, but the catalog links
 their exact verified invocation and other docs link back to the catalog. Derive it by
 following [onboarding.md](onboarding.md), not by copying aspirational commands.
@@ -164,7 +164,7 @@ A required approval blocks the dependent action, not unrelated safe work within 
 existing scope. Checkpoint the gated item, continue independent work when useful, and
 batch compatible decision requests so the product owner can resolve them together.
 
-Park each unresolved approval in `readme/state.md` and put any necessary detail in the
+Park each unresolved approval in `readme/README.md` and put any necessary detail in the
 linked task note. Present a decision in ten lines or fewer using:
 
 ```md

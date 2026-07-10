@@ -191,9 +191,9 @@ isolated checkout needs an approved shared commit, patch, or equivalent transfer
 safe transfer exists, do not decompose. Do not create unauthorized checkpoint commits
 merely to satisfy parallelism.
 
-- Use one writer at a time for `state.md`, task notes, decisions, command catalogs, and
-  other shared knowledge files. Workers return proposed knowledge updates to the Root
-  Orchestrator unless explicitly assigned ownership.
+- Use one writer at a time for `readme/README.md`, task notes, decisions, command
+  catalogs, and other shared knowledge files. Workers return proposed knowledge updates
+  to the Root Orchestrator unless explicitly assigned ownership.
 - Integrate the smallest coherent worker result first. Run its focused checks before
   integration, then the affected integration checks after each merge or integration
   batch. Run the full task-required suite after all results are combined.

@@ -18,8 +18,9 @@ repository state, verification, documentation, and durable decisions consistent.
 
 ## 0. Resume
 
-Read [state.md](state.md) at every session start, then the latest user instruction and
-any task note it points to. Inspect repository status and recent commits before editing.
+Read `readme/README.md` at every session start after the meta README, then the latest
+user instruction and any task note it points to. Inspect repository status and recent
+commits before editing.
 If work is interrupted, approval-gated, redirected, or has stale workers, follow
 [resumption-protocol.md](resumption-protocol.md). Never ask the product owner to restate
 recoverable context.
@@ -96,7 +97,7 @@ a required passing result.
 
 While context is fresh:
 
-- update [state.md](state.md) with focus, next action, approvals, and completion;
+- update `readme/README.md` with focus, next action, approvals, and completion;
 - create or update a task note for long-running or paused work;
 - record significant choices in `readme/decisions/`;
 - update the canonical product, technical, assumption, glossary, source, or standards
@@ -110,7 +111,7 @@ rules.
 
 For substantial work, check whether there was a concrete correction, repeated friction,
 missing context home, late check, or unnecessary ceremony. Search
-[retrospectives.md](retrospectives.md) and its archives before appending a learning. Use
+`readme/learning/retrospectives.md` and its archives before appending a learning. Use
 [framework-improvement.md](framework-improvement.md) when the evidence warrants a rule,
 template, or process change.
 
@@ -120,8 +121,8 @@ For a completed file-changing task in Git, follow
 [automation-policy.md](automation-policy.md#local-commit-completion). Review and stage
 only task-owned changes, inspect the staged diff, commit, and confirm `HEAD` and status.
 
-Refresh `state.md` at close: clear or repoint current focus, record the outcome, increment
-the hygiene task count, and set the next action. Close with one status:
+Refresh `readme/README.md` at close: clear or repoint current focus, record the outcome,
+increment the hygiene task count, and set the next action. Close with one status:
 
 - **Done:** requested outcome achieved and all required runnable checks passed.
 - **Needs verification:** implementation is present but a named required check is
