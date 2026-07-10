@@ -15,6 +15,7 @@ Run this loop until the task is complete:
 6. Verify
 7. Record
 8. Improve
+9. Commit
 
 ## 0. Resume Check
 
@@ -142,6 +143,18 @@ After verification, ask:
 
 Patch the relevant markdown file when the answer implies future value. Prefer small improvements tied to observed evidence.
 
+## 9. Commit
+
+When a completed task changed files in a Git repository, follow
+[automation-policy.md](automation-policy.md#local-commit-completion): review and stage
+only task-owned changes, inspect the staged diff, create the local commit, and confirm
+the resulting commit and repository status before the final response.
+
+If the user opted out or a repository, technical, or safety blocker prevents the commit,
+provide an explicitly uncommitted, incomplete handoff that names the affected task files
+and exact exception. Do not report completion while task-owned changes remain
+uncommitted.
+
 ## Clarification Window
 
 When a task starts with a product owner available:
@@ -160,5 +173,10 @@ A task is complete when:
 - The requested outcome is implemented or the blocker is proven.
 - Relevant checks ran or residual risk is stated.
 - Durable knowledge was updated where needed.
+- Task-owned file changes in a Git repository are committed locally.
 - The next action is clear when work continues beyond this task.
 - The final response states what changed, how it was verified, and any remaining risk.
+
+When an explicit opt-out or blocker leaves task-owned changes uncommitted, stop with an
+uncommitted, incomplete handoff that names the affected files and exact reason. That
+handoff is not task completion.

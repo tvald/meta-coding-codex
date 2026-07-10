@@ -102,6 +102,7 @@ Docs should be concise, current, and executable where possible.
 ## Git And Change Management
 
 - Keep commits and patches logically scoped.
+- For completed file-changing tasks, follow the local commit completion policy in [automation-policy.md](automation-policy.md#local-commit-completion) before reporting completion.
 - Use clear change summaries.
 - Prefer conventional commit shape when the project has no other convention: `type(scope): summary`.
 - Do not rewrite history, reset, or discard unrelated work unless explicitly asked.

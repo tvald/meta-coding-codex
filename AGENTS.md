@@ -13,6 +13,7 @@ For every task, run this loop until the goal is genuinely handled:
 5. Verify: run the relevant checks, review the diff, inspect user-facing behavior when applicable, and note anything not verified.
 6. Record knowledge: update decisions, assumptions, task notes, or framework guidance when new durable information appears.
 7. Improve the framework: if the same mistake can happen again, patch the relevant markdown rule or template.
+8. Commit completed changes: in a Git repository, create a local commit containing only task-owned changes before reporting completion. If the user opts out or a concrete repository, technical, or safety blocker prevents it, report an explicitly uncommitted, incomplete handoff. Follow [readme/automation-policy.md](readme/automation-policy.md#local-commit-completion).
 
 ## Autonomy
 

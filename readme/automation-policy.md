@@ -14,9 +14,44 @@ Agents may do these without asking when they are relevant to the current task:
 - Install local development utilities needed to inspect, test, or format the project when repository policy allows it.
 - Refactor narrowly when required to implement the requested change safely.
 - Patch this framework when a clear repeated gap or user preference should become durable.
+- Create a local, task-scoped commit after completing and verifying file changes in a Git repository, following [Local Commit Completion](#local-commit-completion).
 - Continue after a clarification window using explicit assumptions.
 - Resume interrupted work from repository state, task notes, plans, and agent rosters without asking the product owner to reconstruct context.
 - Re-spawn stale or lost sub-agents only when their work is still needed and their ownership boundaries remain safe.
+
+## Local Commit Completion
+
+A completed task that changes files in a Git repository must end with a local commit.
+The agent does this without asking for separate approval after implementation and
+verification are complete.
+
+Use this sequence:
+
+1. Inspect repository status and the working diff, including knowledge or framework
+   edits made late in the task. Run any checks those late edits require.
+2. Select only files or hunks owned by the current task. Use explicit paths or another
+   demonstrably task-scoped staging method. Never use convenience or blanket staging
+   that could absorb unrelated user or concurrent-agent work.
+3. Inspect the staged diff for scope, correctness, secrets, generated files, and other
+   material that should not be committed.
+4. Create a local commit with a clear message, using the repository's convention or the
+   default in [development-standards.md](development-standards.md#git-and-change-management).
+5. Inspect the resulting `HEAD` and repository status. Include the commit hash in the
+   final response.
+
+Do not commit when the user explicitly says not to, repository instructions prohibit
+commits, the directory is not a Git repository, or a concrete technical or safety
+blocker prevents a clean task-scoped commit. Pre-existing unrelated changes are not a
+blocker when the task changes can be isolated, but they must be preserved and must not
+be described as a clean worktree.
+
+If an exception applies or any task-owned change remains uncommitted, the task is not
+cleanly complete. The final response must name the uncommitted files and the exact
+exception or blocker instead of claiming complete delivery.
+
+This authority covers creating new local task commits only. It does not authorize
+amending commits, rebasing, resetting, creating or switching branches, pushing,
+releasing, deploying, or otherwise rewriting or publishing history.
 
 ## Stop Or Ask First
 

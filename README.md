@@ -45,7 +45,9 @@ For each task, the agent follows the same basic loop:
 5. **Verify the result.** It runs checks proportionate to the risk and inspects the diff.
 6. **Preserve useful knowledge.** It records durable decisions, assumptions, or project
    conventions when future work would benefit from them.
-7. **Report clearly.** It explains what changed, what was verified, and any remaining
+7. **Commit completed file changes.** In a Git repository, it creates a local commit
+   containing only task-owned changes.
+8. **Report clearly.** It explains what changed, what was verified, and any remaining
    risk or next action.
 
 This loop exists so you can focus on product and engineering outcomes instead of
@@ -74,6 +76,12 @@ The default is for the agent to proceed with safe work inside the scope you set.
 includes reading the repository, editing relevant files, adding tests, running local
 checks, researching time-sensitive facts, and maintaining useful project documentation.
 
+After a file-changing task is verified in a Git repository, the agent normally creates
+a local commit containing only the task's changes and includes its hash in the final
+response. This does not authorize a push, release, deployment, branch operation, or
+history rewrite. If a commit is unsafe or blocked, the agent identifies the uncommitted
+files and the exact reason instead of claiming complete delivery.
+
 The agent stops or asks before actions such as destructive data changes, irreversible
 production operations, releases, external communications, charges, customer-data
 changes, or consequential security and permission changes. A required approval blocks
@@ -89,8 +97,13 @@ A task is complete when:
 
 - the requested outcome is implemented, or a concrete blocker is demonstrated;
 - relevant checks have passed, or skipped checks and their residual risk are stated;
-- code, tests, documentation, and durable decisions agree where applicable; and
+- code, tests, documentation, and durable decisions agree where applicable;
+- task-owned file changes in a Git repository are locally committed; and
 - the final response tells you what changed, how it was verified, and what remains.
+
+If an explicit opt-out or blocker leaves task-owned changes uncommitted, the agent
+reports an uncommitted, incomplete handoff with the affected files and exact reason. It
+does not describe that handoff as complete delivery.
 
 The exact evidence depends on the change. A documentation edit may need only a careful
 read-through and link check. A behavior change may need tests, linting, type checks, a

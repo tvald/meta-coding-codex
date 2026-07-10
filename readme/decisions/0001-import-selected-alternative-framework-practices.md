@@ -15,7 +15,7 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [0002: Make Local Task Commits The Default Completion Step](0002-default-local-task-commits.md), only for the statement that the imported controls do not authorize commits. All other parts of this decision remain accepted.
 
 ## Context
 
