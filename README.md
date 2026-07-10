@@ -1,0 +1,121 @@
+# AI-Assisted Development Framework
+
+This repository contains a portable, markdown-only framework for working with AI coding
+agents. Add it to a project to give agents a consistent way to turn a request into a
+focused, verified, and documented change.
+
+The framework is an operating guide, not a runtime dependency. It does not add code to
+your product or require a particular language, platform, or agent tool. Its detailed
+rules live in [`AGENTS.md`](AGENTS.md) and the [`readme/`](readme/README.md) directory;
+this page is the human-facing overview.
+
+## How You Work With It
+
+Describe the outcome you want in normal language. You do not need to choose an agent
+role, select a workflow, or maintain the framework's project notes yourself.
+
+A useful request usually includes whatever you already know about:
+
+- the result you want;
+- important context or examples;
+- constraints, non-goals, or things that must not change; and
+- what would convince you the work is complete.
+
+For example:
+
+> Fix the account export so dates use the customer's timezone. Preserve the current CSV
+> columns, add a regression test, and update any affected documentation.
+
+If some of that information is missing, the agent inspects the repository and makes
+safe, reversible assumptions where it can. It asks concise questions only when an answer
+would materially change the result or when proceeding could be harmful.
+
+## What The Framework Does
+
+For each task, the agent follows the same basic loop:
+
+1. **Understand the goal.** It identifies the requested outcome, constraints, risks, and
+   completion criteria.
+2. **Gather context.** It reads relevant code, tests, documentation, decisions, and, when
+   necessary, current primary sources.
+3. **Choose the smallest safe path.** A small fix stays small; ambiguous, cross-cutting,
+   or high-risk work receives more discovery and review.
+4. **Make focused changes.** It preserves project conventions, avoids unrelated edits,
+   and updates tests and documentation with the behavior they describe.
+5. **Verify the result.** It runs checks proportionate to the risk and inspects the diff.
+6. **Preserve useful knowledge.** It records durable decisions, assumptions, or project
+   conventions when future work would benefit from them.
+7. **Report clearly.** It explains what changed, what was verified, and any remaining
+   risk or next action.
+
+This loop exists so you can focus on product and engineering outcomes instead of
+reminding the agent to inspect context, run tests, or keep documentation current.
+
+## What To Expect At Different Scales
+
+The framework deliberately avoids giving every task the same amount of ceremony.
+
+| Situation | What you should expect |
+| --- | --- |
+| Small, low-risk change | A focused edit, a lightweight check, and a short result summary |
+| Unclear requirement | A few high-value questions or explicit, documented assumptions |
+| Existing or unfamiliar codebase | Inspection of local patterns, commands, tests, and compatibility constraints before editing |
+| Hard-to-reverse choice | Options and tradeoffs recorded in a decision record before the choice becomes difficult to undo |
+| Security-sensitive or production-impacting work | Deeper review, risk-specific checks, and a rollback or mitigation path |
+| Long-running or interrupted work | Durable task notes and a reconstructed next step rather than asking you to repeat recoverable context |
+
+A single capable agent is the default. Specialized agents may be coordinated when the
+task and available tooling justify the extra overhead, but you continue to interact with
+the agent responsible for the overall outcome.
+
+## Autonomy And Your Control
+
+The default is for the agent to proceed with safe work inside the scope you set. This
+includes reading the repository, editing relevant files, adding tests, running local
+checks, researching time-sensitive facts, and maintaining useful project documentation.
+
+The agent stops or asks before actions such as destructive data changes, irreversible
+production operations, releases, external communications, charges, customer-data
+changes, or consequential security and permission changes. A required approval blocks
+that action, not unrelated safe work.
+
+You can redirect the work at any time. The newest instruction takes priority. If you say
+to stop, pause, wait, or cancel, the agent should halt conflicting work and preserve
+enough state to resume safely later.
+
+## What “Done” Means
+
+A task is complete when:
+
+- the requested outcome is implemented, or a concrete blocker is demonstrated;
+- relevant checks have passed, or skipped checks and their residual risk are stated;
+- code, tests, documentation, and durable decisions agree where applicable; and
+- the final response tells you what changed, how it was verified, and what remains.
+
+The exact evidence depends on the change. A documentation edit may need only a careful
+read-through and link check. A behavior change may need tests, linting, type checks, a
+build, or manual inspection. High-risk work receives security, rollback, and operational
+readiness checks as appropriate.
+
+## Project Memory Without Babysitting
+
+As a project grows, agents create and maintain only the records that carry useful
+information. These can include a product brief, technical project context, open
+assumptions, decision records, workflow status, and resumable task notes. Empty process
+files are not created just to satisfy a checklist.
+
+This repository-based memory helps a new or returning agent recover context from the
+project itself. You remain the authority on goals and consequential choices, but you are
+not expected to act as the framework's note-taker.
+
+## Add It To A Project
+
+1. Copy [`AGENTS.md`](AGENTS.md) and the [`readme/`](readme/README.md) directory into the
+   project, merging with any existing project instructions rather than discarding them.
+2. Add project-specific build, test, lint, and run commands to the repository's canonical
+   instruction or standards file as they are verified.
+3. Give the agent a real goal. It will create project briefs, decision records, or other
+   memory files only when the work first needs them.
+
+For the complete process, file map, and templates, see the
+[`readme/README.md`](readme/README.md) framework index.
