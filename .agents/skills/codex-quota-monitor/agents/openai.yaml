@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Quota Monitor"
+  short_description: "Monitor Codex quota before subagent work"
+  default_prompt: "Use $codex-quota-monitor to check whether Codex has capacity for subagent work."

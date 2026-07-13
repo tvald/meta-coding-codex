@@ -1,7 +1,7 @@
 # AI-Assisted Development Framework
 
 This repository contains a portable, Markdown-only core for AI-assisted software
-development plus optional declarative Codex and Claude Code agent adapters. It is
+development plus optional Codex and Claude Code harness integrations. It is
 designed to be added to an existing project without bringing along the decisions, task
 history, or documentation state of the framework repository itself.
 
@@ -22,12 +22,15 @@ Optional harness integration files are:
 
 - `CLAUDE.md`, which imports the canonical root instructions for Claude Code;
 - `.codex/agents/`, containing thin Codex custom-agent adapters; and
-- `.claude/agents/`, containing the matching Claude Code subagent adapters.
+- `.claude/agents/`, containing the matching Claude Code subagent adapters; and
+- `.agents/skills/codex-quota-monitor/`, containing the dependency-free Codex App
+  Server telemetry procedure used by the capacity guard.
 
 These adapters expose only Reviewer, Verifier, and Security Reviewer during the pilot.
 They do not own process semantics, add executable code or dependencies, pin models, add
 MCP servers, or expand parent permissions. Omit them when the destination does not use
-the corresponding harness.
+the corresponding harness. The quota-monitor skill is separate from that pilot, owns no
+threshold policy, and can be omitted when the destination does not use Codex subagents.
 
 Everything else under `readme/` is mutable documentation for this repository as a
 project. It is useful here but is intentionally excluded from a clean add-on package.
@@ -39,9 +42,10 @@ project. It is useful here but is intentionally excluded from a clean add-on pac
    destination's applicable agent instructions.
 3. For Claude Code, merge the `@AGENTS.md` import into an existing `CLAUDE.md`, or copy
    this bridge when no project file exists. Never replace established Claude guidance.
-4. Optionally merge the files from `.codex/agents/` and `.claude/agents/` for the
-   harnesses the destination uses. Resolve same-name agents deliberately; never
-   overwrite an existing definition blindly.
+4. Optionally merge the files from `.codex/agents/`, `.claude/agents/`, and
+   `.agents/skills/codex-quota-monitor/` for the harnesses and quota monitoring the
+   destination uses. Resolve same-name agents or skills deliberately; never overwrite
+   an existing definition blindly.
 5. Do not copy `readme/README.md` or the sibling project-documentation directories.
 6. Start a primary agent session. It reads the meta README and follows onboarding to
    initialize useful project documentation. If `readme/README.md` already contains

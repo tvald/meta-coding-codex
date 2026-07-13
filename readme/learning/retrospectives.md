@@ -23,6 +23,20 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-13-02
+
+- What happened: Follow-up evaluation found that the installed Codex App Server exposes
+  supported rate-limit RPC data even though the CLI has no `usage` subcommand, and a
+  valid response exposed a weekly window while omitting a five-hour window.
+- Framework or knowledge gap: Decision 0006 named no Codex acquisition path and could
+  conflate an explicitly absent window with failed telemetry, causing permanent
+  conservative suspension.
+- Change made or follow-up: Added the dependency-free `codex-quota-monitor` repo skill
+  and Decision 0007, with initialized App Server reads, valid-absence semantics, and
+  failed-read safety linked back to the canonical guard.
+- Tags: codex, skills, app-server, telemetry, quota, null-semantics, dependencies
+- Earlier occurrence: [R-2026-07-13-01](#r-2026-07-13-01)
+
 ### R-2026-07-13-01
 
 - What happened: The product owner required child workers to stop before five-hour or

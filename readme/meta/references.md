@@ -28,6 +28,12 @@ These sources influenced the framework. Agents should use current primary source
 - OpenAI, "Subagents": project-scoped custom Codex agents, configuration layers,
   sandbox controls, and multi-agent coordination (checked 2026-07-10):
   https://learn.chatgpt.com/docs/agent-configuration/subagents
+- OpenAI, "Skills": repo-scoped reusable Codex workflows with optional scripts and
+  progressive disclosure (checked 2026-07-13):
+  https://learn.chatgpt.com/docs/customization/overview#skills
+- OpenAI, "Codex App Server": initialized JSONL transport plus ChatGPT rate-limit read
+  and update messages (checked and locally exercised 2026-07-13):
+  https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt
 - Anthropic, "Create custom subagents": project-scoped Claude Code agent files, tool
   restrictions, permission modes, and delegation behavior (checked 2026-07-10):
   https://code.claude.com/docs/en/sub-agents
