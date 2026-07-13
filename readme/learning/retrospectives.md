@@ -23,6 +23,18 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-13-01
+
+- What happened: The product owner required child workers to stop before five-hour or
+  weekly capacity exhaustion and to resume after reset without manual monitoring.
+- Framework or knowledge gap: Delegation had a concurrency cap and worker recovery but
+  no usage meter, capacity cutoff, reset wait, or safe behavior for missing telemetry.
+- Change made or follow-up: Adopted Decision 0006 with authoritative dual-window checks,
+  a 95% suspension boundary, durable checkpoints, timer-plus-verification behavior, and
+  a five-minute polling fallback.
+- Tags: subagents, usage, quota, capacity, suspension, resumption, timers, polling
+- Earlier occurrence: None
+
 ### R-2026-07-10-03
 
 - What happened: The portable package used only `AGENTS.md` as its root launcher even

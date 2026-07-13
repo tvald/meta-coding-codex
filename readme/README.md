@@ -34,6 +34,7 @@ Keep at most five entries.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
+| 2026-07-13 | Added quota-aware subagent suspension, reset waiting, and verified resumption | [Decision 0006](decisions/0006-guard-subagent-usage-capacity.md) |
 | 2026-07-10 | Added the optional Codex and Claude Code three-role agent-adapter pilot | [Decision 0005](decisions/0005-pilot-optional-agent-adapters.md) |
 | 2026-07-10 | Packaged the reusable framework under `readme/meta/` and separated categorized project documentation | [Decision 0004](decisions/0004-package-framework-as-addon.md) |
 | 2026-07-10 | Dispositioned all framework critique concerns and aligned the framework | [Decision 0003](decisions/0003-address-framework-critique.md) |
@@ -58,5 +59,5 @@ Keep at most five entries.
 ## Hygiene
 
 - Last consistency and pruning pass: 2026-07-10
-- Completed repository-changing tasks since that pass: 1
+- Completed repository-changing tasks since that pass: 2
 - Next pass due: 2026-08-09 or after 10 completed repository-changing tasks, whichever comes first

@@ -13,6 +13,7 @@ agent restart, approval waits, and deliberate user interruption.
 | User guidance | Changed constraint, goal, example, or priority | Halt conflicting work, reframe, update state, plan, and assignments |
 | User stop | Stop, pause, cancel, wait, hold on | Stop nonessential work, checkpoint state, close or suspend workers, and do not continue |
 | Worker loss | Stale worker, missing result, crashed tool | Reconcile shared state; recover only work still needed and safe to own |
+| Capacity wait | Five-hour or weekly usage is at least 95%, or required telemetry is unknown | Checkpoint and suspend workers; wait or poll; resume only after a fresh safe reading |
 
 ## Durable Cursor
 
@@ -47,6 +48,18 @@ are enough to recover it.
 6. Re-run only the checks needed to establish current state, then continue or report the
    concrete blocker.
 7. Refresh state and the task note after meaningful progress and before a long pause.
+
+## Capacity-Wait Recovery
+
+[The usage capacity guard](agent-definitions.md#usage-capacity-guard) owns thresholds,
+meter cadence, suspension, and timer-versus-poll selection. A reset timer merely wakes
+the Root Orchestrator: re-read both windows before resuming. If one limiting window did
+not reset or telemetry is unavailable, update the checkpoint and continue waiting.
+
+Prefer the original suspended handle after a safe reading. If it cannot resume, inspect
+its last output and repository state before replacing it under the normal worker
+recovery rules. Keep the task active or parked during the wait; do not report a terminal
+completion status solely because capacity is temporarily unavailable.
 
 ## Worker And Worktree Recovery
 

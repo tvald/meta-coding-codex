@@ -91,8 +91,8 @@ host projects may omit the pilot entirely.
 - [automation-policy.md](automation-policy.md): standing authority, approvals, commands,
   and local commits.
 - [resumption-protocol.md](resumption-protocol.md): interruption and worker recovery.
-- [agent-definitions.md](agent-definitions.md): optional roles, decomposition,
-  integration, and shared-work safety.
+- [agent-definitions.md](agent-definitions.md): optional roles, decomposition, usage
+  capacity, integration, and shared-work safety.
 - [development-standards.md](development-standards.md): default engineering standards.
 - [quality-system.md](quality-system.md): risk gates, verification, review, security, and
   completion statuses.
