@@ -6,6 +6,17 @@ entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the a
 Review pilots and sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
+Archived entries: [2026](../archive/framework-changelog-2026.md).
+
+## 2026-07-14: Rename The Moving Latest Release
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction and T-0011 workflow-path checks.
+- Change: Renamed the moving `latest` release display title to `core-framework` without
+  changing its tag, asset, permissions, or publication sequence.
+- Success signal: Both release creation and update apply the new title.
+- Review or sunset trigger: A published `latest` release retains a different title.
+
 ## 2026-07-14: Streamline The Piped Installer Command
 
 - Status: Adopted.
@@ -140,19 +151,3 @@ Review pilots and sunset triggers during the scheduled hygiene pass in
   local-link checks without project state and can initialize a fresh project cursor.
 - Review or sunset trigger: An adopter packages state unintentionally, agents confuse
   the two README roles, or an in-place reset becomes a demonstrated need.
-
-## 2026-07-10: Address External Framework Critique
-
-- Status: Adopted, with modified adoption for routing risk, approval authority, and
-  parallel context publication.
-- Evidence: Accepted user-provided review covering the full framework; detailed
-  disposition in [Decision 0003](../decisions/0003-address-framework-critique.md).
-- Change: Added project state, durable retrospectives, onboarding, artifact budgets,
-  approval parking, and qualitative change review; consolidated routing and templates;
-  strengthened verification completion and parallel recovery rules.
-- Success signal: A cold-start agent can find active work and prior corrections, one
-  route is sufficient to begin work, and quality/process changes no longer require
-  duplicate templates or numeric self-scores.
-- Review or sunset trigger: The state/log churn exceeds their recovery value, a removed
-  template proves necessary in two real tasks, or a retained safety overlay creates
-  classification conflicts.

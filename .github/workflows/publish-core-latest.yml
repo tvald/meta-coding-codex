@@ -106,7 +106,7 @@ jobs:
           GH_PROMPT_DISABLED: 1
           RELEASE_SHA: ${{ github.sha }}
           RELEASE_TAG: latest
-          RELEASE_TITLE: Latest framework core
+          RELEASE_TITLE: core-framework
           RELEASE_ASSET_PATH: dist/${{ env.RELEASE_ASSET_NAME }}
         run: |
           set -euo pipefail
