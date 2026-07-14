@@ -6,7 +6,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 - Format: 1
 - Next task ID: T-0009
 - Primary task: None
-- Scheduling: Running
+- Scheduling: Idle
 - Global pause source or reason: None
 
 ## Tasks
@@ -20,7 +20,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0005 | Add a dependency-free Codex quota-monitor skill | User instruction, 2026-07-13 / r1 | Done | T-0004 | Initiative / High | None | None | [Brief](0005-codex-quota-monitor-skill-brief.md), [notes](0005-codex-quota-monitor-skill-notes.md) | `058349e` |
 | T-0006 | Reconcile durable project state with imported task-loop commit `d5ff9f5` and verify core/state separation | User instructions, 2026-07-14 / r2 | Done | None | Initiative / High | None | None | [Brief](0006-task-loop-state-reconciliation-brief.md), [notes](0006-task-loop-state-reconciliation-notes.md) | Decisions [0008](../decisions/0008-adopt-durable-task-orchestration.md) and [0009](../decisions/0009-authorize-bounded-project-delegation.md) |
 | T-0007 | Add a shell script that packages the portable framework core as a zip archive | User instruction, 2026-07-14 / r1 | Done | T-0006 | Quick change / High | None | None | [Brief](0007-core-package-script-brief.md), [notes](0007-core-package-script-notes.md) | [Decision 0010](../decisions/0010-automate-portable-core-archive.md) |
-| T-0008 | Build the core zip on every push to `main`, publish it as `latest`, and document installation | User instructions, 2026-07-14 / r2 | Pending | T-0007 | Unrouted | None | After T-0007 is Done, frame release workflow permissions, update semantics, and safe unpack guidance | [Brief](0008-latest-release-workflow-brief.md) | None |
+| T-0008 | Build the core zip on every push to `main`, publish it as `latest`, and document installation | User instructions, 2026-07-14 / r2 | Done | T-0007 | Initiative / High | None | None | [Brief](0008-latest-release-workflow-brief.md), [notes](0008-latest-release-workflow-notes.md) | [Decision 0011](../decisions/0011-publish-moving-latest-core-release.md) |
 
 ## Operating Contract
 

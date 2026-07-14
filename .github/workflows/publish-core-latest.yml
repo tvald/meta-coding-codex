@@ -1,0 +1,187 @@
+---
+name: Publish latest framework core
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: publish-core-latest-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_ASSET_NAME: ai-coding-meta-framework-core.zip
+  WORKFLOW_ARTIFACT_NAME: framework-core-${{ github.sha }}
+
+jobs:
+  build:
+    name: Build and verify core archive
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the triggering commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Check runner tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v zip
+          command -v unzip
+
+      - name: Build the core archive
+        shell: bash
+        run: ./scripts/package-core.sh "dist/${RELEASE_ASSET_NAME}"
+
+      - name: Verify the release payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(mktemp)
+          actual=$(mktemp)
+          trap 'rm -f "$expected" "$actual"' EXIT
+
+          {
+            printf '%s\n' AGENTS.md
+            find readme/meta -type f -print
+          } | LC_ALL=C sort > "$expected"
+
+          unzip -tq "dist/${RELEASE_ASSET_NAME}" >/dev/null
+          unzip -Z1 "dist/${RELEASE_ASSET_NAME}" > "$actual"
+          cmp "$expected" "$actual"
+          cp "$expected" dist/core-inventory.txt
+
+      - name: Transfer the verified payload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ${{ env.WORKFLOW_ARTIFACT_NAME }}
+          path: |
+            dist/${{ env.RELEASE_ASSET_NAME }}
+            dist/core-inventory.txt
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  publish:
+    name: Publish the latest release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Receive the verified payload
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: ${{ env.WORKFLOW_ARTIFACT_NAME }}
+          path: dist
+
+      - name: Recheck the transferred archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual=$(mktemp)
+          trap 'rm -f "$actual"' EXIT
+
+          test -s "dist/${RELEASE_ASSET_NAME}"
+          unzip -tq "dist/${RELEASE_ASSET_NAME}" >/dev/null
+          unzip -Z1 "dist/${RELEASE_ASSET_NAME}" > "$actual"
+          cmp dist/core-inventory.txt "$actual"
+
+      - name: Move the tag and publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GH_PROMPT_DISABLED: 1
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: latest
+          RELEASE_TITLE: Latest framework core
+          RELEASE_ASSET_PATH: dist/${{ env.RELEASE_ASSET_NAME }}
+        run: |
+          set -euo pipefail
+
+          ensure_current_main() {
+            current_sha=$(gh api "repos/${GH_REPO}/git/ref/heads/main" --jq '.object.sha')
+            if [ "$current_sha" != "$RELEASE_SHA" ]; then
+              printf 'Skipping stale run for %s; main is %s.\n' \
+                "$RELEASE_SHA" "$current_sha"
+              exit 0
+            fi
+          }
+
+          ensure_current_main
+
+          if ! release_ids=$(gh api --paginate \
+            "repos/${GH_REPO}/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"${RELEASE_TAG}\") | .id"); then
+            printf 'Unable to determine whether release %s exists.\n' \
+              "$RELEASE_TAG" >&2
+            exit 1
+          fi
+          if [[ "$release_ids" == *$'\n'* ]]; then
+            printf 'Multiple releases use tag %s; refusing to mutate them.\n' \
+              "$RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          if ! tag_refs=$(gh api --paginate \
+            "repos/${GH_REPO}/git/matching-refs/tags/${RELEASE_TAG}" \
+            --jq ".[] | select(.ref == \"refs/tags/${RELEASE_TAG}\") | .ref"); then
+            printf 'Unable to determine whether tag %s exists.\n' \
+              "$RELEASE_TAG" >&2
+            exit 1
+          fi
+          if [[ "$tag_refs" == *$'\n'* ]]; then
+            printf 'Multiple exact refs use tag %s; refusing to mutate them.\n' \
+              "$RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          release_exists=false
+          if [ -n "$release_ids" ]; then
+            release_exists=true
+            ensure_current_main
+            gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --draft
+          fi
+
+          ensure_current_main
+          if [ -n "$tag_refs" ]; then
+            gh api --method PATCH \
+              "repos/${GH_REPO}/git/refs/tags/${RELEASE_TAG}" \
+              -f sha="$RELEASE_SHA" \
+              -F force=true >/dev/null
+          else
+            gh api --method POST "repos/${GH_REPO}/git/refs" \
+              -f ref="refs/tags/${RELEASE_TAG}" \
+              -f sha="$RELEASE_SHA" >/dev/null
+          fi
+
+          ensure_current_main
+          release_notes=$(printf 'Automatically built from main commit %s.' "$RELEASE_SHA")
+
+          if [ "$release_exists" = true ]; then
+            gh release upload "$RELEASE_TAG" "$RELEASE_ASSET_PATH" \
+              --repo "$GH_REPO" --clobber
+            ensure_current_main
+            gh release edit "$RELEASE_TAG" \
+              --repo "$GH_REPO" \
+              --draft=false \
+              --latest \
+              --title "$RELEASE_TITLE" \
+              --notes "$release_notes"
+          else
+            gh release create "$RELEASE_TAG" "$RELEASE_ASSET_PATH" \
+              --repo "$GH_REPO" \
+              --verify-tag \
+              --latest \
+              --title "$RELEASE_TITLE" \
+              --notes "$release_notes"
+          fi

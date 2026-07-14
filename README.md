@@ -35,6 +35,41 @@ threshold policy, and can be omitted when the destination does not use Codex sub
 Everything else under `readme/` is mutable documentation for this repository as a
 project. It is useful here but is intentionally excluded from a clean add-on package.
 
+## Install The Latest Core
+
+With `curl`, `unzip`, and `mktemp` installed, run this from the root of the project that
+will receive the framework:
+
+```sh
+(
+  set -eu
+  framework_zip=$(mktemp "${TMPDIR:-/tmp}/framework-core.XXXXXX")
+  trap 'rm -f "$framework_zip"' EXIT HUP INT TERM
+
+  curl --fail --location --retry 3 \
+    --output "$framework_zip" \
+    https://github.com/tvald/meta-coding-codex/releases/download/latest/ai-coding-meta-framework-core.zip
+  unzip -tq "$framework_zip" >/dev/null
+
+  if [ -e AGENTS.md ] || [ -L AGENTS.md ]; then
+    if [ -e AGENTS.framework.md ] || [ -L AGENTS.framework.md ]; then
+      printf '%s\n' 'Refusing to replace existing AGENTS.framework.md.' >&2
+      exit 1
+    fi
+    unzip -p "$framework_zip" AGENTS.md > AGENTS.framework.md
+    unzip "$framework_zip" -x AGENTS.md -d .
+  else
+    unzip "$framework_zip" -d .
+  fi
+)
+```
+
+If the project already has `AGENTS.md`, the commands preserve it and write the packaged
+startup instruction to `AGENTS.framework.md`. Merge that instruction into the existing
+file, then delete `AGENTS.framework.md`; do not replace project-specific agent guidance.
+`unzip` also prompts before replacing any existing framework file, so resolve those
+collisions deliberately rather than creating a mixed installation.
+
 ## Build The Core Archive
 
 With Info-ZIP `zip` and `unzip` installed, run:

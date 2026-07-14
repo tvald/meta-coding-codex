@@ -56,20 +56,20 @@ Out of scope:
 
 ## Acceptance Criteria
 
-- [ ] A workflow triggers only on pushes to `main` and uses the T-0007 script as the
+- [x] A workflow triggers only on pushes to `main` and uses the T-0007 script as the
       sole package builder.
-- [ ] Build and archive verification complete before any tag or release mutation.
-- [ ] The workflow declares only the permissions needed to update the `latest` tag and
+- [x] Build and archive verification complete before any tag or release mutation.
+- [x] The workflow declares only the permissions needed to update the `latest` tag and
       release, and does not expose credentials to untrusted triggers.
-- [ ] Rapid pushes cannot let an older run overwrite a newer `latest` release.
-- [ ] The `latest` tag and release asset are created on first run and updated on later
+- [x] Rapid pushes cannot let an older run overwrite a newer `latest` release.
+- [x] The `latest` tag and release asset are created on first run and updated on later
       runs without accumulating stale duplicate assets.
-- [ ] The top-level README gives copyable download-and-unpack commands using the exact
+- [x] The top-level README gives copyable download-and-unpack commands using the exact
       release asset URL and warns maintainers to merge rather than overwrite an existing
       root `AGENTS.md`.
-- [ ] Workflow syntax, action pinning or first-party tooling, shell safety, permissions,
+- [x] Workflow syntax, action pinning or first-party tooling, shell safety, permissions,
       event scenarios, docs, risk, diff, and staged checks pass.
-- [ ] Task-owned changes are committed separately after T-0007.
+- [x] Task-owned changes are committed separately after T-0007.
 
 ## Constraints
 
@@ -80,7 +80,7 @@ Out of scope:
 
 ## Workflow Route Rationale
 
-- Cataloged route and risk: Recorded when T-0008 is selected after T-0007.
+- Cataloged route and risk: Initiative / High.
 - Why this route: The implementation is small but combines build, concurrency, mutable
   Git reference, release update, permissions, and external publication behavior.
 - Why this risk gate: CI/CD write permissions and automated public release are High-risk
@@ -95,7 +95,7 @@ Out of scope:
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Older run publishes after newer push | `latest` points at stale framework | Concurrency cancellation plus current-ref check before mutation |
+| Older run publishes after newer push | `latest` points at stale framework | Serialized concurrency plus current-ref check before every mutation |
 | Write token is exposed to untrusted code | Repository or release compromise | Push-to-main only, automatic token, least permissions, no untrusted checkout/ref |
 | Tag moves but asset upload fails | Release metadata and artifact disagree | Verify first, sequence mutations, and make reruns idempotent |
 | Asset update leaves stale duplicates | Users download the wrong archive | Fixed asset name and clobber/update behavior |

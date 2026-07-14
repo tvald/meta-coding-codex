@@ -23,6 +23,21 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-14-03
+
+- What happened: Designing a moving `latest` release for rapid main pushes showed that
+  cancelling active workflow runs can overlap publisher teardown, while GitHub does not
+  guarantee arbitrary concurrency ordering.
+- Framework or knowledge gap: The repository had an exact package boundary but no
+  durable release ordering, partial-update, permission-isolation, or consumer-collision
+  contract.
+- Change made or follow-up: Serialized whole workflow runs, added live-main checks before
+  mutations, split read-only build from write publication, made release/ref discovery
+  exact and fail-closed, drafted existing releases during asset replacement, and made
+  installation preserve existing AGENTS instructions.
+- Tags: releases, github-actions, concurrency, permissions, packaging, collisions
+- Earlier occurrence: [R-2026-07-14-02](#r-2026-07-14-02)
+
 ### R-2026-07-14-02
 
 - What happened: T-0006 had to reconstruct and verify the state-free package manually,
