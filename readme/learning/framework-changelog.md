@@ -6,6 +6,25 @@ entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the a
 Review pilots and sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
+## 2026-07-14: Adopt Imported Durable Task Orchestration
+
+- Status: Adopted.
+- Evidence: State-free task-loop import `d5ff9f5`, product-owner clarification about
+  the import boundary, and independent T-0006@r2 review; see
+  [Decision 0008](../decisions/0008-adopt-durable-task-orchestration.md) and
+  [Decision 0009](../decisions/0009-authorize-bounded-project-delegation.md).
+- Change: Added a mandatory host task catalog with additive non-FIFO intake, stable
+  identity/revision and authority, task-scoped targeting/isolation, and bounded local
+  delegation. Migrated this host's state separately, recognized catalog collisions by
+  schema, and preserved project-local operating choices outside the portable startup
+  merge.
+- Success signal: A state-free package bootstraps or migrates host cursor/catalog state
+  without copying history or overwriting existing documentation; tasks resume and close
+  under the correct authority, revision, and commit boundary.
+- Review or sunset trigger: A package contains host facts, onboarding overwrites a task
+  index, stale task evidence is used, catalog staging mixes tasks, or delegation occurs
+  without destination authority.
+
 ## 2026-07-13: Add Codex Quota Monitor Skill
 
 - Status: Adopted.

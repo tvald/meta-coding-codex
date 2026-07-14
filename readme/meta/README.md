@@ -18,11 +18,12 @@ process owner to load next.
 4. Read `readme/tasks/README.md` when it exists; it is the canonical task catalog.
 5. Read only the process and project documents relevant to the assignment.
 
-If `readme/README.md` is missing or does not begin with `# Project State`, or the task
-catalog is missing, the add-on is not fully onboarded. A primary session follows
-[onboarding.md](onboarding.md), preserving colliding documentation, and instantiates the
-missing cursor or catalog. A delegated agent does not initialize shared documentation
-unless the orchestrator assigned that ownership.
+If `readme/README.md` is missing or does not begin with `# Project State`, or
+`readme/tasks/README.md` is missing or does not begin with `# Task Catalog`, the add-on
+is not fully onboarded. A primary session follows [onboarding.md](onboarding.md),
+preserving colliding documentation, and instantiates the missing cursor or catalog. A
+delegated agent does not initialize shared documentation unless the orchestrator
+assigned that ownership.
 
 ## Directory Contract
 
@@ -156,8 +157,9 @@ to simulate a reset.
 On first use:
 
 1. The primary session reads root instructions and this file.
-2. It runs [onboarding.md](onboarding.md) because the project cursor is absent or
-   recognizes and safely resolves an existing non-cursor file at that path.
+2. It runs [onboarding.md](onboarding.md) because the project cursor or task catalog is
+   absent, or recognizes and safely resolves a non-framework document at either
+   mandatory path.
 3. It instantiates the project cursor and task catalog from
    [project-state.md](templates/project-state.md) and
    [task-catalog.md](templates/task-catalog.md).

@@ -4,24 +4,28 @@ Read this file at the start of every session. It is the project-wide cursor and
 documentation index, not a history log. Keep it at or below 80 lines and link to task
 notes or decisions for detail.
 
-## Current Focus
+## Task Cursor
 
-- Status: Idle
-- Goal: None
-- Route: None
-- Task note: None
-- Next safe action: Start from the latest user request.
+- Task catalog: [Task catalog](tasks/README.md)
+- Primary task: None
+- Primary details: None
 
-## Parked Approvals
+The task catalog owns outcomes, status, dependencies, task-specific approvals or
+blockers, next actions, detail links, and results. Do not copy them here.
 
-| ID | Gated Action | Status | Dependent Work | Decision Record Or Task Note |
+## Global Parked Approvals
+
+Task-specific approvals belong in the catalog. Use this table only for an approval that
+gates several tasks or the whole project.
+
+| ID | Gated Action | Status | Affected Tasks | Decision Record |
 | --- | --- | --- | --- | --- |
 | None | | | | |
 
 An approval blocks only its dependent action. Continue unrelated safe work when it is
 useful and remains within the user's scope.
 
-## Known Dead Ends
+## Known Global Dead Ends
 
 - None.
 
@@ -34,23 +38,19 @@ Keep at most five entries.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
+| 2026-07-14 | Adopted imported task orchestration, migrated host state, and verified state-free packaging | [Decisions 0008](decisions/0008-adopt-durable-task-orchestration.md) and [0009](decisions/0009-authorize-bounded-project-delegation.md) |
 | 2026-07-13 | Added and forward-tested the dependency-free Codex quota-monitor skill | [Decision 0007](decisions/0007-add-codex-quota-monitor-skill.md) |
 | 2026-07-13 | Added quota-aware subagent suspension, reset waiting, and verified resumption | [Decision 0006](decisions/0006-guard-subagent-usage-capacity.md) |
 | 2026-07-10 | Added the optional Codex and Claude Code three-role agent-adapter pilot | [Decision 0005](decisions/0005-pilot-optional-agent-adapters.md) |
 | 2026-07-10 | Packaged the reusable framework under `readme/meta/` and separated categorized project documentation | [Decision 0004](decisions/0004-package-framework-as-addon.md) |
-| 2026-07-10 | Dispositioned all framework critique concerns and aligned the framework | [Decision 0003](decisions/0003-address-framework-critique.md) |
-
-## Next Actions
-
-- Agent-adapter pilot: 0/5 eligible tasks. Review by 2026-08-09 or immediately after a
-  trust-boundary or client-discovery failure; use [Decision 0005](decisions/0005-pilot-optional-agent-adapters.md).
 
 ## Documentation Map
 
 - Reusable framework: [meta/README.md](meta/README.md)
+- Task catalog: [tasks/README.md](tasks/README.md)
 - Stable project knowledge: `readme/project/` (created on demand)
 - Decisions: [decisions/](decisions/)
-- Active and historical tasks: [tasks/](tasks/)
+- Task details: [tasks/](tasks/)
 - Quality evidence: [quality/](quality/)
 - Threat models: [threat-models/](threat-models/)
 - Incidents: `readme/incidents/` (created on demand)
@@ -60,5 +60,5 @@ Keep at most five entries.
 ## Hygiene
 
 - Last consistency and pruning pass: 2026-07-10
-- Completed repository-changing tasks since that pass: 3
+- Completed repository-changing tasks since that pass: 4
 - Next pass due: 2026-08-09 or after 10 completed repository-changing tasks, whichever comes first

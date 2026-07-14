@@ -39,7 +39,9 @@ project. It is useful here but is intentionally excluded from a clean add-on pac
 
 1. Copy `readme/meta/` into the destination repository.
 2. Merge the startup requirement from this repository's `AGENTS.md` into the
-   destination's applicable agent instructions.
+   destination's applicable agent instructions. Do not copy project-local operating
+   choices such as the standing delegation request unless the destination owner adopts
+   them explicitly.
 3. For Claude Code, merge the `@AGENTS.md` import into an existing `CLAUDE.md`, or copy
    this bridge when no project file exists. Never replace established Claude guidance.
 4. Optionally merge the files from `.codex/agents/`, `.claude/agents/`, and

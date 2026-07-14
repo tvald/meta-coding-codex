@@ -7,18 +7,21 @@ owns onboarding and records the result in `readme/README.md`.
 ## Procedure
 
 1. **Initialize task discovery and the project cursor.** A valid cursor begins with
-   `# Project State`. If
-   `readme/README.md` is absent, instantiate it from
+   `# Project State`. If `readme/README.md` is absent, instantiate it from
    [templates/project-state.md](templates/project-state.md). If that path contains
    other documentation, never overwrite it: inventory the content, relocate it to an
    appropriate canonical home under `readme/project/`, update repository-local inbound
    links, and then instantiate the cursor. If relocation could break an external link,
    published contract, or tool, record the collision and obtain the owner's destination
    decision first. Never copy state from the framework source repository or another
-   project. Preserve an existing valid cursor as project evidence. Instantiate
-   `readme/tasks/README.md` from
-   [templates/task-catalog.md](templates/task-catalog.md), capturing the onboarding
-   request as the first task. If an established project already has active task records,
+   project. Preserve an existing valid cursor as project evidence. A valid catalog
+   begins with `# Task Catalog`. If `readme/tasks/README.md` is absent, instantiate it
+   from [templates/task-catalog.md](templates/task-catalog.md), capturing the onboarding
+   request as the first task. If that path contains other documentation, never overwrite
+   it: inventory and relocate it to an appropriate non-catalog home, then update
+   repository-local inbound links. If relocation could break an external link, published
+   contract, or tool, record the collision and obtain the owner's destination decision
+   before instantiating the catalog. If an established project already has task records,
    assign stable IDs and link them without inventing missing history.
 2. **Inventory the repository.** Read instruction files, manifests, lockfiles, CI and
    release configuration, contributor docs, source entry points, tests, recent commits,

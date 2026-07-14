@@ -23,6 +23,22 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-14-01
+
+- What happened: A substantial task-loop update was imported from a separate framework
+  repository without its mutable state, leaving this host on the old cursor schema and
+  without the newly mandatory catalog. Review also found that catalog-path collisions
+  lacked the cursor path's preservation rules.
+- Framework or knowledge gap: State-free imports correctly exclude foreign project
+  memory, but each host still needs explicit adoption records and symmetric migration
+  safety for every mandatory state path. Project-local authority in root instructions
+  must also remain outside the portable startup merge.
+- Change made or follow-up: Migrated this host to the catalog/cursor contract, recorded
+  Decisions 0008 and 0009, added schema-aware catalog collision handling, and required a
+  state-free package/bootstrap fixture without otherwise redesigning the imported core.
+- Tags: imports, packaging, state, tasks, catalog, onboarding, collisions, delegation
+- Earlier occurrence: [R-2026-07-10-02](#r-2026-07-10-02)
+
 ### R-2026-07-13-02
 
 - What happened: Follow-up evaluation found that the installed Codex App Server exposes
