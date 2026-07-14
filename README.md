@@ -35,6 +35,28 @@ threshold policy, and can be omitted when the destination does not use Codex sub
 Everything else under `readme/` is mutable documentation for this repository as a
 project. It is useful here but is intentionally excluded from a clean add-on package.
 
+## Build The Core Archive
+
+With Info-ZIP `zip` and `unzip` installed, run:
+
+```sh
+./scripts/package-core.sh
+```
+
+The default output is `dist/ai-coding-meta-framework-core.zip`. Pass one `.zip` path to
+write elsewhere; paths containing a `..` segment are rejected:
+
+```sh
+./scripts/package-core.sh /tmp/ai-coding-meta-framework-core.zip
+```
+
+The archive contains the complete `readme/meta/` tree and only the portable startup
+portion of `AGENTS.md`. It excludes project state, optional harness integrations, the
+quota-monitor skill, and this repository's standing delegation request. Generated
+archives under `dist/` are ignored by Git. Packaged timestamps, modes, entry order, and
+extra metadata are normalized so unchanged content produces a byte-identical archive
+with the supported Info-ZIP tools.
+
 ## Add It To A Project
 
 1. Copy `readme/meta/` into the destination repository.

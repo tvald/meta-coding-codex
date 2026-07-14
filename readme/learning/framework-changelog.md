@@ -6,6 +6,20 @@ entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the a
 Review pilots and sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
+## 2026-07-14: Automate The Portable Core Archive
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction, T-0006's manual state-free fixture, and
+  T-0007 positive, negative, reproducibility, extraction, and collision checks; see
+  [Decision 0010](../decisions/0010-automate-portable-core-archive.md).
+- Change: Added a POSIX-shell command that packages only the portable `AGENTS.md` prefix
+  and complete `readme/meta/` tree, validates exact inventory and integrity, normalizes
+  file metadata, and safely replaces an ignored output archive.
+- Success signal: Content-identical checkouts produce the same valid 26-entry zip, and
+  no mutable host state, optional integration, or local authority enters it.
+- Review or sunset trigger: Archive drift, unsafe replacement, missing core content,
+  host-state leakage, or a demonstrated need to distribute executable runtime tooling.
+
 ## 2026-07-14: Adopt Imported Durable Task Orchestration
 
 - Status: Adopted.

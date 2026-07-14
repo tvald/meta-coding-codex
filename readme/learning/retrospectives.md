@@ -23,6 +23,19 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-14-02
+
+- What happened: T-0006 had to reconstruct and verify the state-free package manually,
+  and the next requested distribution workflow needed the same exact boundary again.
+  The first script draft also showed that source mtimes make fresh clones differ.
+- Framework or knowledge gap: The core/state boundary was documented but not executable,
+  and reproducibility did not yet include checkout-independent metadata normalization.
+- Change made or follow-up: Added an allowlisted packaging command that generates only
+  the portable startup prefix plus `readme/meta/`, normalizes modes and UTC timestamps,
+  verifies its own inventory, and leaves release publication to a separate task.
+- Tags: packaging, automation, reproducibility, state, metadata, task-splitting
+- Earlier occurrence: [R-2026-07-14-01](#r-2026-07-14-01)
+
 ### R-2026-07-14-01
 
 - What happened: A substantial task-loop update was imported from a separate framework
