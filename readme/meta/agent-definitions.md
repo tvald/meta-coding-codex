@@ -1,8 +1,7 @@
 # Agent Definitions
 
-This framework works with one capable agent or a coordinated set of specialized agents.
-Roles are optional responsibility bundles within a workflow route, not another menu that
-every task must classify. Prefer one agent until decomposition has a clear benefit.
+This framework supports one capable agent or coordinated specialists. Roles are optional
+responsibility bundles within a workflow route, not a menu every task must classify.
 
 ## Shared Agent Contract
 
@@ -48,9 +47,8 @@ The current optional pilot maps three bounded, independently useful roles:
 | `verifier` | [QA And Verification Agent](#qa-and-verification-agent) | Runs declared checks; does not edit source and reports command-created artifacts |
 | `security-reviewer` | [Security And Risk Agent](#security-and-risk-agent) | Read-only default and no-write instruction; returns findings and proposed record updates |
 
-The Root Orchestrator still decides whether decomposition is justified, supplies the
-assignment and ownership boundary, and integrates results. Native discovery never
-overrides the single-agent default or the decomposition rules below.
+The Root Orchestrator applies the decomposition rules, assigns ownership, and integrates
+results; native discovery never mandates delegation.
 
 ## Root Orchestrator
 
@@ -60,7 +58,8 @@ Responsibilities:
 
 - Run the root loop.
 - Run the resume check before continuing interrupted work.
-- Decide whether work stays single-agent or is decomposed.
+- Solely own task intake, catalog writes, eligibility, and primary-task selection.
+- Decide whether selected work stays single-agent or is decomposed.
 - Maintain the plan, quality bar, and final integration.
 - Maintain the agent roster for multi-agent work: assignment, ownership, status, last known output, and restart policy.
 - Assign clear scopes to specialist agents.
@@ -199,18 +198,22 @@ Use when:
 
 ## Decomposition Rules
 
-Decompose only when it improves speed, quality, or focus:
+Root `AGENTS.md` supplies standing authorization; task-level decomposition remains a
+separate decision with no minimum worker count. Keep work primary when it is small,
+tightly coupled, shares mutable canonical files, or costs more to coordinate than to
+complete. Keep at most one primary implementation task active by default. Delegate only
+an independently useful, non-overlapping result; a separate delegated task also requires
+isolated worktree, integration, and capacity safety. Task count is not a delegation
+trigger. Decompose only when it improves speed, quality, or focus:
 
 - Split by independent files, components, or research questions.
 - Give each agent one clear owner area.
 - Avoid assigning multiple agents to edit the same files concurrently.
-- Give each agent explicit outputs and verification expectations.
+- Give each agent its task ID/revision, explicit output, and verification expectations.
 - Record each agent's assignment, owned files, expected output, and restart policy in the task note when work may span interruptions.
 - Integrate through the root orchestrator.
 - Keep at most three child workers active by default. Integrate or close work before
   adding more unless project policy sets a different evidence-based cap.
-
-Do not create specialized agents for tiny tasks. Coordination overhead is real.
 
 ## Usage Capacity Guard
 
@@ -264,8 +267,8 @@ merely to satisfy parallelism.
 - Reassign only work still needed, independent, and absent from integrated results.
   Replacement instructions include prior evidence, current state, owned files, what not
   to redo or revert, checks, and handoff format.
-- User stop or redirect makes old worker output stale. Halt or redirect workers when
-  possible and review later output against the new instruction before integration.
+- A stop or redirect stales output only for affected tasks. Unrelated task arrival does
+  not stale a worker. Halt affected workers and review later output before integration.
 
 ## Handoff Format
 
@@ -273,7 +276,7 @@ Use this format when assigning or returning work:
 
 ```md
 ## Assignment
-- Goal:
+- Task ID, revision, and goal:
 - Scope:
 - Non-goals:
 - Inputs:

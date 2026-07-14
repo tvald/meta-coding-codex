@@ -28,6 +28,11 @@ Escalate the path when the change is hard to reverse, touches multiple ownership
 
 Small-batch target: one user outcome, one process decision, or one refactor theme that a reviewer can understand without reconstructing the whole project.
 
+Catalog adjacency, shared dependencies, or receipt in one message does not make
+unrelated tasks one batch. Combine instructions only when they are deliberately
+reframed before material work as one coherent outcome with compatible acceptance,
+route, risk, verification, and commit boundaries.
+
 Large-diff split triggers: split a change before review or commit when any trigger applies:
 
 - The diff combines unrelated behavior, refactor, formatting, or documentation changes.
@@ -62,6 +67,23 @@ Declare which checks are required for the task before material implementation wh
 practical. Run the smallest required set that gives credible confidence. Mark unrelated
 checks Not applicable; do not call a required check optional after seeing its result.
 
+## Task Isolation
+
+Each selected task has its own route, risk gate, acceptance criteria, verification
+evidence, completion status, and commit boundary. The number or risk of pending catalog
+tasks does not change the selected task's route or permit weaker gates.
+
+A `Blocked` or `Needs verification` task blocks its dependents. Independent eligible
+work may continue only when the repository is clean or its ownership and verification
+are demonstrably isolated from failed, dirty, or overlapping work. Never run later
+file-changing tasks through a broken shared baseline. If later work invalidates an
+earlier task's acceptance, reopen it or create a corrective task and withhold any
+aggregate completion claim.
+
+`Done`, `Needs verification`, `Blocked`, `Cancelled`, and `Superseded` are task-scoped.
+The presence of one `Done` task does not make pending catalog work complete, and the
+presence of one blocked task does not stall unrelated safe work.
+
 ## Verification Outcomes
 
 - **Pass:** the check ran and its observed result met the criterion.
@@ -71,7 +93,7 @@ checks Not applicable; do not call a required check optional after seeing its re
   will unblock it. If the check is required, the task status is Needs verification.
 - **Not applicable:** the check was not required for the scoped behavior or risk.
 
-Done requires every required runnable check to pass. A residual-risk statement records
+`Done` requires every required runnable check for that task to pass. A residual-risk statement records
 what passing checks do not establish; it cannot replace a result. A genuinely impossible
 required check produces an explicit **Needs verification** handoff, not Done. An
 established approval path may change which risk is accepted, but must not relabel an

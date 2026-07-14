@@ -13,7 +13,8 @@ Agents may do these without asking when they are relevant to the current task:
 
 - Read project docs, source code, tests, and decision records.
 - Search current external sources when facts may have changed.
-- Create or update product briefs, task notes, assumptions, glossary entries, source maps, standards, and decision records.
+- Create or update the task catalog, task briefs or notes, product briefs, assumptions,
+  glossary entries, source maps, standards, and decision records.
 - Add or update tests that verify touched behavior.
 - Run build, lint, typecheck, test, format, and local app commands.
 - Install local development utilities needed to inspect, test, or format the project when repository policy allows it.
@@ -24,16 +25,31 @@ Agents may do these without asking when they are relevant to the current task:
 - Create a local, task-scoped commit after completing and verifying file changes in a Git repository, following [Local Commit Completion](#local-commit-completion).
 - Continue after a clarification window using explicit assumptions.
 - Resume interrupted work from repository state, task notes, plans, and agent rosters without asking the product owner to reconstruct context.
+- Delegate bounded in-scope work under the standing request in root `AGENTS.md` when
+  [the decomposition rules](agent-definitions.md#decomposition-rules) justify it and the
+  [usage capacity guard](agent-definitions.md#usage-capacity-guard) permits it.
 - Re-spawn stale or lost sub-agents only when their work is still needed and their ownership boundaries remain safe.
 - Read authoritative five-hour and weekly usage, suspend or resume child workers, and
   set reset-aligned waits or polls under the
   [usage capacity guard](agent-definitions.md#usage-capacity-guard).
 
+## Task Intake Persistence
+
+The Root Orchestrator may persist newly delivered instructions to
+`readme/tasks/README.md` without waiting for the active implementation task to finish.
+Write the minimal row immediately as working-tree state and preserve it through
+interruptions. Do not create a commit for an unfinished task merely to persist intake;
+that requires separate explicit user direction or established repository authority.
+At task completion, stage only that task's catalog hunks and preserve unrelated pending
+rows. Intake does not mark a task complete or grant implementation authority.
+
 ## Local Commit Completion
 
 A completed task that changes files in a Git repository must end with a local commit.
 The agent does this without asking for separate approval after implementation and
-verification are complete.
+verification are complete. Include that task's catalog/result update in the same
+commit. Adjacent catalog rows or satisfied dependencies do not justify bundling
+unrelated implementations.
 
 Use this sequence:
 
@@ -89,24 +105,30 @@ Expanding standing authority or removing a stop boundary is a material policy ch
 It requires explicit user direction or an accepted decision under the framework-change
 process, and the edit cannot retroactively authorize the gated action that motivated it.
 
+Task capture or selection never grants authority for an external, destructive,
+privileged, or otherwise approval-gated action. Persist an approval's source, status,
+action, boundary, and task ID/revision. A revision change requires revalidation before
+the approval can authorize work.
+
 ## User Interrupt Handling
 
-Follow [resumption-protocol.md](resumption-protocol.md#deliberate-user-interrupts), which
-is the canonical owner for newest-instruction, stop, redirect, stale-worker, and final
-response behavior.
+Follow [resumption-protocol.md](resumption-protocol.md#delivered-message-semantics), which
+is the canonical owner for additive intake, task targeting, stop, redirect,
+stale-worker, and final-response behavior.
 
 ## Automatic Knowledge Maintenance
 
 At the end of each non-trivial task, the agent should decide whether to update:
 
-- `readme/README.md` for the current cursor, recent outcome, and hygiene counter.
+- `readme/tasks/README.md` for task intake, lifecycle, dependencies, and results.
+- `readme/README.md` for the primary-task pointer, recent outcome, and hygiene counter.
 - `readme/project/brief.md` for stable product facts.
 - `readme/project/assumptions.md` for unresolved uncertainty.
 - `readme/project/source-map.md` for important sources and freshness.
 - `readme/project/glossary.md` for domain vocabulary.
 - `readme/decisions/` for meaningful choices.
 - `readme/project/standards.md` for project-specific rules.
-- `readme/tasks/` for resumable work.
+- `readme/tasks/` for briefs and resumable execution detail.
 - `readme/learning/retrospectives.md` for concrete cross-session learning signals.
 - This framework for process improvements.
 
@@ -167,8 +189,9 @@ A required approval blocks the dependent action, not unrelated safe work within 
 existing scope. Checkpoint the gated item, continue independent work when useful, and
 batch compatible decision requests so the product owner can resolve them together.
 
-Park each unresolved approval in `readme/README.md` and put any necessary detail in the
-linked task note. Present a decision in ten lines or fewer using:
+Park each task-specific approval in the catalog and put necessary detail in its linked
+task record. Reserve `readme/README.md` for global or cross-task approvals. Present a
+decision in ten lines or fewer using:
 
 ```md
 Decision: <what needs approval>

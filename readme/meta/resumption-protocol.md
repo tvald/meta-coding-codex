@@ -8,87 +8,105 @@ agent restart, approval waits, and deliberate user interruption.
 
 | Type | Examples | Required Response |
 | --- | --- | --- |
-| Unplanned pause | Sleep, network loss, compaction, session restart | Reconstruct from state and repository evidence; continue from the next safe action |
-| Approval wait | Release, destructive action, sensitive permission | Park the gated action; continue independent safe work; resume it only after the decision |
-| User guidance | Changed constraint, goal, example, or priority | Halt conflicting work, reframe, update state, plan, and assignments |
-| User stop | Stop, pause, cancel, wait, hold on | Stop nonessential work, checkpoint state, close or suspend workers, and do not continue |
+| Unplanned pause | Sleep, network loss, compaction, session restart | Reconstruct catalog, task, repository, and worker state; continue from the next safe action |
+| Approval wait | Release, destructive action, sensitive permission | Park the gated task; continue independent eligible work from a clean boundary |
+| Task guidance | Changed constraint, goal, example, or priority for a task | Halt conflicting task work, record the amendment, and reframe only that task |
+| Global user stop | Stop all, pause, wait, hold on | Stop nonessential work, checkpoint active tasks, suspend workers, and do not schedule work |
 | Worker loss | Stale worker, missing result, crashed tool | Reconcile shared state; recover only work still needed and safe to own |
-| Capacity wait | Five-hour or weekly usage is at least 95%, or required telemetry is unknown | Checkpoint and suspend workers; wait or poll; resume only after a fresh safe reading |
+| Capacity wait | An applicable usage window is at least 95%, or required telemetry is unknown | Checkpoint and suspend workers; resume only after a fresh safe reading |
 
-## Durable Cursor
+## Durable Recovery State
 
-`readme/README.md` is the first pointer. For long-running, risky, paused, or parallel
-work, it links one active `readme/tasks/NNNN-topic-notes.md` created from
-[templates/task-notes.md](templates/task-notes.md). The note contains:
+`readme/README.md` is the first pointer and `readme/tasks/README.md` is the canonical
+task catalog. Read the catalog before task details. The catalog owns global scheduling
+pause, stable identity and revision, authority provenance, outcome, lifecycle status,
+dependencies, selected route/risk, task-specific approval or blocker, next safe action,
+and detail/result links.
 
-- latest user instruction, goal, route, criteria, and plan;
-- work-item and artifact status;
-- changed files, commits, commands already run, and observed results;
-- worker roster and non-overlapping ownership;
-- decisions and assumptions made during the task;
-- failed approaches worth avoiding, with evidence and retry conditions;
-- verification completed and required checks remaining;
-- next safe action; and
-- stop conditions and parked approvals.
-
-Small single-turn work needs no task note when state, the active plan, and final response
-are enough to recover it.
+Create a brief when scope, acceptance, route, or risk needs detail. Create a task note
+for long-running, risky, paused, or parallel execution. A task note contains the
+execution checkpoint, work-item status, changed files, commits, observed checks, worker
+roster, relevant decisions, failed approaches, parked-approval detail, and work still
+needed. It links the catalog instead of copying catalog-owned fields.
 
 ## Resume Loop
 
-1. Read `AGENTS.md`, the meta README, `readme/README.md`, the latest user message, and
-   the active task note if linked.
-2. Classify the interruption and apply the newest instruction before older plans.
-3. Inspect `git status`, recent commits, relevant diffs, running tools, and integration
-   state. Do not repeat a risky side effect until its prior result is known.
-4. Reconstruct and update the plan, next safe action, parked approvals, and worker
-   roster before editing.
-5. Review recorded dead ends. Retry only when new evidence addresses the observed reason
-   for failure.
-6. Re-run only the checks needed to establish current state, then continue or report the
-   concrete blocker.
-7. Refresh state and the task note after meaningful progress and before a long pause.
+1. Read `AGENTS.md`, the meta README, `readme/README.md`, the task catalog, the primary
+   task's brief or notes, and any newly delivered message.
+2. Inspect `git status`, recent commits, relevant diffs, running tools, worktrees, and
+   worker state. Do not repeat a risky side effect until its prior result is known.
+3. Validate unique task IDs, authority provenance, current revisions, valid links and
+   dependencies, no dependency cycle, and no more than one primary `Active` task.
+   Quarantine unverifiable nonterminal tasks as `Blocked` before tool-using work.
+4. Classify newly delivered messages using the rules below and persist every accepted
+   independent task before continuing implementation.
+5. Revalidate the active task's status, revision, accepted amendments, dependency
+   results, approval source/action/boundary/revision, repository safety, plan, and next
+   action.
+6. Review dead ends and stale output. Retry only when new evidence addresses the
+   observed failure; never integrate output invalidated for that task.
+7. Re-run only checks needed to establish current state, then resume the active task or
+   use the root loop to select an eligible one.
+8. Refresh catalog, cursor, and task note after meaningful progress and before a long
+   pause.
+
+If multiple tasks incorrectly appear primary-`Active`, checkpoint them and reconcile
+ownership before editing. Do not guess which dirty changes belong to which task.
+
+## Delivered Message Semantics
+
+Classify a new message by target and intent rather than treating recency as global
+replacement:
+
+- A status question creates no task. Answer it; compatible work may continue unless
+  the user asked only for a report or pause.
+- A new independent outcome creates a new task and does not preempt a safe active
+  increment.
+- Guidance or an approval naming a task ID, or unambiguously referring to one task,
+  updates only that task. A material amendment increments its revision and records
+  source, reason, and impact; re-run affected framing, approval, route, risk, worker,
+  and verification gates.
+- A pause, cancellation, replacement, or reprioritization with a clear task target is
+  scoped to that task. Cancellation and supersession record a disposition; they do not
+  silently undo commits or external effects.
+- Unqualified `stop`, `pause`, `wait`, or `hold on` sets catalog scheduling to `Paused`,
+  records its source or reason, and checkpoints active work. Only authoritative resume
+  guidance returns scheduling to `Running`. An ambiguous cancellation, replacement, or conflict is checkpointed and
+  clarified for the affected tasks rather than inferred globally.
+- `cancel all`, `replace all`, or equivalent explicit global scope applies to every
+  nonterminal task. Preserve terminal history, effects, and task-specific dispositions.
+
+Approval or worker output is usable only when its recorded task ID and revision match
+the catalog. Output becomes stale when its task revision, ownership, or stop state
+invalidates it; unrelated task arrival does not stale it. A final response addresses
+the current request and relevant catalog state; it never presents pending, parked,
+blocked, or `Needs verification` work as completed.
 
 ## Capacity-Wait Recovery
 
 [The usage capacity guard](agent-definitions.md#usage-capacity-guard) owns thresholds,
 meter cadence, suspension, and timer-versus-poll selection. A reset timer merely wakes
-the Root Orchestrator: re-read both windows before resuming. If one limiting window did
-not reset or telemetry is unavailable, update the checkpoint and continue waiting.
+the Root Orchestrator: re-read every applicable window before resuming. If a limiting
+window did not reset or telemetry is unavailable, update the task checkpoint and wait.
 
 Prefer the original suspended handle after a safe reading. If it cannot resume, inspect
-its last output and repository state before replacing it under the normal worker
-recovery rules. Keep the task active or parked during the wait; do not report a terminal
-completion status solely because capacity is temporarily unavailable.
+its last output and repository state before replacing it. Keep each affected task
+active or parked; capacity waiting is not a terminal task status.
 
 ## Worker And Worktree Recovery
 
-[agent-definitions.md](agent-definitions.md#parallel-integration-and-recovery) owns the
-rules for WIP limits, shared-file writers, isolated-context publication, integration
-checks, and orphaned branch or worktree recovery. On resume, do not reassign work until
-the repository and worker roster show that it is absent or unusable. Preserve unknown
-commits and uncommitted changes until ownership is established.
+[agent-definitions.md](agent-definitions.md#parallel-integration-and-recovery) owns WIP
+limits, shared-file writers, isolated-context publication, integration checks, and
+orphan recovery. Do not reassign work until repository and worker records show that it
+is absent or unusable. Preserve unknown commits and changes until ownership is known.
 
-Replacement work receives the original goal, newest guidance, ownership boundary,
-prior evidence, current repository state, what not to redo or revert, verification, and
-handoff format. Do not recover obsolete work after a user stop or redirect.
-
-## Deliberate User Interrupts
-
-The newest user message controls the current turn:
-
-- A status question gets a status answer; compatible work continues unless the user
-  asked only for a report or pause.
-- New guidance stops conflicting actions, updates the plan and state, and permits only
-  compatible continuation.
-- Stop, pause, cancel, wait, or hold on stops nonessential actions and new workers until
-  the user resumes.
-- Output from a worker following an older plan is stale evidence until reviewed against
-  the new instruction.
-- The final response addresses the newest request and status, not the superseded plan.
+Replacement work receives the task ID and revision, original goal, applicable
+guidance, ownership boundary, prior evidence, repository state, what not to redo or
+revert, verification, and handoff format. Do not recover cancelled, superseded, or
+globally paused work.
 
 ## Resume Verification
 
-Before closing resumed work, confirm that the latest request is satisfied, stale worker
-output was reviewed before use, checks cover work from both sides of the interruption,
-and state records remaining verification, approvals, or blockers.
+Before closing resumed work, confirm that its latest accepted instruction is satisfied,
+stale output was reviewed before use, checks cover both sides of the interruption, and
+the catalog records every remaining verification, approval, dependency, or blocker.

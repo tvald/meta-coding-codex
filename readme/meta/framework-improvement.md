@@ -120,7 +120,7 @@ Before closing framework edits, confirm:
 
 - root entrypoints and state point to the right owners;
 - new guidance has one home and removed copies leave working links;
-- templates match process docs and remain within the ten-template catalog;
+- templates match process docs and remain within the twelve-template catalog;
 - significant choices and every framework edit are recorded;
 - optional harness adapters remain thin, removable, schema-valid, and subordinate to
   their canonical Markdown owners;

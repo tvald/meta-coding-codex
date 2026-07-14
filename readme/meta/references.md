@@ -41,6 +41,11 @@ These sources influenced the framework. Agents should use current primary source
   project can import an existing `AGENTS.md` owner (checked 2026-07-10):
   https://code.claude.com/docs/en/memory
 - AGENTS.md open format: project instructions as a README for agents. https://agents.md/
+- `tvald/meta-coding-claude`, task and work-management process: durable task artifacts,
+  proportional detail, safe checkpoints, and post-distillation archives. Primary
+  repository reviewed at commit `f43d34314f4caabc0ca5940bda9bba9d13d76566`
+  (checked 2026-07-13):
+  https://github.com/tvald/meta-coding-claude/tree/f43d34314f4caabc0ca5940bda9bba9d13d76566/readme/meta
 
 ## Product And Requirements
 

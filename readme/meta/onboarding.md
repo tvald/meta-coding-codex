@@ -6,7 +6,8 @@ owns onboarding and records the result in `readme/README.md`.
 
 ## Procedure
 
-1. **Initialize the project cursor.** A valid cursor begins with `# Project State`. If
+1. **Initialize task discovery and the project cursor.** A valid cursor begins with
+   `# Project State`. If
    `readme/README.md` is absent, instantiate it from
    [templates/project-state.md](templates/project-state.md). If that path contains
    other documentation, never overwrite it: inventory the content, relocate it to an
@@ -14,7 +15,11 @@ owns onboarding and records the result in `readme/README.md`.
    links, and then instantiate the cursor. If relocation could break an external link,
    published contract, or tool, record the collision and obtain the owner's destination
    decision first. Never copy state from the framework source repository or another
-   project. Preserve an existing valid cursor as project evidence.
+   project. Preserve an existing valid cursor as project evidence. Instantiate
+   `readme/tasks/README.md` from
+   [templates/task-catalog.md](templates/task-catalog.md), capturing the onboarding
+   request as the first task. If an established project already has active task records,
+   assign stable IDs and link them without inventing missing history.
 2. **Inventory the repository.** Read instruction files, manifests, lockfiles, CI and
    release configuration, contributor docs, source entry points, tests, recent commits,
    and current working-tree state. Classify the project as greenfield or established.
@@ -36,9 +41,9 @@ owns onboarding and records the result in `readme/README.md`.
    `readme/project/context.md`, assumptions, glossary, source map, standards, decisions,
    or other categorized project records only when the inventory produced real content.
 7. **Prove cold-start readiness.** From the recorded files, confirm that a new agent can
-   identify the product outcome, current focus, next safe action, canonical commands,
-   important constraints, and any parked approvals without asking the owner to repeat
-   repository-recoverable facts.
+   identify the product outcome, task catalog, primary and eligible tasks, dependency-
+   blocked or parked work, next safe action, canonical commands, important constraints,
+   and approvals without asking the owner to repeat repository-recoverable facts.
 
 ## Greenfield Variant
 

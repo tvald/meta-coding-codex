@@ -1,45 +1,46 @@
 # Project State
 
-Read this file at the start of every session. It is the project-wide cursor and
-documentation index, not a history log. Keep it at or below 80 lines and link to task
-notes or decisions for detail.
+Read this file at the start of every session. It is the bounded project-wide cursor and
+documentation index, not a task list or history log. Keep it at or below 80 lines and
+link to canonical records for detail.
 
-## Current Focus
+## Task Cursor
 
-- Status: Idle
-- Goal: None
-- Route: None
-- Task note: None
-- Next safe action: Complete project onboarding or start from the latest user request.
+- Task catalog: `readme/tasks/README.md`
+- Primary task: None
+- Primary details: None
 
-## Parked Approvals
+The task catalog owns outcomes, status, dependencies, task-specific approvals or
+blockers, next actions, detail links, and results. Do not copy them here.
 
-| ID | Gated Action | Status | Dependent Work | Decision Record Or Task Note |
+## Global Parked Approvals
+
+Task-specific approvals belong in the catalog. Use this table only for an approval that
+gates several tasks or the whole project.
+
+| ID | Gated Action | Status | Affected Tasks | Decision Record |
 | --- | --- | --- | --- | --- |
 | None | | | | |
 
-## Known Dead Ends
+## Known Global Dead Ends
 
 - None.
 
 ## Recently Completed
 
-Keep at most five entries.
+Keep at most five linked summaries; detailed results remain in the catalog.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
 | None | | |
 
-## Next Actions
-
-- Run or complete onboarding when project context and verified commands are missing.
-
 ## Documentation Map
 
 - Reusable framework: `readme/meta/README.md`
+- Task catalog: `readme/tasks/README.md`
 - Stable project knowledge: `readme/project/` (created on demand)
 - Decisions: `readme/decisions/`
-- Tasks: `readme/tasks/`
+- Task details: `readme/tasks/`
 - Quality and threats: `readme/quality/` and `readme/threat-models/`
 - Incidents and learning: `readme/incidents/` and `readme/learning/`
 - Archives: `readme/archive/` (created on demand)

@@ -1,12 +1,28 @@
 # Task Brief
 
+Create this only when the catalog row is insufficient for selection, acceptance,
+routing, or review. The catalog remains the owner of status, dependencies, approvals or
+blockers, next action, and result.
+
+## Identity And Source
+
+- Task ID:
+- Initial revision: r1
+- Catalog: `readme/tasks/README.md`
+- Accepted source: User instruction / accepted in-scope finding / decision
+- Source reference and date:
+- Parent or split task IDs: None
+
+Record a concise source reference, not secrets, personal data, or unnecessary verbatim
+prompt text.
+
 ## Goal
 
 What outcome should be true when this task is done?
 
 ## Background
 
-What context, user need, incident, metric, document, or decision led to this task?
+What context, need, incident, metric, document, or decision led to this task?
 
 ## Scope
 
@@ -34,14 +50,15 @@ Out of scope:
 
 -
 
-## Workflow Route
+## Workflow Route Rationale
 
-- Route: Quick change / Clarify / Discover / Decide / Initiative / Correct course
+Complete when the task is selected or framing makes the route clear.
+
+- Cataloged route and risk: See this task's catalog row.
 - Why this route:
-- Risk gate: Low / Medium / High / Critical
+- Why this risk gate:
 - Upstream artifacts required:
 - Escalation trigger:
-- Next action after this task:
 
 ## Risks
 
@@ -61,7 +78,15 @@ Out of scope:
 - Manual checks:
 - Documentation checks:
 - Baseline or counterfactual evidence for new regression/behavior tests:
-- Amendments after implementation starts, with reason and impact:
+
+## Material Amendments
+
+Record amendments after intake with their authority and acceptance impact. Minor
+wording corrections need no row.
+
+| Revision | Date | Source | Change | Reason | Scope Or Acceptance Impact |
+| --- | --- | --- | --- | --- | --- |
+| r2 | | | | | |
 
 ## Done When
 

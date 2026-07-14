@@ -1,18 +1,23 @@
 # Task Notes
 
-Use for long-running, paused, or parallel work. `readme/README.md` points to the one
-active note; this file owns detail that would overflow the project cursor.
+Use for long-running, risky, paused, or parallel execution. The task catalog links this
+note and remains the owner of outcome, status, dependencies, task-specific approval or
+blocker, next safe action, and result.
 
-## Task Cursor
+## Task Identity
 
-- Name:
+- Task ID:
+- Catalog: `readme/tasks/README.md`
+- Brief or acceptance source:
 - Started:
 - Last updated:
-- Status: Active / Parked / Needs verification / Blocked / Done / Cancelled
-- Route: Quick change / Clarify / Discover / Decide / Initiative / Correct course
-- Latest user instruction:
-- Goal and completion criteria:
-- Next safe action:
+- Accepted task revision:
+
+## Execution Checkpoint
+
+- Completed safe increment:
+- Current repository or external state:
+- Resume constraints:
 
 ## Plan
 
@@ -32,15 +37,19 @@ active note; this file owns detail that would overflow the project cursor.
 - Required checks remaining:
 - Decisions and assumptions since start:
 
-## Parked Approvals
+## Parked Approval Detail
 
-| ID | Proposal | Default | Yes Consequence | No Consequence | Dependent Work |
-| --- | --- | --- | --- | --- | --- |
-| | | | | | |
+The catalog owns the approval ID, status, bound revision, and this detail link. Persist
+the approval source, exact action, and boundary here; missing fields cannot authorize
+work.
+
+| ID | Task Revision | Approval Source | Action And Boundary | Dependent Work |
+| --- | --- | --- | --- | --- |
+| | | | | |
 
 ## Worker Roster
 
-| Worker | Assignment | Owned Files Or Domains | Status | Last Output | Restart Policy |
+| Worker | Task ID, Revision, And Assignment | Owned Files Or Domains | Status | Last Output | Restart Policy |
 | --- | --- | --- | --- | --- | --- |
 | | | | Planned / Running / Quota-suspended / Complete / Stale / Obsolete / Replace | | |
 
@@ -51,7 +60,7 @@ active note; this file owns detail that would overflow the project cursor.
 - Weekly window consumed and reset time:
 - Limiting or unknown windows:
 - Wake method and time:
-- Resume condition and next safe action:
+- Resume condition:
 
 ## Attempts And Dead Ends
 

@@ -21,6 +21,11 @@ ownership was assigned explicitly.
 - Optional files under `.codex/agents/` and `.claude/agents/` are harness adapters only;
   [readme/meta/agent-definitions.md](readme/meta/agent-definitions.md) remains the role
   and delegation authority.
+- **Standing delegation request:** This repository explicitly asks primary sessions to
+  use sub-agents, delegation, and parallel agent work when the canonical decomposition
+  rules identify a concrete independent benefit. This is standing authorization, not a
+  requirement to delegate: keep small, tightly coupled, overlapping, or single-writer
+  work in the primary agent.
 - During the adapter pilot, prefer a matching named adapter only when an applicable
   quality gate and the canonical decomposition rules already justify independent work;
   never delegate merely to advance the pilot counter.

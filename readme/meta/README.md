@@ -15,13 +15,14 @@ process owner to load next.
 1. Read the applicable root `AGENTS.md` instructions.
 2. Read this meta README in full.
 3. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
-4. Read only the process and project documents relevant to the assignment.
+4. Read `readme/tasks/README.md` when it exists; it is the canonical task catalog.
+5. Read only the process and project documents relevant to the assignment.
 
-If `readme/README.md` is missing or does not begin with `# Project State`, the add-on is
-not fully onboarded. A primary session follows [onboarding.md](onboarding.md), preserving
-any colliding documentation, and creates the cursor from
-[project-state.md](templates/project-state.md). A delegated agent does not initialize
-shared documentation unless the orchestrator assigned that ownership.
+If `readme/README.md` is missing or does not begin with `# Project State`, or the task
+catalog is missing, the add-on is not fully onboarded. A primary session follows
+[onboarding.md](onboarding.md), preserving colliding documentation, and instantiates the
+missing cursor or catalog. A delegated agent does not initialize shared documentation
+unless the orchestrator assigned that ownership.
 
 ## Directory Contract
 
@@ -33,17 +34,18 @@ The host project's agent-maintained documentation uses these mutable paths:
 
 | Path | Purpose |
 | --- | --- |
-| `readme/README.md` | Always-read current focus, next action, approvals, recent outcomes, and documentation index |
+| `readme/README.md` | Always-read catalog and primary-task pointer, global approvals, recent outcomes, and documentation index |
 | `readme/project/` | Stable project brief, context, standards, assumptions, glossary, source map, automation backlog, and project-specific agent guidance |
 | `readme/decisions/` | Append-only significant project or local-framework decisions |
-| `readme/tasks/` | Task briefs and resumable task notes |
+| `readme/tasks/` | Canonical `README.md` task catalog plus proportional briefs and resumable notes |
 | `readme/quality/` | Durable readiness, verification, and review records |
 | `readme/threat-models/` | Lightweight security and trust-boundary analyses |
 | `readme/incidents/` | Incident and near-miss records |
 | `readme/learning/` | Retrospectives and the local framework changelog |
 | `readme/archive/` | Overflow moved from active artifacts without rewriting history |
 
-Create optional files and directories only when they will contain useful information.
+The project cursor and task catalog are mandatory after onboarding. Create other
+optional files and directories only when they will contain useful information.
 Established host documentation may remain at its required conventional location; link
 to its canonical owner instead of copying facts into framework-managed records.
 
@@ -80,6 +82,7 @@ host projects may omit the pilot entirely.
 - Outcome first; context before code.
 - One provisional workflow route, with risk as an independent safety overlay.
 - Small reversible steps and observed verification results.
+- Durable additive task intake with dependency- and safety-based selection, not FIFO.
 - One canonical home for each fact, rule, decision, and command catalog.
 - Repository-backed state and learning instead of assumed session memory.
 - Agents maintain process memory; product owners make consequential product decisions.
@@ -87,7 +90,8 @@ host projects may omit the pilot entirely.
 
 ## Process Map
 
-- [root-loop.md](root-loop.md): operating loop for every task.
+- [root-loop.md](root-loop.md): additive intake, selection, and operating loop for every
+  task.
 - [workflow-routing.md](workflow-routing.md): single route table and escalation triggers.
 - [onboarding.md](onboarding.md): cold-start inventory, command derivation, ingestion,
   state initialization, and cold-start proof.
@@ -97,7 +101,8 @@ host projects may omit the pilot entirely.
   archives, and maintenance cadence.
 - [automation-policy.md](automation-policy.md): standing authority, approvals, commands,
   and local commits.
-- [resumption-protocol.md](resumption-protocol.md): interruption and worker recovery.
+- [resumption-protocol.md](resumption-protocol.md): task-targeted interruption and
+  worker recovery.
 - [agent-definitions.md](agent-definitions.md): optional roles, decomposition, usage
   capacity, integration, and shared-work safety.
 - [development-standards.md](development-standards.md): default engineering standards.
@@ -107,7 +112,7 @@ host projects may omit the pilot entirely.
   edits, pilots, and sunset checks.
 - [references.md](references.md): primary research basis.
 
-## Eleven-Template Catalog
+## Template Catalog
 
 - [project-state.md](templates/project-state.md) → `readme/README.md`: bounded project
   cursor and documentation index.
@@ -121,6 +126,8 @@ host projects may omit the pilot entirely.
   consequential uncertainty.
 - [decision-record.md](templates/decision-record.md) → `readme/decisions/`: significant
   choices.
+- [task-catalog.md](templates/task-catalog.md) → `readme/tasks/README.md`: durable task
+  identity, lifecycle, dependencies, discovery, and results.
 - [task-brief.md](templates/task-brief.md) and
   [task-notes.md](templates/task-notes.md) → `readme/tasks/`: scoped outcomes and
   resumable work.
@@ -151,13 +158,14 @@ On first use:
 1. The primary session reads root instructions and this file.
 2. It runs [onboarding.md](onboarding.md) because the project cursor is absent or
    recognizes and safely resolves an existing non-cursor file at that path.
-3. It instantiates the project cursor from
-   [project-state.md](templates/project-state.md).
+3. It instantiates the project cursor and task catalog from
+   [project-state.md](templates/project-state.md) and
+   [task-catalog.md](templates/task-catalog.md).
 4. It derives commands from manifests and CI, executes safe candidates, and records
    only observed successes in `readme/project/standards.md`.
 5. It creates project knowledge categories only when inventory produces real content.
-6. It proves a new agent can recover the outcome, focus, next action, commands,
-   constraints, and approvals from repository evidence.
+6. It proves a new agent can recover the outcome, catalog, primary and eligible tasks,
+   next action, commands, constraints, and approvals from repository evidence.
 
 For greenfield work, record product and technology choices as decisions rather than
 pretending to derive them. For an established project, preserve existing instruction
