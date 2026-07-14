@@ -14,7 +14,8 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0012](0012-add-fail-closed-piped-installer.md), for the installation
+  procedure only; publication behavior remains current.
 
 ## Context
 
@@ -55,7 +56,8 @@ plus a live branch-head check gives the stronger final-state guarantee here.
   latest. A failed update therefore becomes unavailable instead of publicly inconsistent.
 - Document the stable download URL and extraction from a destination repository root.
   Plain `unzip` remains interactive for collisions; an existing `AGENTS.md` must be kept
-  and merged with the portable startup instruction rather than overwritten.
+  and merged with the portable startup instruction rather than overwritten. This
+  initial extraction procedure is superseded by Decision 0012's fail-closed installer.
 
 ## Options Considered
 

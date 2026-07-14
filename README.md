@@ -37,38 +37,25 @@ project. It is useful here but is intentionally excluded from a clean add-on pac
 
 ## Install The Latest Core
 
-With `curl`, `unzip`, and `mktemp` installed, run this from the root of the project that
-will receive the framework:
+With Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and common POSIX file tools installed, run
+this from the root of the project that will receive the framework:
 
 ```sh
-(
-  set -eu
-  framework_zip=$(mktemp "${TMPDIR:-/tmp}/framework-core.XXXXXX")
-  trap 'rm -f "$framework_zip"' EXIT HUP INT TERM
-
-  curl --fail --location --retry 3 \
-    --output "$framework_zip" \
-    https://github.com/tvald/meta-coding-codex/releases/download/latest/ai-coding-meta-framework-core.zip
-  unzip -tq "$framework_zip" >/dev/null
-
-  if [ -e AGENTS.md ] || [ -L AGENTS.md ]; then
-    if [ -e AGENTS.framework.md ] || [ -L AGENTS.framework.md ]; then
-      printf '%s\n' 'Refusing to replace existing AGENTS.framework.md.' >&2
-      exit 1
-    fi
-    unzip -p "$framework_zip" AGENTS.md > AGENTS.framework.md
-    unzip "$framework_zip" -x AGENTS.md -d .
-  else
-    unzip "$framework_zip" -d .
-  fi
-)
+bash -o pipefail -c "curl --disable -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 https://raw.githubusercontent.com/tvald/meta-coding-codex/main/scripts/install-core.sh | bash"
 ```
 
-If the project already has `AGENTS.md`, the commands preserve it and write the packaged
-startup instruction to `AGENTS.framework.md`. Merge that instruction into the existing
-file, then delete `AGENTS.framework.md`; do not replace project-specific agent guidance.
-`unzip` also prompts before replacing any existing framework file, so resolve those
-collisions deliberately rather than creating a mixed installation.
+The [installer script](scripts/install-core.sh) validates and stages the latest release
+before changing the project. If the project already has `AGENTS.md`, it preserves it
+and writes the packaged startup instruction to `AGENTS.framework.md`. Merge that
+instruction into the existing file, then delete `AGENTS.framework.md`; do not replace
+project-specific agent guidance.
+The installer refuses an existing `AGENTS.framework.md` or `readme/meta` instead of
+overwriting or mixing an installation. Its lock serializes installer runs only; run it
+while no other local process is renaming or replacing the destination paths.
+
+This convenience command executes the current installer from this repository with your
+user's permissions. Inspect or download the linked script before running it when you
+need to review or pin the exact code first.
 
 ## Build The Core Archive
 

@@ -23,6 +23,22 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-07-14-04
+
+- What happened: Moving safe install commands into a streamed script exposed three
+  independent completeness boundaries: Bash can execute a valid prefix before curl
+  finishes, an allowlisted zip can still omit most core files, and pathname rechecks can
+  race with local directory replacement. A Linux descriptor-path fix then proved
+  unsuitable for the portable installer because macOS cannot traverse directory FDs.
+- Framework or knowledge gap: The package boundary was exact at production time but not
+  yet enforced by the consumer, and installer safety had no durable stream-completion,
+  directory-transaction, or cross-platform race contract.
+- Change made or follow-up: Added a final compound invocation plus outer `pipefail`, an
+  installer/workflow exact-inventory handshake, noninteractive capped staging, and
+  no-clobber AGENT plus CWD-relative directory-scoped meta transactions with rollback.
+- Tags: installer, streaming, packaging, inventory, races, rollback, portability, state
+- Earlier occurrence: [R-2026-07-14-02](#r-2026-07-14-02)
+
 ### R-2026-07-14-03
 
 - What happened: Designing a moving `latest` release for rapid main pushes showed that

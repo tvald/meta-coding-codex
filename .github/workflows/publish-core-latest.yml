@@ -46,7 +46,8 @@ jobs:
           set -euo pipefail
           expected=$(mktemp)
           actual=$(mktemp)
-          trap 'rm -f "$expected" "$actual"' EXIT
+          installer_expected=$(mktemp)
+          trap 'rm -f "$expected" "$actual" "$installer_expected"' EXIT
 
           {
             printf '%s\n' AGENTS.md
@@ -56,6 +57,8 @@ jobs:
           unzip -tq "dist/${RELEASE_ASSET_NAME}" >/dev/null
           unzip -Z1 "dist/${RELEASE_ASSET_NAME}" > "$actual"
           cmp "$expected" "$actual"
+          ./scripts/install-core.sh --print-expected-inventory > "$installer_expected"
+          cmp "$expected" "$installer_expected"
           cp "$expected" dist/core-inventory.txt
 
       - name: Transfer the verified payload
