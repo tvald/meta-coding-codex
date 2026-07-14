@@ -16,7 +16,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0013](0013-streamline-installer-invocation.md), for the public pipe
+  invocation and stream-completion mechanism only; archive and destination behavior
+  remain current.
 
 ## Context
 

@@ -37,12 +37,13 @@ project. It is useful here but is intentionally excluded from a clean add-on pac
 
 ## Install The Latest Core
 
-With Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and common POSIX file tools installed, run
-this from the root of the project that will receive the framework:
+From the root of the project that will receive the framework, run:
 
 ```sh
-bash -o pipefail -c "curl --disable -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 https://raw.githubusercontent.com/tvald/meta-coding-codex/main/scripts/install-core.sh | bash"
+curl -fsSL https://raw.githubusercontent.com/tvald/meta-coding-codex/main/scripts/install-core.sh | bash
 ```
+
+This requires Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and common POSIX file tools.
 
 The [installer script](scripts/install-core.sh) validates and stages the latest release
 before changing the project. If the project already has `AGENTS.md`, it preserves it
@@ -55,7 +56,11 @@ while no other local process is renaming or replacing the destination paths.
 
 This convenience command executes the current installer from this repository with your
 user's permissions. Inspect or download the linked script before running it when you
-need to review or pin the exact code first.
+need to review or pin the exact code first. Once its guard has loaded, the script rejects
+an incomplete stream before installation. Like other direct curl-to-shell commands, the
+pipeline reports Bash's status rather than curl's independent status; curl still prints
+its own failure. Confirm the installer's success message or download first when strict
+fetch-status handling is required.
 
 ## Build The Core Archive
 

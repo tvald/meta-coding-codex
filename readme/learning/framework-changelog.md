@@ -6,6 +6,18 @@ entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the a
 Review pilots and sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
+## 2026-07-14: Streamline The Piped Installer Command
+
+- Status: Adopted.
+- Evidence: Direct product-owner preference and T-0010 stream/install review; see
+  [Decision 0013](../decisions/0013-streamline-installer-invocation.md).
+- Change: Replaced the outer pipefail wrapper with conventional `curl -fsSL URL | bash`
+  syntax and moved guarded-stream completion detection into the installer.
+- Success signal: Complete pipes install unchanged, guarded truncations fail before
+  mutation, and the unavoidable upstream-status pipeline limitation remains visible.
+- Review or sunset trigger: Hidden install failure, truncation mutation, or preference
+  for strict upstream-status propagation over the shorter command.
+
 ## 2026-07-14: Add A Fail-Closed Piped Core Installer
 
 - Status: Adopted.

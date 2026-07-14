@@ -16,19 +16,21 @@
 | Threat | Impact | Likelihood | Existing Control | Gap |
 | --- | --- | --- | --- | --- |
 | Stream truncates after mutations begin | Partial or inconsistent destination | Medium | Curl fail flag | Pipeline status and progressive Bash execution are insufficient |
+| Curl fails independently of Bash | No install or a completed install can mislead automation about fetch status | Medium | Curl prints an error | Default pipeline status comes from Bash regardless of empty, partial, or complete curl output |
 | Archive traverses or contains unexpected/special paths | Arbitrary destination writes | Low | Producer inventory check | Consumer must distrust downloaded bytes independently |
 | Installer overwrites existing framework/instructions | Project policy loss or mixed version | Medium | Prior interactive unzip | Pipe stdin cannot safely carry prompts |
 | Failure occurs after one durable claim | Partial fresh installation | Medium | Temporary download | Multi-path destination update is not atomic |
 | Project or documentation path is replaced during installation | Writes or cleanup escape into another directory | Low | Initial symlink checks | Pathname checks alone have time-of-check/time-of-use races |
 | Mutable raw script is compromised | Arbitrary code under caller identity | Low | HTTPS and repository governance | No immutable pin or signature in requested simple command |
-| Curl configuration changes transfer behavior | Credentials leak or source/protocol changes | Low | Fixed URL | User curl config is otherwise implicit input |
+| Curl configuration changes transfer behavior | Credentials leak or source/protocol changes | Low | Fixed public HTTPS URL; archive curl disables config | Public convenience curl retains caller configuration |
 
 ## Mitigations
 
 | Mitigation | Owner | Verification | Status |
 | --- | --- | --- | --- |
-| Define all work before a final compound invocation and wrap the documented pipe with `pipefail` | Installer/README | Truncated-stream and outer-fetch-failure fixtures | Done |
-| Disable curl config and require HTTPS/TLS for fixed project URLs | Installer/README | Static argument assertions | Done |
+| Define all work before a final compound invocation and guard stream completion after the script's first statement | Installer/README | Truncated-prefix and complete-pipe fixtures | Done |
+| Use a fixed public HTTPS installer URL; disable curl config and restrict HTTPS for the archive download | Installer/README | Static argument assertions | Done |
+| Document that the direct pipeline cannot propagate curl's independent status | README/Decision 0013 | Failing-curl empty/prefix/complete fixtures and documentation review | Done |
 | Limit transfer/expansion and validate exact producer-synchronized inventory and regular entry types before extraction | Installer/workflow | Hostile archive and workflow-sync fixtures | Done |
 | Refuse root, symlink parents, existing meta, and existing merge helper | Installer | Destination collision fixtures | Done |
 | Keep root paths current-directory-relative and complete meta work in parent-checked directory-scoped subshells | Installer | Parent-symlink and root-rename replacement fixtures | Done |
@@ -46,7 +48,8 @@
 - Dependency, script, or generated-code risk: Curl, unzip, and common POSIX tools are
   host dependencies; the installer and archive are moving remote artifacts.
 - Secret or sensitive-data exposure risk: No token is required. Curl configuration files
-  are disabled; caller environment, trust-store, DNS, and proxy behavior remain inputs.
+  are disabled for the archive download; the public convenience curl retains caller
+  configuration. Environment, trust-store, DNS, and proxy behavior remain inputs.
 - CI/CD or deployment permission risk: The existing workflow adds one read-only
   installer/producer inventory comparison before publishing; permissions and mutations
   are unchanged.
@@ -58,7 +61,10 @@
   between claims can still leave one installer-created path despite signal rollback. A
   malicious same-user process can race or forge cooperative path ownership; the README
   requires a quiescent destination and the lock serializes installer invocations only.
+  A public curl failure is not represented in the direct pipeline status even though
+  curl prints an error; Bash behavior depends on whether no script, an incomplete
+  prefix, or the complete guarded script arrived.
 - Approval or decision record: Direct user instruction and
-  [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md).
+  [Decision 0013](../decisions/0013-streamline-installer-invocation.md).
 - Review trigger: Unexpected overwrite, path escape, partial install, remote-source
   mismatch, credential use, need for update semantics, or demand for immutable signing.

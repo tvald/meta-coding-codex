@@ -38,11 +38,11 @@ Keep at most five entries.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
+| 2026-07-14 | Streamlined installation to conventional curl-to-Bash syntax with a guarded-stream sentinel | [Decision 0013](decisions/0013-streamline-installer-invocation.md) |
 | 2026-07-14 | Added a portable fail-closed piped core installer with producer-synchronized inventory | [Decision 0012](decisions/0012-add-fail-closed-piped-installer.md) |
 | 2026-07-14 | Added a serialized moving-latest release workflow and documented safe core installation | [Decision 0011](decisions/0011-publish-moving-latest-core-release.md) |
 | 2026-07-14 | Added a reproducible state-free core packaging command | [Decision 0010](decisions/0010-automate-portable-core-archive.md) |
 | 2026-07-14 | Adopted imported task orchestration, migrated host state, and verified state-free packaging | [Decisions 0008](decisions/0008-adopt-durable-task-orchestration.md) and [0009](decisions/0009-authorize-bounded-project-delegation.md) |
-| 2026-07-13 | Added and forward-tested the dependency-free Codex quota-monitor skill | [Decision 0007](decisions/0007-add-codex-quota-monitor-skill.md) |
 
 ## Documentation Map
 
@@ -60,5 +60,5 @@ Keep at most five entries.
 ## Hygiene
 
 - Last consistency and pruning pass: 2026-07-10
-- Completed repository-changing tasks since that pass: 7
+- Completed repository-changing tasks since that pass: 8
 - Next pass due: 2026-08-09 or after 10 completed repository-changing tasks, whichever comes first

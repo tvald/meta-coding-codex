@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+{ FRAMEWORK_INSTALLER_STREAM_COMPLETE=false; trap 'if [ "$FRAMEWORK_INSTALLER_STREAM_COMPLETE" != true ]; then printf "%s\n" "install-core.sh: installer stream ended before completion" >&2; exit 1; fi' EXIT; }
+
+# The guard above must remain the first executable statement. A direct `curl | bash`
+# pipeline reports Bash rather than curl status. Once this compound has loaded, its EXIT
+# trap makes an incomplete stream fail before the final invocation can run.
 
 framework_core_inventory() {
     printf '%s\n' \
@@ -389,5 +394,6 @@ install_framework_core() {
 }
 
 {
+    FRAMEWORK_INSTALLER_STREAM_COMPLETE=true
     install_framework_core "$@"
 }

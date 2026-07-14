@@ -4,7 +4,7 @@ This is the canonical discovery and lifecycle record for every accepted task. Ph
 row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 
 - Format: 1
-- Next task ID: T-0010
+- Next task ID: T-0011
 - Primary task: None
 - Scheduling: Idle
 - Global pause source or reason: None
@@ -22,6 +22,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0007 | Add a shell script that packages the portable framework core as a zip archive | User instruction, 2026-07-14 / r1 | Done | T-0006 | Quick change / High | None | None | [Brief](0007-core-package-script-brief.md), [notes](0007-core-package-script-notes.md) | [Decision 0010](../decisions/0010-automate-portable-core-archive.md) |
 | T-0008 | Build the core zip on every push to `main`, publish it as `latest`, and document installation | User instructions, 2026-07-14 / r2 | Done | T-0007 | Initiative / High | None | None | [Brief](0008-latest-release-workflow-brief.md), [notes](0008-latest-release-workflow-notes.md) | [Decision 0011](../decisions/0011-publish-moving-latest-core-release.md) |
 | T-0009 | Replace inline installation commands with a safe script usable through `curl` piped to Bash | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / High | None | None | [Brief](0009-piped-core-installer-brief.md), [notes](0009-piped-core-installer-notes.md) | [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md) |
+| T-0010 | Streamline the public install command to conventional `curl -fsSL … \| bash` form | User instruction, 2026-07-14 / r1 | Done | T-0009 | Quick change / High | None | None | [Brief](0010-streamline-installer-command-brief.md), [notes](0010-streamline-installer-command-notes.md) | [Decision 0013](../decisions/0013-streamline-installer-invocation.md) |
 
 ## Operating Contract
 
