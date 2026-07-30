@@ -8,6 +8,21 @@ Review pilots and sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-07-30: Adopt The Agent Adapters And Skip The Pilot Disposition
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction and T-0015 grep, link, and budget checks; see
+  [Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md).
+- Change: Promoted the three role adapters from Pilot to Adopted and reframed the shipped
+  meta wording accordingly, so a fresh install no longer inherits a "current pilot" it
+  cannot inspect. Established a repository-local policy to skip the Pilot disposition and
+  adopt framework changes directly, recorded in the operating contract and project state;
+  the reusable Pilot mechanism is unchanged for other adopters.
+- Success signal: No shipped file advertises a live adapter pilot, and framework changes
+  here are dispositioned Adopt, Revise, or Reject.
+- Review or sunset trigger: An adopted-directly change here regresses in a way staged
+  piloting would have caught, or the owner reinstates piloting.
+
 ## 2026-07-30: Adopt Tiered Per-Window Usage Cutoffs
 
 - Status: Adopted.
@@ -140,17 +155,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 - Review or sunset trigger: A package contains host facts, onboarding overwrites a task
   index, stale task evidence is used, catalog staging mixes tasks, or delegation occurs
   without destination authority.
-
-## 2026-07-13: Add Codex Quota Monitor Skill
-
-- Status: Adopted.
-- Evidence: Direct product-owner implementation instruction, current official Codex
-  skill/App Server documentation, and a successful installed-client telemetry read; see
-  [Decision 0007](../decisions/0007-add-codex-quota-monitor-skill.md).
-- Change: Added an optional dependency-free repo skill that opens one initialized Codex
-  App Server connection, normalizes rate-limit windows, distinguishes valid absence from
-  failed telemetry, and supplies Decision 0006's capacity guard.
-- Success signal: Codex discovers the skill, obtains current quota without credential
-  access, pauses on unsafe or genuinely unknown capacity, and leaves no orphan process.
-- Review or sunset trigger: Discovery, schema, parsing, cutoff, cleanup, permission, or
-  portability failure; add a helper only after observed reliability evidence.

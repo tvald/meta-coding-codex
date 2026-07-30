@@ -74,12 +74,11 @@ Each quota-monitor skill contains only its required Markdown telemetry procedure
 metadata and links [agent-definitions.md](agent-definitions.md#usage-capacity-guard) as
 policy owner. The Codex skill reads the already-installed Codex App Server; the Claude
 skill reads the authenticated Claude Code usage surface within a single subprocess and
-never surfaces credentials, tokens, or billing data to the session. Neither is part of
-the three-role adapter pilot.
+never surfaces credentials, tokens, or billing data to the session. Neither is one of the
+three role adapters.
 
-The current adapter pilot covers Reviewer, QA And Verification Agent, and Security And
-Risk Agent. The source framework's decision and changelog own its promotion or sunset;
-host projects may omit the pilot entirely.
+The three role adapters—Reviewer, QA And Verification Agent, and Security And Risk
+Agent—are adopted optional integrations that host projects may omit entirely.
 
 ## Principles
 

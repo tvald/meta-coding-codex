@@ -15,7 +15,8 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0016](0016-adopt-adapters-and-skip-pilot-disposition.md) promotes the adapters
+  from Pilot to Adopted and skips the Pilot disposition repository-wide.
 
 ## Context
 
