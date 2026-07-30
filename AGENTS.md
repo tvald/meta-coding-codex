@@ -27,9 +27,13 @@ ownership was assigned explicitly.
   rules identify a concrete independent benefit. This is standing authorization, not a
   requirement to delegate: keep small, tightly coupled, overlapping, or single-writer
   work in the primary agent.
-- During the adapter pilot, prefer a matching named adapter only when an applicable
-  quality gate and the canonical decomposition rules already justify independent work;
-  never delegate merely to advance the pilot counter.
+- Prefer a matching named adapter (Reviewer, QA And Verification Agent, Security And Risk
+  Agent) when an applicable quality gate and the canonical decomposition rules already
+  justify independent work; do not delegate merely to use one.
+- **Skip the Pilot disposition:** for this repository only, disposition every framework
+  change as Adopt, Revise, or Reject and never Pilot; a change that would otherwise be
+  piloted is adopted directly, per
+  [Decision 0016](readme/decisions/0016-adopt-adapters-and-skip-pilot-disposition.md).
 - Mutable project documentation lives in the categorized `readme/` siblings described
   by the meta README, with `readme/README.md` as its always-read cursor.
 - Run the [root loop](readme/meta/root-loop.md), choose one route from

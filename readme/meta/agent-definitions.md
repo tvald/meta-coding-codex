@@ -39,7 +39,7 @@ Adapters do not copy full responsibilities, pin models, configure MCP servers or
 enable recursive delegation, bypass approvals, own integration, or write shared project
 knowledge. Omitting all adapters leaves the core framework behavior unchanged.
 
-The current optional pilot maps three bounded, independently useful roles:
+Three adopted optional adapters map bounded, independently useful roles:
 
 | Adapter Name | Canonical Role | Write Boundary |
 | --- | --- | --- |

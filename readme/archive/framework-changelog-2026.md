@@ -48,6 +48,20 @@
   whichever comes first; revise or remove immediately after a trust-boundary or client
   discovery failure, and remove at review if unused, duplicative, or materially drifted.
 
+## 2026-07-13: Add Codex Quota Monitor Skill
+
+- Status: Adopted.
+- Evidence: Direct product-owner implementation instruction, current official Codex
+  skill/App Server documentation, and a successful installed-client telemetry read; see
+  [Decision 0007](../decisions/0007-add-codex-quota-monitor-skill.md).
+- Change: Added an optional dependency-free repo skill that opens one initialized Codex
+  App Server connection, normalizes rate-limit windows, distinguishes valid absence from
+  failed telemetry, and supplies Decision 0006's capacity guard.
+- Success signal: Codex discovers the skill, obtains current quota without credential
+  access, pauses on unsafe or genuinely unknown capacity, and leaves no orphan process.
+- Review or sunset trigger: Discovery, schema, parsing, cutoff, cleanup, permission, or
+  portability failure; add a helper only after observed reliability evidence.
+
 ## 2026-07-13: Guard Subagent Usage Capacity
 
 - Status: Adopted. Superseded by [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md)'s
