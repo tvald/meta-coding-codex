@@ -29,3 +29,21 @@
   local-link checks without project state and can initialize a fresh project cursor.
 - Review or sunset trigger: An adopter packages state unintentionally, agents confuse
   the two README roles, or an in-place reset becomes a demonstrated need.
+
+## 2026-07-10: Pilot Optional Codex And Claude Code Agent Adapters
+
+- Status: Pilot. Active per [Decision 0005](../decisions/0005-pilot-optional-agent-adapters.md);
+  this historical entry was moved here for changelog budget only, not sunset.
+- Evidence: Current official Codex and Claude Code agent-discovery capabilities plus
+  direct user instruction after an explicit adopt/pilot/reject evaluation; see
+  [Decision 0005](../decisions/0005-pilot-optional-agent-adapters.md).
+- Change: Added a root Claude-to-AGENTS bridge and thin Reviewer, Verifier, and Security
+  Reviewer adapters for both harnesses; kept role semantics in the Markdown core and
+  defined a removable, no-permission-expansion adapter contract.
+- Success signal: Across five eligible non-trivial tasks, the adapters are useful at
+  least twice—meaning a named invocation returns the canonical handoff and supplies
+  recorded review or verification evidence—while causing no unnecessary delegation,
+  permission expansion, or overlapping edits.
+- Review or sunset trigger: Review on 2026-08-09 or after five eligible tasks,
+  whichever comes first; revise or remove immediately after a trust-boundary or client
+  discovery failure, and remove at review if unused, duplicative, or materially drifted.

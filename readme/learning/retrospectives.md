@@ -10,6 +10,8 @@ it has appeared before, link the earlier entry and apply the repeat trigger in
 160 lines; move older entries unchanged to a dated file under `readme/archive/` and link
 the archive here.
 
+Archived entries: [2026](../archive/retrospectives-2026.md).
+
 Each entry has exactly these durable fields, plus tags for search:
 
 ```md
@@ -22,6 +24,23 @@ Each entry has exactly these durable fields, plus tags for search:
 ```
 
 ## Entries
+
+### R-2026-07-30-01
+
+- What happened: A request framed as a small urgent bug ("there is an issue with the
+  installer") was designed, verified, and committed (`0a8cd76`) straight through. The root
+  loop was not run first: no catalog ID was reserved and no task, quality, or decision
+  records existed until a later turn prompted the backfill as T-0013.
+- Framework or knowledge gap: A trivial-looking fix pattern-matched to "just fix it" and
+  bypassed the entrypoint's mandate that every repository-changing task be recorded. No
+  forcing function ties a framework-modifying commit to a catalog row, so the catalog
+  silently jumped from T-0011 to T-0012 with an unrecorded change in between.
+- Change made or follow-up: Backfilled T-0013 and its records; treat any change to the
+  installer or framework files as an accepted task that needs at least a catalog row and
+  route before its commit, however small the request appears. Watch for repeats of a
+  quick fix skipping intake.
+- Tags: process, root-loop, task-catalog, records, installer, backfill
+- Earlier occurrence: None
 
 ### R-2026-07-14-04
 
@@ -133,16 +152,4 @@ Each entry has exactly these durable fields, plus tags for search:
   categorized project documentation separately, and made packaging plus onboarding the
   clean-start path.
 - Tags: packaging, portability, state, onboarding, documentation-boundary
-- Earlier occurrence: None
-
-### R-2026-07-10-01
-
-- What happened: An external review found that repeat-detection and cold-start recovery
-  relied on session memory that the repository did not persist.
-- Framework or knowledge gap: The retrospective was internal only, and no global state
-  file pointed a new agent to active work or parked approvals.
-- Change made or follow-up: Added this log and the
-  [project cursor](../README.md), then made their read, update, size, archive, and
-  recurrence rules explicit.
-- Tags: continuity, cold-start, retrospective, repeat-detection
 - Earlier occurrence: None
