@@ -218,29 +218,28 @@ trigger. Decompose only when it improves speed, quality, or focus:
 ## Usage Capacity Guard
 
 The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
-running, or quota-suspended. Use only the harness or provider's authoritative usage
-surface; never infer safety from elapsed time or token estimates.
-On Codex, use the repo's `codex-quota-monitor` skill when installed; on Claude Code, use
-the repo's `claude-quota-monitor` skill when installed. Each owns only telemetry
-acquisition and normalization, not capacity policy.
+running, or quota-suspended. Use only the provider's authoritative usage surface, never
+elapsed time or token estimates; on Codex use the `codex-quota-monitor` skill and on
+Claude Code the `claude-quota-monitor` skill for telemetry, not capacity policy.
 
-- Read both the five-hour and weekly consumption before every spawn or resume, after a
-  worker result, and at least every five minutes while any child is active. When only
-  remaining capacity is reported, consumed percentage is `100 - remaining percentage`.
-- If either window is at least 95% consumed, start or resume no child. Ask active
-  children to checkpoint and suspend at the next safe message or tool boundary, then do
-  only the coordination needed to preserve their state and output.
-- Treat a failed or malformed required reading as unknown capacity and apply the same
-  delegation pause until telemetry returns. A successful authoritative response that
-  explicitly omits a window means that window is not applicable. Do not guess or ask
-  the product owner to monitor it.
-- Before waiting, record the minimal reading time, percentages, reset times, limiting
-  windows, worker states, next safe action, and wake method in the active task note. Do
-  not persist account identifiers or raw billing data.
-- When every limiting window has an authoritative reset time and a reliable wait
-  facility exists, set one wake-up timer for the latest of those times. Otherwise poll
-  the usage surface every five minutes. A wake-up is not proof of reset: re-read both
-  windows and keep waiting while either applicable window is at least 95% or unknown.
+- Read every advertised window—five-hour, weekly, each model-scoped window, and monthly
+  when present—before each spawn or resume, after a worker result, and at least every five
+  minutes while any child is active. Consumed is `100 - remaining` when only remaining
+  capacity is reported.
+- A cutoff only prevents accidentally crossing a hard limit—which terminates the
+  orchestrator session—so it rises with window length: **95%** five-hour, **98%** weekly
+  (including any model-scoped weekly), **99%** monthly. A scoped or provider-named window
+  takes its duration group's cutoff; a real limit error is a 100% reading, and a failed,
+  malformed, or unknown required reading is treated the same as at-cutoff.
+- Apply each window's cutoff independently. If any window is at or above its cutoff, start
+  or resume no child; ask active children to checkpoint and suspend at the next safe
+  boundary, then preserve their state and output. A response that explicitly omits a
+  window means it is not applicable; do not guess or ask the product owner to monitor it.
+- Before waiting, record the reading time, per-window consumed percentages, reset times,
+  limiting windows, worker states, next safe action, and wake method; never persist
+  account or billing data. Set one wake-up for the latest reset when limiting windows have
+  authoritative resets and a wait facility exists, else poll every five minutes; re-read
+  every window on wake and keep waiting while any is at or above its cutoff or unknown.
 - Resume existing workers when the harness supports it; otherwise use the replacement
   rules below. A quota wait is an operational pause, not **Blocked**, **Needs
   verification**, or task completion.

@@ -47,3 +47,18 @@
 - Review or sunset trigger: Review on 2026-08-09 or after five eligible tasks,
   whichever comes first; revise or remove immediately after a trust-boundary or client
   discovery failure, and remove at review if unused, duplicative, or materially drifted.
+
+## 2026-07-13: Guard Subagent Usage Capacity
+
+- Status: Adopted. Superseded by [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md)'s
+  tiered per-window cutoffs; original flat-95% entry retained here unchanged.
+- Evidence: Direct durable product-owner instruction; see
+  [Decision 0006](../decisions/0006-guard-subagent-usage-capacity.md).
+- Change: Made the Root Orchestrator monitor authoritative five-hour and weekly usage,
+  suspend delegation at either 95% boundary or when telemetry is unknown, checkpoint
+  workers, and use a reset timer with fresh-read verification or five-minute polling
+  before resuming.
+- Success signal: Eligible delegated work pauses without losing output or exhausting
+  integration capacity and resumes only after both windows are observed safe.
+- Review or sunset trigger: A missed cutoff, premature resume, lost checkpoint,
+  unavailable meter, materially late resume, or provider/harness capability change.

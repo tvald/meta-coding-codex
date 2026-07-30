@@ -8,6 +8,22 @@ Review pilots and sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-07-30: Adopt Tiered Per-Window Usage Cutoffs
+
+- Status: Adopted.
+- Evidence: Product-owner instruction on quota waste and T-0014 budget, hardcoded-cutoff
+  grep, and link checks; see
+  [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md).
+- Change: Generalized the capacity guard to threshold every advertised window—five-hour,
+  weekly, each model-scoped window, and monthly—and replaced the flat 95% cutoff with
+  tiered 95% five-hour, 98% weekly, and 99% monthly, so long-window quota stays usable
+  while an accidental hard-limit hit that would terminate the orchestrator is still
+  prevented. Aligned the resumption capacity-wait trigger and the task-notes template.
+- Success signal: The guard thresholds the windows its skills report and reserves only a
+  small margin on distant-reset windows.
+- Review or sunset trigger: An accidental hard-limit crossing despite the guard, or a new
+  provider window class the tiers do not cover.
+
 ## 2026-07-30: Add A Claude Code Usage Telemetry Skill
 
 - Status: Adopted.
@@ -138,17 +154,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   access, pauses on unsafe or genuinely unknown capacity, and leaves no orphan process.
 - Review or sunset trigger: Discovery, schema, parsing, cutoff, cleanup, permission, or
   portability failure; add a helper only after observed reliability evidence.
-
-## 2026-07-13: Guard Subagent Usage Capacity
-
-- Status: Adopted.
-- Evidence: Direct durable product-owner instruction; see
-  [Decision 0006](../decisions/0006-guard-subagent-usage-capacity.md).
-- Change: Made the Root Orchestrator monitor authoritative five-hour and weekly usage,
-  suspend delegation at either 95% boundary or when telemetry is unknown, checkpoint
-  workers, and use a reset timer with fresh-read verification or five-minute polling
-  before resuming.
-- Success signal: Eligible delegated work pauses without losing output or exhausting
-  integration capacity and resumes only after both windows are observed safe.
-- Review or sunset trigger: A missed cutoff, premature resume, lost checkpoint,
-  unavailable meter, materially late resume, or provider/harness capability change.
