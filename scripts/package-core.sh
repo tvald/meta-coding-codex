@@ -49,6 +49,9 @@ REPOSITORY_ROOT=$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)
 README_SOURCE=$REPOSITORY_ROOT/readme
 META_SOURCE=$README_SOURCE/meta
 AGENTS_SOURCE=$REPOSITORY_ROOT/AGENTS.md
+CLAUDE_AGENTS_SOURCE=$REPOSITORY_ROOT/.claude/agents
+CODEX_AGENTS_SOURCE=$REPOSITORY_ROOT/.codex/agents
+SKILLS_SOURCE=$REPOSITORY_ROOT/.agents/skills
 
 [ -d "$README_SOURCE" ] || fail "missing documentation directory: $README_SOURCE"
 [ ! -L "$README_SOURCE" ] || fail "documentation directory must not be a symbolic link"
@@ -57,12 +60,35 @@ AGENTS_SOURCE=$REPOSITORY_ROOT/AGENTS.md
 [ -f "$AGENTS_SOURCE" ] || fail "missing startup source: $AGENTS_SOURCE"
 [ ! -L "$AGENTS_SOURCE" ] || fail "startup source must not be a symbolic link"
 
+# Optional harness adapters (Claude Code and Codex agent definitions, plus the Codex
+# quota-monitor skill) ship inside the same portable core so a destination that uses
+# those harnesses receives their discovery metadata. Each is a required source in this
+# repository; the installer decides per file whether to add or preserve it.
+[ -d "$CLAUDE_AGENTS_SOURCE" ] || fail "missing adapter directory: $CLAUDE_AGENTS_SOURCE"
+[ ! -L "$CLAUDE_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
+[ -d "$CODEX_AGENTS_SOURCE" ] || fail "missing adapter directory: $CODEX_AGENTS_SOURCE"
+[ ! -L "$CODEX_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
+[ -d "$SKILLS_SOURCE" ] || fail "missing skill directory: $SKILLS_SOURCE"
+[ ! -L "$SKILLS_SOURCE" ] || fail "skill directory must not be a symbolic link"
+
 MARKER_COUNT=$(grep -c '^## Operating Contract$' "$AGENTS_SOURCE" || true)
 [ "$MARKER_COUNT" -eq 1 ] ||
     fail "AGENTS.md must contain exactly one '## Operating Contract' boundary"
 
-UNEXPECTED_CORE_ENTRIES=$(find "$META_SOURCE" \
-    \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print)
+# Restrict every packaged tree to plain directories and the file types each surface is
+# allowed to publish: Markdown for the core and Claude adapters, TOML for the Codex
+# adapters, and Markdown or YAML for the skill.
+UNEXPECTED_CORE_ENTRIES=$(
+    find "$META_SOURCE" \
+        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
+    find "$CLAUDE_AGENTS_SOURCE" \
+        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
+    find "$CODEX_AGENTS_SOURCE" \
+        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.toml' \) \) -print
+    find "$SKILLS_SOURCE" \
+        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' ! -name '*.yaml' \) \) \
+        -print
+)
 [ -z "$UNEXPECTED_CORE_ENTRIES" ] || {
     printf '%s: portable core contains unsupported files:\n%s\n' \
         "$PROGRAM" "$UNEXPECTED_CORE_ENTRIES" >&2
@@ -135,6 +161,12 @@ trap 'exit 1' HUP INT QUIT TERM
 
 mkdir -p "$STAGING_DIRECTORY/readme"
 cp -pR "$META_SOURCE" "$STAGING_DIRECTORY/readme/meta"
+mkdir -p "$STAGING_DIRECTORY/.claude"
+cp -pR "$CLAUDE_AGENTS_SOURCE" "$STAGING_DIRECTORY/.claude/agents"
+mkdir -p "$STAGING_DIRECTORY/.codex"
+cp -pR "$CODEX_AGENTS_SOURCE" "$STAGING_DIRECTORY/.codex/agents"
+mkdir -p "$STAGING_DIRECTORY/.agents"
+cp -pR "$SKILLS_SOURCE" "$STAGING_DIRECTORY/.agents/skills"
 awk '/^## Operating Contract$/ { exit } { print }' \
     "$AGENTS_SOURCE" > "$STAGING_DIRECTORY/AGENTS.md"
 
@@ -147,17 +179,22 @@ if grep -q '^## Operating Contract$\|Standing delegation request' \
     fail "portable AGENTS.md contains project-local operating guidance"
 fi
 
-find "$STAGING_DIRECTORY/readme/meta" -type d -exec chmod 0755 {} \;
+find "$STAGING_DIRECTORY/readme/meta" "$STAGING_DIRECTORY/.claude" \
+    "$STAGING_DIRECTORY/.codex" "$STAGING_DIRECTORY/.agents" \
+    -type d -exec chmod 0755 {} \;
 find "$STAGING_DIRECTORY/AGENTS.md" "$STAGING_DIRECTORY/readme/meta" \
-    -type f -exec chmod 0644 {} \;
+    "$STAGING_DIRECTORY/.claude" "$STAGING_DIRECTORY/.codex" \
+    "$STAGING_DIRECTORY/.agents" -type f -exec chmod 0644 {} \;
 find "$STAGING_DIRECTORY/AGENTS.md" "$STAGING_DIRECTORY/readme/meta" \
-    -type f -exec touch -t 200001010000 {} \;
+    "$STAGING_DIRECTORY/.claude" "$STAGING_DIRECTORY/.codex" \
+    "$STAGING_DIRECTORY/.agents" -type f -exec touch -t 200001010000 {} \;
 
 EXPECTED_INVENTORY=$STAGING_DIRECTORY/expected-inventory.txt
 ACTUAL_INVENTORY=$STAGING_DIRECTORY/actual-inventory.txt
 (
     cd "$STAGING_DIRECTORY"
-    find AGENTS.md readme/meta -type f -print | sort > "$EXPECTED_INVENTORY"
+    find AGENTS.md readme/meta .claude .codex .agents -type f -print |
+        sort > "$EXPECTED_INVENTORY"
 )
 
 (

@@ -7,6 +7,14 @@
 
 framework_core_inventory() {
     printf '%s\n' \
+        '.agents/skills/codex-quota-monitor/SKILL.md' \
+        '.agents/skills/codex-quota-monitor/agents/openai.yaml' \
+        '.claude/agents/reviewer.md' \
+        '.claude/agents/security-reviewer.md' \
+        '.claude/agents/verifier.md' \
+        '.codex/agents/reviewer.toml' \
+        '.codex/agents/security-reviewer.toml' \
+        '.codex/agents/verifier.toml' \
         'AGENTS.md' \
         'readme/meta/README.md' \
         'readme/meta/agent-definitions.md' \
@@ -104,6 +112,7 @@ install_framework_core() {
     SORTED_INVENTORY=$WORK_DIRECTORY/inventory-sorted.txt
     EXPECTED_INVENTORY=$WORK_DIRECTORY/inventory-expected.txt
     EXPECTED_META_INVENTORY=$WORK_DIRECTORY/meta-inventory-expected.txt
+    ADAPTER_INVENTORY=$WORK_DIRECTORY/adapter-inventory.txt
     LONG_INVENTORY=$WORK_DIRECTORY/inventory-long.txt
     EXTRACTED_INVENTORY=$WORK_DIRECTORY/extracted-inventory.txt
     INSTALLED_META_INVENTORY=$WORK_DIRECTORY/meta-inventory-installed.txt
@@ -202,7 +211,9 @@ install_framework_core() {
 
     while IFS= read -r entry || [ -n "$entry" ]; do
         case $entry in
-            AGENTS.md|readme/meta/*.md)
+            AGENTS.md|readme/meta/*.md| \
+            .claude/agents/*.md|.codex/agents/*.toml| \
+            .agents/skills/*.md|.agents/skills/*.yaml)
                 ;;
             *)
                 fail "archive contains an unexpected entry: $entry"
@@ -233,6 +244,8 @@ install_framework_core() {
     cmp -s "$EXPECTED_INVENTORY" "$SORTED_INVENTORY" ||
         fail "archive inventory differs from the complete portable core"
     grep '^readme/meta/' "$EXPECTED_INVENTORY" > "$EXPECTED_META_INVENTORY"
+    grep -E '^\.(agents|claude|codex)/' "$EXPECTED_INVENTORY" \
+        > "$ADAPTER_INVENTORY" || true
 
     # Inflate only after central-directory metadata and exact inventory pass their caps.
     unzip -P '' -tq "$ARCHIVE" >/dev/null ||
@@ -251,7 +264,7 @@ install_framework_core() {
 
     (
         cd "$STAGING_DIRECTORY"
-        find AGENTS.md readme/meta -type f -print | sort
+        find AGENTS.md readme/meta .claude .codex .agents -type f -print | sort
     ) > "$EXTRACTED_INVENTORY"
     cmp -s "$SORTED_INVENTORY" "$EXTRACTED_INVENTORY" ||
         fail "extracted files differ from the validated archive inventory"
@@ -383,6 +396,96 @@ install_framework_core() {
     INSTALL_COMPLETE=true
     restore_signal_traps
 
+    # Optional harness adapters install additively once the core is in place. They are
+    # non-destructive by construction: a same-name agent or skill file already present is
+    # preserved, never overwritten, so a partial run can only leave additional framework
+    # files behind. A failure here does not undo the completed core installation.
+    ADAPTERS_INSTALLED=0
+    ADAPTERS_PRESERVED=0
+    ADAPTERS_FAILED=0
+
+    # Create each missing directory component beneath the destination root without
+    # following a symbolic link that a colliding path may have planted. Returns non-zero
+    # when a component is a symlink or a non-directory, so the caller skips that file.
+    ensure_adapter_parent() {
+        _ensure_dir=$1
+        _ensure_accum=
+        _ensure_oldifs=$IFS
+        IFS=/
+        # shellcheck disable=SC2086
+        set -- $_ensure_dir
+        IFS=$_ensure_oldifs
+        for _ensure_comp in "$@"; do
+            if [ -z "$_ensure_accum" ]; then
+                _ensure_accum=$_ensure_comp
+            else
+                _ensure_accum=$_ensure_accum/$_ensure_comp
+            fi
+            if [ -L "$_ensure_accum" ]; then
+                printf '%s: refusing symbolic adapter path: %s\n' \
+                    "$PROGRAM" "$_ensure_accum" >&2
+                return 1
+            elif [ -d "$_ensure_accum" ]; then
+                :
+            elif [ -e "$_ensure_accum" ]; then
+                printf '%s: adapter parent is not a directory: %s\n' \
+                    "$PROGRAM" "$_ensure_accum" >&2
+                return 1
+            else
+                trap '' HUP INT QUIT TERM
+                if ! mkdir "$_ensure_accum"; then
+                    restore_signal_traps
+                    printf '%s: cannot create adapter directory: %s\n' \
+                        "$PROGRAM" "$_ensure_accum" >&2
+                    return 1
+                fi
+                restore_signal_traps
+            fi
+        done
+        return 0
+    }
+
+    # Install one adapter file, preserving any existing same-name destination. Always
+    # returns success; outcome is tallied so a single unwritable file cannot abort the run.
+    install_adapter_file() {
+        _adapter_src=$1
+        _adapter_dest=$2
+        if [ -e "$_adapter_dest" ] || [ -L "$_adapter_dest" ]; then
+            ADAPTERS_PRESERVED=$((ADAPTERS_PRESERVED + 1))
+            return 0
+        fi
+        _adapter_parent=${_adapter_dest%/*}
+        if [ "$_adapter_parent" != "$_adapter_dest" ] &&
+            ! ensure_adapter_parent "$_adapter_parent"; then
+            ADAPTERS_FAILED=$((ADAPTERS_FAILED + 1))
+            return 0
+        fi
+        trap '' HUP INT QUIT TERM
+        if ln "$_adapter_src" "$_adapter_dest" 2>/dev/null ||
+            cp -p "$_adapter_src" "$_adapter_dest"; then
+            restore_signal_traps
+            if cmp -s "$_adapter_src" "$_adapter_dest"; then
+                ADAPTERS_INSTALLED=$((ADAPTERS_INSTALLED + 1))
+            else
+                rm -f "$_adapter_dest" || true
+                ADAPTERS_FAILED=$((ADAPTERS_FAILED + 1))
+                printf '%s: installed adapter file differs, removed: %s\n' \
+                    "$PROGRAM" "$_adapter_dest" >&2
+            fi
+        else
+            restore_signal_traps
+            ADAPTERS_FAILED=$((ADAPTERS_FAILED + 1))
+            printf '%s: cannot install adapter file: %s\n' \
+                "$PROGRAM" "$_adapter_dest" >&2
+        fi
+        return 0
+    }
+
+    while IFS= read -r adapter_rel || [ -n "$adapter_rel" ]; do
+        [ -n "$adapter_rel" ] || continue
+        install_adapter_file "$STAGING_DIRECTORY/$adapter_rel" "$adapter_rel"
+    done < "$ADAPTER_INVENTORY"
+
     printf 'Installed the portable framework core in %s.\n' "$DESTINATION_ROOT"
     if [ "$PRESERVE_AGENTS" = true ]; then
         printf '%s\n' \
@@ -391,6 +494,8 @@ install_framework_core() {
     else
         printf '%s\n' 'Installed the portable startup instruction as AGENTS.md.'
     fi
+    printf 'Harness adapters: %s installed, %s preserved, %s failed.\n' \
+        "$ADAPTERS_INSTALLED" "$ADAPTERS_PRESERVED" "$ADAPTERS_FAILED"
 }
 
 {
