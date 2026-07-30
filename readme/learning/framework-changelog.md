@@ -8,6 +8,24 @@ Review pilots and sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-07-30: Add A Claude Code Usage Telemetry Skill
+
+- Status: Adopted.
+- Evidence: Product-owner instruction, a live `oauth/usage` read confirming model-scoped
+  windows, an independent Security And Risk Agent review with no Critical or High
+  findings, and T-0012 containment, inventory, and installer checks; see
+  [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md).
+- Change: Added the optional `claude-quota-monitor` skill whose credential-scoped `node`
+  reader parses the authoritative `limits[]` array first, preserves model-scoped windows,
+  and prints only normalized capacity fields while keeping the token inside the
+  subprocess. Shipped it through the additive core installer by packaging `.claude/skills`
+  and pointed the capacity guard at it. This is the framework's first credential-reading
+  surface, bounded by a threat-model card.
+- Success signal: A Claude Code Root Orchestrator obtains current five-hour, weekly,
+  model-scoped, and monthly windows without credential material entering the conversation.
+- Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
+  schema change, or a second copy of the reader.
+
 ## 2026-07-14: Rename The Moving Latest Release
 
 - Status: Adopted.
@@ -137,17 +155,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 - Review or sunset trigger: Review on 2026-08-09 or after five eligible tasks,
   whichever comes first; revise or remove immediately after a trust-boundary or client
   discovery failure, and remove at review if unused, duplicative, or materially drifted.
-
-## 2026-07-10: Package Framework Under `readme/meta/`
-
-- Status: Adopted.
-- Evidence: Direct user instruction and selected directory/reset contracts, recorded in
-  [Decision 0004](../decisions/0004-package-framework-as-addon.md).
-- Change: Made `readme/meta/README.md` the reusable agent entrypoint; moved all reusable
-  process files and templates under meta; categorized this repository's mutable project
-  documentation directly under `readme/`; and defined state-free packaging plus
-  first-run onboarding.
-- Success signal: A package containing root AGENTS guidance and `readme/meta/` passes
-  local-link checks without project state and can initialize a fresh project cursor.
-- Review or sunset trigger: An adopter packages state unintentionally, agents confuse
-  the two README roles, or an in-place reset becomes a demonstrated need.

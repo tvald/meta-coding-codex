@@ -12,6 +12,7 @@ framework_core_inventory() {
         '.claude/agents/reviewer.md' \
         '.claude/agents/security-reviewer.md' \
         '.claude/agents/verifier.md' \
+        '.claude/skills/claude-quota-monitor/SKILL.md' \
         '.codex/agents/reviewer.toml' \
         '.codex/agents/security-reviewer.toml' \
         '.codex/agents/verifier.toml' \
@@ -212,7 +213,8 @@ install_framework_core() {
     while IFS= read -r entry || [ -n "$entry" ]; do
         case $entry in
             AGENTS.md|readme/meta/*.md| \
-            .claude/agents/*.md|.codex/agents/*.toml| \
+            .claude/agents/*.md|.claude/skills/*.md|.claude/skills/*.yaml| \
+            .codex/agents/*.toml| \
             .agents/skills/*.md|.agents/skills/*.yaml)
                 ;;
             *)

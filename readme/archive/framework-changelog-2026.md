@@ -15,3 +15,17 @@
 - Review or sunset trigger: The state/log churn exceeds their recovery value, a removed
   template proves necessary in two real tasks, or a retained safety overlay creates
   classification conflicts.
+
+## 2026-07-10: Package Framework Under `readme/meta/`
+
+- Status: Adopted.
+- Evidence: Direct user instruction and selected directory/reset contracts, recorded in
+  [Decision 0004](../decisions/0004-package-framework-as-addon.md).
+- Change: Made `readme/meta/README.md` the reusable agent entrypoint; moved all reusable
+  process files and templates under meta; categorized this repository's mutable project
+  documentation directly under `readme/`; and defined state-free packaging plus
+  first-run onboarding.
+- Success signal: A package containing root AGENTS guidance and `readme/meta/` passes
+  local-link checks without project state and can initialize a fresh project cursor.
+- Review or sunset trigger: An adopter packages state unintentionally, agents confuse
+  the two README roles, or an in-place reset becomes a demonstrated need.
