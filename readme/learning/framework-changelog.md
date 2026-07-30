@@ -26,6 +26,20 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 - Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
   schema change, or a second copy of the reader.
 
+## 2026-07-30: Pack Harness Adapters And Skills Into The Installer
+
+- Status: Adopted.
+- Evidence: User bug report and T-0013 inventory, reproducibility, additive-install,
+  symlink-escape, and negative-packaging checks; records backfilled for commit `0a8cd76`.
+- Change: Made `package-core.sh` stage and type-validate `.claude/agents`, `.codex/agents`,
+  and `.agents/skills`, and made `install-core.sh` and CI carry them in the exact core
+  inventory and install them additively without overwriting same-name host files or
+  traversing symlinked path components.
+- Success signal: A deployed repository receives the adapters and quota skill, and the
+  packer, installer, and CI inventories agree.
+- Review or sunset trigger: A packaged tree drifts from the installer inventory or an
+  additive install overwrites a host file.
+
 ## 2026-07-14: Rename The Moving Latest Release
 
 - Status: Adopted.
@@ -138,20 +152,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   integration capacity and resumes only after both windows are observed safe.
 - Review or sunset trigger: A missed cutoff, premature resume, lost checkpoint,
   unavailable meter, materially late resume, or provider/harness capability change.
-
-## 2026-07-10: Pilot Optional Codex And Claude Code Agent Adapters
-
-- Status: Pilot.
-- Evidence: Current official Codex and Claude Code agent-discovery capabilities plus
-  direct user instruction after an explicit adopt/pilot/reject evaluation; see
-  [Decision 0005](../decisions/0005-pilot-optional-agent-adapters.md).
-- Change: Added a root Claude-to-AGENTS bridge and thin Reviewer, Verifier, and Security
-  Reviewer adapters for both harnesses; kept role semantics in the Markdown core and
-  defined a removable, no-permission-expansion adapter contract.
-- Success signal: Across five eligible non-trivial tasks, the adapters are useful at
-  least twice—meaning a named invocation returns the canonical handoff and supplies
-  recorded review or verification evidence—while causing no unnecessary delegation,
-  permission expansion, or overlapping edits.
-- Review or sunset trigger: Review on 2026-08-09 or after five eligible tasks,
-  whichever comes first; revise or remove immediately after a trust-boundary or client
-  discovery failure, and remove at review if unused, duplicative, or materially drifted.
