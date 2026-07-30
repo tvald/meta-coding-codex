@@ -56,9 +56,8 @@ work.
 ## Usage Capacity
 
 - Last authoritative meter reading:
-- Five-hour window consumed and reset time:
-- Weekly window consumed and reset time:
-- Limiting or unknown windows:
+- Per-window consumed and reset time (five-hour, weekly, any model-scoped, monthly):
+- Limiting or unknown windows and their cutoffs:
 - Wake method and time:
 - Resume condition:
 

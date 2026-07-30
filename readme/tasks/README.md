@@ -4,7 +4,7 @@ This is the canonical discovery and lifecycle record for every accepted task. Ph
 row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 
 - Format: 1
-- Next task ID: T-0014
+- Next task ID: T-0015
 - Primary task: None
 - Scheduling: Idle
 - Global pause source or reason: None
@@ -26,6 +26,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0011 | Rename the moving-latest release display title from `Latest framework core` to `core-framework` | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / Medium | None | None | None | [Quality record](../quality/2026-07-14-core-release-title.md) |
 | T-0012 | Add a credential-safe Claude Code usage-telemetry skill and ship it through the core installer | User instruction, 2026-07-30 / r1 | Done | T-0005, T-0013 | Initiative / High | None | None | [Brief](0012-claude-quota-monitor-skill-brief.md), [notes](0012-claude-quota-monitor-skill-notes.md) | [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md) |
 | T-0013 | Pack harness adapters and skills into the core packager and installer | User instruction, 2026-07-30 / r1 | Done | T-0009 | Quick change / High | None | None | [Brief](0013-installer-adapter-packing-brief.md), [notes](0013-installer-adapter-packing-notes.md) | `0a8cd76`, [quality record](../quality/2026-07-30-installer-adapter-packing.md) |
+| T-0014 | Adopt tiered per-window usage capacity cutoffs in the guard | User instruction, 2026-07-30 / r1 | Done | T-0012 | Initiative / High | None | None | [Brief](0014-tiered-usage-cutoffs-brief.md), [notes](0014-tiered-usage-cutoffs-notes.md) | [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md) |
 
 ## Operating Contract
 
