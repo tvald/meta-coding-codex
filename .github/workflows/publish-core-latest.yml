@@ -51,7 +51,7 @@ jobs:
 
           {
             printf '%s\n' AGENTS.md
-            find readme/meta .claude/agents .codex/agents .agents/skills \
+            find readme/meta .claude/agents .claude/skills .codex/agents .agents/skills \
               -type f -print
           } | LC_ALL=C sort > "$expected"
 

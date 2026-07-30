@@ -220,8 +220,9 @@ trigger. Decompose only when it improves speed, quality, or focus:
 The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
 running, or quota-suspended. Use only the harness or provider's authoritative usage
 surface; never infer safety from elapsed time or token estimates.
-On Codex, use the repo's `codex-quota-monitor` skill when installed; it owns only
-telemetry acquisition and normalization, not capacity policy.
+On Codex, use the repo's `codex-quota-monitor` skill when installed; on Claude Code, use
+the repo's `claude-quota-monitor` skill when installed. Each owns only telemetry
+acquisition and normalization, not capacity policy.
 
 - Read both the five-hour and weekly consumption before every spawn or resume, after a
   worker result, and at least every five minutes while any child is active. When only

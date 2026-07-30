@@ -50,6 +50,7 @@ README_SOURCE=$REPOSITORY_ROOT/readme
 META_SOURCE=$README_SOURCE/meta
 AGENTS_SOURCE=$REPOSITORY_ROOT/AGENTS.md
 CLAUDE_AGENTS_SOURCE=$REPOSITORY_ROOT/.claude/agents
+CLAUDE_SKILLS_SOURCE=$REPOSITORY_ROOT/.claude/skills
 CODEX_AGENTS_SOURCE=$REPOSITORY_ROOT/.codex/agents
 SKILLS_SOURCE=$REPOSITORY_ROOT/.agents/skills
 
@@ -66,6 +67,8 @@ SKILLS_SOURCE=$REPOSITORY_ROOT/.agents/skills
 # repository; the installer decides per file whether to add or preserve it.
 [ -d "$CLAUDE_AGENTS_SOURCE" ] || fail "missing adapter directory: $CLAUDE_AGENTS_SOURCE"
 [ ! -L "$CLAUDE_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
+[ -d "$CLAUDE_SKILLS_SOURCE" ] || fail "missing skill directory: $CLAUDE_SKILLS_SOURCE"
+[ ! -L "$CLAUDE_SKILLS_SOURCE" ] || fail "skill directory must not be a symbolic link"
 [ -d "$CODEX_AGENTS_SOURCE" ] || fail "missing adapter directory: $CODEX_AGENTS_SOURCE"
 [ ! -L "$CODEX_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
 [ -d "$SKILLS_SOURCE" ] || fail "missing skill directory: $SKILLS_SOURCE"
@@ -83,6 +86,9 @@ UNEXPECTED_CORE_ENTRIES=$(
         \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
     find "$CLAUDE_AGENTS_SOURCE" \
         \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
+    find "$CLAUDE_SKILLS_SOURCE" \
+        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' ! -name '*.yaml' \) \) \
+        -print
     find "$CODEX_AGENTS_SOURCE" \
         \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.toml' \) \) -print
     find "$SKILLS_SOURCE" \
@@ -163,6 +169,7 @@ mkdir -p "$STAGING_DIRECTORY/readme"
 cp -pR "$META_SOURCE" "$STAGING_DIRECTORY/readme/meta"
 mkdir -p "$STAGING_DIRECTORY/.claude"
 cp -pR "$CLAUDE_AGENTS_SOURCE" "$STAGING_DIRECTORY/.claude/agents"
+cp -pR "$CLAUDE_SKILLS_SOURCE" "$STAGING_DIRECTORY/.claude/skills"
 mkdir -p "$STAGING_DIRECTORY/.codex"
 cp -pR "$CODEX_AGENTS_SOURCE" "$STAGING_DIRECTORY/.codex/agents"
 mkdir -p "$STAGING_DIRECTORY/.agents"

@@ -55,9 +55,10 @@ to its canonical owner instead of copying facts into framework-managed records.
 The portable core is complete with this `readme/meta/` tree and the merged root
 `AGENTS.md` startup instruction. A root `CLAUDE.md` may import `AGENTS.md` so Claude Code
 loads the same owner. Project files under `.codex/agents/` and `.claude/agents/` may
-expose selected roles through native discovery. A repo skill under
-`.agents/skills/codex-quota-monitor/` may expose the Codex-specific telemetry procedure
-required by the portable usage capacity guard.
+expose selected roles through native discovery. Repo skills under
+`.agents/skills/codex-quota-monitor/` and `.claude/skills/claude-quota-monitor/` may
+expose the Codex and Claude Code telemetry procedures required by the portable usage
+capacity guard.
 
 These files are optional integration surfaces, not additional policy owners. They:
 
@@ -69,10 +70,12 @@ These files are optional integration surfaces, not additional policy owners. The
   bypasses, or integration ownership; and
 - can be omitted or removed without changing the core framework workflow.
 
-The quota-monitor skill contains only its required Markdown instructions and UI metadata.
-It uses the already-installed Codex App Server and links
-[agent-definitions.md](agent-definitions.md#usage-capacity-guard) as policy owner; it is
-not part of the three-role adapter pilot.
+Each quota-monitor skill contains only its required Markdown telemetry procedure and UI
+metadata and links [agent-definitions.md](agent-definitions.md#usage-capacity-guard) as
+policy owner. The Codex skill reads the already-installed Codex App Server; the Claude
+skill reads the authenticated Claude Code usage surface within a single subprocess and
+never surfaces credentials, tokens, or billing data to the session. Neither is part of
+the three-role adapter pilot.
 
 The current adapter pilot covers Reviewer, QA And Verification Agent, and Security And
 Risk Agent. The source framework's decision and changelog own its promotion or sunset;
@@ -147,9 +150,9 @@ every project artifact only after it has useful content.
 
 A clean core package contains this `readme/meta/` tree and a merged root AGENTS startup
 instruction. For Claude Code, merge a root `CLAUDE.md` import of `AGENTS.md`. Optionally
-merge the matching `.codex/agents/`, `.claude/agents/`, or Codex quota-monitor skill
-when the destination uses those harnesses. Never overwrite an established instruction,
-same-name agent, or same-name skill.
+merge the matching `.codex/agents/`, `.claude/agents/`, or the Codex or Claude
+quota-monitor skill when the destination uses those harnesses. Never overwrite an
+established instruction, same-name agent, or same-name skill.
 The package excludes `readme/README.md` and every mutable project-documentation sibling.
 Packaging is the supported reset path; do not delete an existing project's documentation
 to simulate a reset.

@@ -4,7 +4,7 @@ This is the canonical discovery and lifecycle record for every accepted task. Ph
 row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 
 - Format: 1
-- Next task ID: T-0012
+- Next task ID: T-0013
 - Primary task: None
 - Scheduling: Idle
 - Global pause source or reason: None
@@ -24,6 +24,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0009 | Replace inline installation commands with a safe script usable through `curl` piped to Bash | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / High | None | None | [Brief](0009-piped-core-installer-brief.md), [notes](0009-piped-core-installer-notes.md) | [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md) |
 | T-0010 | Streamline the public install command to conventional `curl -fsSL … \| bash` form | User instruction, 2026-07-14 / r1 | Done | T-0009 | Quick change / High | None | None | [Brief](0010-streamline-installer-command-brief.md), [notes](0010-streamline-installer-command-notes.md) | [Decision 0013](../decisions/0013-streamline-installer-invocation.md) |
 | T-0011 | Rename the moving-latest release display title from `Latest framework core` to `core-framework` | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / Medium | None | None | None | [Quality record](../quality/2026-07-14-core-release-title.md) |
+| T-0012 | Add a credential-safe Claude Code usage-telemetry skill and ship it through the core installer | User instruction, 2026-07-30 / r1 | Done | T-0005 | Initiative / High | None | None | [Brief](0012-claude-quota-monitor-skill-brief.md), [notes](0012-claude-quota-monitor-skill-notes.md) | [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md) |
 
 ## Operating Contract
 
