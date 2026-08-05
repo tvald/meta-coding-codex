@@ -3,6 +3,20 @@
 Repository memory must let a cold-start agent find the current cursor, durable facts,
 decisions, and recurrence evidence without asking the product owner to reconstruct them.
 
+## Repository Is The Only Memory Store
+
+All durable project knowledge used as agent memory lives in its repository under version
+control. No agent or harness may use a harness-native memory feature, assistant profile,
+home-directory note, scratch file, hosted note, or external database as a substitute or
+duplicate store for project state, learning, preferences, decisions, or task facts.
+
+This rule does not prohibit live provider telemetry, ephemeral tool state, or an
+owner-authorized external system that is itself an authoritative operational source.
+Ingest the evidence needed for repository-backed recovery under
+[knowledge ingestion](knowledge-ingestion.md). If auxiliary agent memory is found
+outside the repository, migrate it into the applicable canonical artifact, stop relying
+on the external copy, and delete it only under applicable authority.
+
 ## Canonical Artifacts
 
 | Artifact | Canonical Purpose | Owner |
@@ -17,14 +31,14 @@ decisions, and recurrence evidence without asking the product owner to reconstru
 | `readme/project/automation-backlog.md` | Evidence-backed candidates for removing repeated manual work | Agent observing the candidate |
 | `readme/project/agents.md` | Durable project-specific roles or agent rules justified by repeated use | Root Orchestrator |
 | `readme/decisions/` | Append-only significant choices and consequences | Decision owner or Root Orchestrator |
-| `readme/tasks/README.md` | Stable task IDs and revisions, authority provenance, global scheduling pause, outcomes, lifecycle, dependencies, selected route/risk, task approvals or blockers, next actions, detail links, and results | Root Orchestrator, sole writer |
+| `readme/tasks/README.md` | Stable task IDs and revisions, authority provenance, global scheduling pause, outcomes, lifecycle, dependencies, selected route/risk, task approvals or blockers, next actions, detail links, and concise results | Root Orchestrator, sole writer |
 | `readme/tasks/NNNN-*-brief.md` | Task-specific scope, acceptance, route/risk rationale, and amendments when the catalog row is insufficient | Root Orchestrator or assigned analyst |
 | `readme/tasks/NNNN-*-notes.md` | Execution checkpoints for long-running, risky, paused, or parallel work | Root Orchestrator |
 | `readme/quality/` | Durable readiness, verification, review, and completion evidence | Root Orchestrator or QA owner |
 | `readme/threat-models/` | Security and trust-boundary analysis | Security or risk owner |
 | `readme/incidents/` | Blameless incident and near-miss learning | Incident owner |
 | `readme/learning/retrospectives.md` | Searchable cross-session correction and process-learning signals | Agent observing the signal |
-| `readme/learning/framework-changelog.md` | Auditable framework edits, pilots, and sunset triggers | Agent changing the framework |
+| `readme/meta/framework-changelog.md` | Auditable framework edits, pilots, and sunset triggers | Agent changing the framework |
 
 `readme/README.md` and `readme/tasks/README.md` are mandatory after onboarding because
 they are the cold-start cursor and task discovery surface. Create every other project
@@ -44,10 +58,16 @@ between the brief, assumptions, glossary, and source map.
 For task state, the catalog owns global scheduling pause, identity and revision,
 authority provenance, concise outcome, status, dependencies, selected route/risk,
 task-specific approval or blocker, one next safe action, and detail/result pointers. A
-task brief expands scope, criteria, route/risk rationale, and material amendments. A task note
-owns only the execution checkpoint and evidence needed to resume. The project cursor
+task brief expands scope, criteria, route/risk rationale, and material amendments. A task
+note owns only the execution checkpoint and evidence needed to resume. The project cursor
 points to these owners and may summarize recent outcomes; it does not maintain another
 work list.
+
+Keep every catalog cell concise—about two sentences at most. When a task needs more
+framing than a cell holds, create a brief; when its execution history or result needs
+more, create or extend a `NNNN-notes.md` and link it from the cell instead of narrating
+inline. A cell accreting a second dated update is the signal to open a note. Rich
+narrative belongs in the linked brief, note, decision, or archive—not in the row.
 
 For an approval, the catalog cell owns its ID, status, bound task revision, and detail
 link. The linked task record must persist approval source, action, and boundary; an
@@ -174,7 +194,7 @@ without changing it.
 | Assumptions | 120 lines | Archive closed rows to `readme/archive/` | Root Orchestrator |
 | Glossary | 160 lines | Archive deprecated terms after dependent docs migrate | Documentarian |
 | Source map | 200 lines | Archive stale sources while preserving decision links | Research owner |
-| Task catalog | 300 lines | Move terminal rows unchanged to a dated archive after distillation; retain every nonterminal row and an archive pointer | Root Orchestrator |
+| Task catalog | 20 task rows | Over budget, append the oldest terminal rows unchanged to `readme/archive/tasks/YYYY-MM-catalog.md` under a distilled index, retaining every nonterminal row; never rewrite archived rows, use a sequence suffix on an incompatible collision, and update the catalog's archive pointer | Root Orchestrator |
 | Active task note | 300 lines | Move completed chronology to a dated archive; keep resume state | Root Orchestrator |
 | Decision record | 220 lines each | Prefer linked supporting evidence; never truncate an accepted decision | Decision owner |
 | Retrospective or framework changelog | 20 entries or 160 lines | Move old entries unchanged to a dated archive and link it | Root Orchestrator |
@@ -192,7 +212,8 @@ project cursor holds both counters. The pass must:
 1. validate cursor pointers, catalog links, unique IDs, acyclic dependencies, at most
    one primary active task, parked approvals, and canonical command links;
 2. find budgets over limit and apply their overflow rules;
-3. mark or supersede stale guidance and sources;
+3. mark or supersede stale guidance and sources, and re-examine decisions whose
+   assumptions or project context materially changed;
 4. search retrospective repeats and evaluate due framework pilots or sunsets;
 5. reconcile duplicated or conflicting guidance at its canonical owner; and
 6. record the date, reset the task counter, and name any incomplete maintenance action.

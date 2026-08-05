@@ -44,8 +44,10 @@ Evidence level informs judgment; it is not a numeric score. Name the decisive ev
 4. **Change the smallest owner.** Routine reversible edits can be applied directly.
    Create a decision record for significant process, safety, authority, or ownership
    choices. Keep templates aligned.
-5. **Log every framework edit.** Append status, evidence, change, success signal, and
-   review or sunset trigger to `readme/learning/framework-changelog.md`.
+5. **Log every local framework edit.** Append status, evidence, change, success signal,
+   and review or sunset trigger to `readme/meta/framework-changelog.md`. A framework
+   source repository may keep that distributable seed blank only when an explicit
+   project policy assigns an excluded source-history owner.
 6. **Verify and close.** Run link, template, consistency, line-budget, and request review
    as applicable. All required checks must pass before Done.
 

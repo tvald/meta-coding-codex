@@ -21,6 +21,7 @@ framework_core_inventory() {
         'readme/meta/agent-definitions.md' \
         'readme/meta/automation-policy.md' \
         'readme/meta/development-standards.md' \
+        'readme/meta/framework-changelog.md' \
         'readme/meta/framework-improvement.md' \
         'readme/meta/knowledge-ingestion.md' \
         'readme/meta/knowledge-management.md' \
@@ -274,6 +275,23 @@ install_framework_core() {
     grep -Fq '[readme/meta/README.md](readme/meta/README.md)' \
         "$STAGING_DIRECTORY/AGENTS.md" ||
         fail "portable AGENTS.md does not link the framework entrypoint"
+    STAGED_FRAMEWORK_CHANGELOG=$STAGING_DIRECTORY/readme/meta/framework-changelog.md
+    CHANGELOG_MARKER='<!-- Local framework entries go below this line. -->'
+    CHANGELOG_MARKER_COUNT=$(grep -Fxc "$CHANGELOG_MARKER" \
+        "$STAGED_FRAMEWORK_CHANGELOG" || true)
+    [ "$CHANGELOG_MARKER_COUNT" -eq 1 ] ||
+        fail "framework changelog seed must contain exactly one local-entry marker"
+    if grep -Eq '^## [0-9]{4}-[0-9]{2}-[0-9]{2}: ' \
+        "$STAGED_FRAMEWORK_CHANGELOG"; then
+        fail "framework changelog seed contains a dated local entry"
+    fi
+    if awk -v marker="$CHANGELOG_MARKER" '
+        seen && NF { populated = 1 }
+        $0 == marker { seen = 1 }
+        END { exit populated ? 0 : 1 }
+    ' "$STAGED_FRAMEWORK_CHANGELOG"; then
+        fail "framework changelog seed contains local entries"
+    fi
 
     # Recheck immediately before atomically claiming destination paths.
     if [ -e "$META_DESTINATION" ] || [ -L "$META_DESTINATION" ]; then

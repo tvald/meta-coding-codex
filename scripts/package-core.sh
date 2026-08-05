@@ -48,6 +48,7 @@ SCRIPT_DIR=$(CDPATH='' cd "$(dirname "$0")" && pwd -P)
 REPOSITORY_ROOT=$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)
 README_SOURCE=$REPOSITORY_ROOT/readme
 META_SOURCE=$README_SOURCE/meta
+FRAMEWORK_CHANGELOG_SOURCE=$META_SOURCE/framework-changelog.md
 AGENTS_SOURCE=$REPOSITORY_ROOT/AGENTS.md
 CLAUDE_AGENTS_SOURCE=$REPOSITORY_ROOT/.claude/agents
 CLAUDE_SKILLS_SOURCE=$REPOSITORY_ROOT/.claude/skills
@@ -58,6 +59,10 @@ SKILLS_SOURCE=$REPOSITORY_ROOT/.agents/skills
 [ ! -L "$README_SOURCE" ] || fail "documentation directory must not be a symbolic link"
 [ -d "$META_SOURCE" ] || fail "missing core directory: $META_SOURCE"
 [ ! -L "$META_SOURCE" ] || fail "core directory must not be a symbolic link"
+[ -f "$FRAMEWORK_CHANGELOG_SOURCE" ] ||
+    fail "missing framework changelog seed: $FRAMEWORK_CHANGELOG_SOURCE"
+[ ! -L "$FRAMEWORK_CHANGELOG_SOURCE" ] ||
+    fail "framework changelog seed must not be a symbolic link"
 [ -f "$AGENTS_SOURCE" ] || fail "missing startup source: $AGENTS_SOURCE"
 [ ! -L "$AGENTS_SOURCE" ] || fail "startup source must not be a symbolic link"
 
@@ -100,6 +105,21 @@ UNEXPECTED_CORE_ENTRIES=$(
         "$PROGRAM" "$UNEXPECTED_CORE_ENTRIES" >&2
     exit 1
 }
+
+CHANGELOG_MARKER='<!-- Local framework entries go below this line. -->'
+CHANGELOG_MARKER_COUNT=$(grep -Fxc "$CHANGELOG_MARKER" "$FRAMEWORK_CHANGELOG_SOURCE" || true)
+[ "$CHANGELOG_MARKER_COUNT" -eq 1 ] ||
+    fail "framework changelog seed must contain exactly one local-entry marker"
+if grep -Eq '^## [0-9]{4}-[0-9]{2}-[0-9]{2}: ' "$FRAMEWORK_CHANGELOG_SOURCE"; then
+    fail "framework changelog seed contains a dated local entry; transfer its evidence and restore the blank seed"
+fi
+if awk -v marker="$CHANGELOG_MARKER" '
+    seen && NF { populated = 1 }
+    $0 == marker { seen = 1 }
+    END { exit populated ? 0 : 1 }
+' "$FRAMEWORK_CHANGELOG_SOURCE"; then
+    fail "framework changelog seed contains local entries; transfer their evidence and restore the blank seed"
+fi
 
 if [ $# -eq 0 ]; then
     OUTPUT=$REPOSITORY_ROOT/dist/ai-coding-meta-framework-core.zip

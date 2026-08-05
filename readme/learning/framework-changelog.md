@@ -1,12 +1,39 @@
 # Framework Changelog
 
-Every framework edit is recorded here so it can be audited, evaluated, and reverted.
+This upstream framework-source repository records its own framework edits here so the
+distributed [blank changelog seed](../meta/framework-changelog.md) never carries source
+project history. This is the project-specific override established by
+[Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md); installed
+frameworks use the meta-path log.
+
 Keep entries append-only. Limit the active file to 20 entries or 160 lines; move older
 entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the archive.
-Review pilots and sunset triggers during the scheduled hygiene pass in
+Review sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
+
+## 2026-08-05: Reconcile Downstream Framework Changes And Ship A Changelog Seed
+
+- Status: Revised; individual imported groups were Adopted, Revised, or Rejected under
+  the source repository's skip-Pilot policy.
+- Evidence: Product-owner instructions through T-0016@r2, two downstream failure signals
+  transferred into the task note, an independent Reviewer audit, exact 36-entry package
+  and installer inventories, reproducible archives, and positive and negative install
+  fixtures; see [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md).
+- Change: Added the blank meta-path changelog seed and kept upstream framework-development
+  state project-side; adopted a repository-backed auxiliary-memory rule, a collision-safe
+  ~20-row task-catalog budget with concise cells, and context-triggered decision review;
+  rejected the foreign task schema, KB projection, worker-write, and intermediate-commit
+  rules. Extended package and installer validation so local changelog entries cannot
+  enter a clean installation.
+- Success signal: A fresh install contains one blank, self-describing changelog seed;
+  producer, consumer, and CI-derived inventories agree; foreign state and populated-seed
+  mutations fail before destination mutation; upstream task and audit history remains in
+  project-side records.
+- Review or sunset trigger: A populated seed ships or installs, producer/consumer
+  inventory diverges, the source-versus-consumer state boundary confuses an adopter, or
+  the 20-row catalog trigger overwrites or obscures archived task history.
 
 ## 2026-07-30: Adopt The Agent Adapters And Skip The Pilot Disposition
 
@@ -122,36 +149,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   run becoming final, and existing destination AGENTS guidance is preserved for merging.
 - Review or sunset trigger: Stale final release, token expansion, persistent draft or
   asset mismatch, action/runner deprecation, or destination overwrite.
-
-## 2026-07-14: Automate The Portable Core Archive
-
-- Status: Adopted.
-- Evidence: Direct product-owner instruction, T-0006's manual state-free fixture, and
-  T-0007 positive, negative, reproducibility, extraction, and collision checks; see
-  [Decision 0010](../decisions/0010-automate-portable-core-archive.md).
-- Change: Added a POSIX-shell command that packages only the portable `AGENTS.md` prefix
-  and complete `readme/meta/` tree, validates exact inventory and integrity, normalizes
-  file metadata, and safely replaces an ignored output archive.
-- Success signal: Content-identical checkouts produce the same valid 26-entry zip, and
-  no mutable host state, optional integration, or local authority enters it.
-- Review or sunset trigger: Archive drift, unsafe replacement, missing core content,
-  host-state leakage, or a demonstrated need to distribute executable runtime tooling.
-
-## 2026-07-14: Adopt Imported Durable Task Orchestration
-
-- Status: Adopted.
-- Evidence: State-free task-loop import `d5ff9f5`, product-owner clarification about
-  the import boundary, and independent T-0006@r2 review; see
-  [Decision 0008](../decisions/0008-adopt-durable-task-orchestration.md) and
-  [Decision 0009](../decisions/0009-authorize-bounded-project-delegation.md).
-- Change: Added a mandatory host task catalog with additive non-FIFO intake, stable
-  identity/revision and authority, task-scoped targeting/isolation, and bounded local
-  delegation. Migrated this host's state separately, recognized catalog collisions by
-  schema, and preserved project-local operating choices outside the portable startup
-  merge.
-- Success signal: A state-free package bootstraps or migrates host cursor/catalog state
-  without copying history or overwriting existing documentation; tasks resume and close
-  under the correct authority, revision, and commit boundary.
-- Review or sunset trigger: A package contains host facts, onboarding overwrites a task
-  index, stale task evidence is used, catalog staging mixes tasks, or delegation occurs
-  without destination authority.

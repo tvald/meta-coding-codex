@@ -27,9 +27,16 @@ assigned that ownership.
 
 ## Directory Contract
 
-`readme/meta/` contains only reusable framework policy, references, and blank templates.
-Project facts, decisions, commands, active work, reviews, learning, and archives never
-become part of the reusable package.
+`readme/meta/` contains reusable framework policy, references, blank templates, and a
+blank [framework changelog](framework-changelog.md) seed. After installation, that log
+is the one intentional host-state exception under `readme/meta/`: it records only local
+edits to the installed framework so useful evidence can accompany a later upstream
+proposal. Its preamble ships in a clean package; entries from one host never do. All
+other project facts, decisions, commands, active work, reviews, learning, and archives
+remain in the project-side paths below and never become part of the reusable package.
+When the project being developed is the framework itself, its framework-development
+tasks and state are ordinary project state and remain in those project-side paths; an
+explicit source-project policy may therefore keep the distributable seed blank.
 
 The host project's agent-maintained documentation uses these mutable paths:
 
@@ -42,7 +49,7 @@ The host project's agent-maintained documentation uses these mutable paths:
 | `readme/quality/` | Durable readiness, verification, and review records |
 | `readme/threat-models/` | Lightweight security and trust-boundary analyses |
 | `readme/incidents/` | Incident and near-miss records |
-| `readme/learning/` | Retrospectives and the local framework changelog |
+| `readme/learning/` | Retrospectives; an excluded upstream framework-source changelog only under explicit source-project policy |
 | `readme/archive/` | Overflow moved from active artifacts without rewriting history |
 
 The project cursor and task catalog are mandatory after onboarding. Create other
@@ -87,7 +94,9 @@ Agent—are adopted optional integrations that host projects may omit entirely.
 - Small reversible steps and observed verification results.
 - Durable additive task intake with dependency- and safety-based selection, not FIFO.
 - One canonical home for each fact, rule, decision, and command catalog.
-- Repository-backed state and learning instead of assumed session memory.
+- Repository-backed state and learning only. No harness may use an out-of-repository
+  memory store for durable project knowledge. Detail and rationale:
+  [knowledge-management.md](knowledge-management.md#repository-is-the-only-memory-store).
 - Agents maintain process memory; product owners make consequential product decisions.
 - Repeated failures improve the system, with every local framework edit auditable.
 
@@ -147,12 +156,12 @@ every project artifact only after it has useful content.
 
 ## Package And Bootstrap
 
-A clean core package contains this `readme/meta/` tree and a merged root AGENTS startup
-instruction. For Claude Code, merge a root `CLAUDE.md` import of `AGENTS.md`. Optionally
-merge the matching `.codex/agents/`, `.claude/agents/`, or the Codex or Claude
-quota-monitor skill when the destination uses those harnesses. Never overwrite an
-established instruction, same-name agent, or same-name skill.
-The package excludes `readme/README.md` and every mutable project-documentation sibling.
+A clean core package contains this `readme/meta/` tree, including the blank framework
+changelog seed, and a merged root AGENTS startup instruction. It may also carry the
+matching `.codex/agents/`, `.claude/agents/`, and Codex or Claude quota-monitor skill as
+optional integrations. Never overwrite an established instruction, same-name agent, or
+same-name skill. The package excludes local changelog entries, `readme/README.md`, and
+every mutable project-documentation sibling.
 Packaging is the supported reset path; do not delete an existing project's documentation
 to simulate a reset.
 
