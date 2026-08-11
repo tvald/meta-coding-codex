@@ -22,6 +22,7 @@ import {
   validateDetailPath,
   validateTask,
 } from "./schema.mjs";
+import { gitSubprocessEnvironment } from "../../../lib/git-environment.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const STORE_RELATIVE = "readme/tasks/store";
@@ -32,6 +33,7 @@ const ALLOWED_DETAIL_ROOTS = [
   "readme/threat-models/",
   "readme/incidents/",
 ];
+const REPOSITORY_CONTEXTS = new WeakSet();
 
 function gitOutput(args, cwd) {
   try {
@@ -40,6 +42,7 @@ function gitOutput(args, cwd) {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
       timeout: 10_000,
+      env: gitSubprocessEnvironment(),
     }).trim();
   } catch {
     fail("GIT_REQUIRED", "a usable Git worktree is required");
@@ -50,12 +53,28 @@ export async function repositoryContext(cwd = process.cwd()) {
   const rootReported = gitOutput(["rev-parse", "--show-toplevel"], cwd);
   const root = await fs.realpath(rootReported);
   await assertOrdinaryDirectoryTree(root, root, "Git worktree", { allowRoot: true });
+  const caller = await fs.realpath(cwd).catch(() => fail("GIT_REQUIRED", "caller working directory is unavailable"));
+  const callerRelative = path.relative(root, caller);
+  if (callerRelative.startsWith("..") || path.isAbsolute(callerRelative)) {
+    fail("GIT_REQUIRED", "Git top level does not contain the caller working directory");
+  }
+  await assertOrdinaryDirectoryTree(root, caller, "caller working directory", { allowRoot: true });
   const commonReported = gitOutput(["rev-parse", "--git-common-dir"], root);
   const commonCandidate = path.isAbsolute(commonReported) ? commonReported : path.resolve(root, commonReported);
   const commonDir = await fs.realpath(commonCandidate).catch(() => fail("GIT_REQUIRED", "Git common directory is unavailable"));
   await assertOrdinaryDirectoryTree(commonDir, commonDir, "Git common directory", { allowRoot: true });
   const storeRoot = path.join(root, ...STORE_RELATIVE.split("/"));
-  return { root, commonDir, storeRoot };
+  const context = Object.freeze({ root, commonDir, storeRoot });
+  REPOSITORY_CONTEXTS.add(context);
+  return context;
+}
+
+export function assertRepositoryContext(context) {
+  if ((typeof context !== "object" && typeof context !== "function") || context === null ||
+      !REPOSITORY_CONTEXTS.has(context)) {
+    fail("PATH_UNSAFE", "a validated repository context is required");
+  }
+  return context;
 }
 
 function assertInside(root, target, label, { allowRoot = false } = {}) {

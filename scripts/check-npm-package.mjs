@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -34,6 +35,7 @@ const requiredFileGlobs = [
   '.claude/skills/',
   '.codex/agents/',
   'bin/',
+  'lib/',
   'package-files.json',
   'readme/meta/',
 ];
@@ -65,6 +67,21 @@ export function validateManifest(candidate = manifest) {
   assert(candidate.version === '1.0.0', 'unexpected package version');
   assert(candidate.private !== true, 'package must not be private');
   assert(candidate.type === 'module', 'package must use ESM');
+  const taskCompatibility = candidate.metaFramework?.taskCli;
+  const compatibilityKeys = taskCompatibility !== null && typeof taskCompatibility === 'object' &&
+    !Array.isArray(taskCompatibility) ? Object.keys(taskCompatibility).sort() : [];
+  const expectedCompatibilityKeys = Object.keys(TASK_COMPATIBILITY).sort();
+  assert(
+    compatibilityKeys.length === expectedCompatibilityKeys.length &&
+      compatibilityKeys.every((key, index) => key === expectedCompatibilityKeys[index]) &&
+      taskCompatibility.version === TASK_COMPATIBILITY.version &&
+      JSON.stringify(taskCompatibility.envelopeVersions) === JSON.stringify(TASK_COMPATIBILITY.envelopeVersions) &&
+      JSON.stringify(taskCompatibility.readableStoreSchemaVersions) ===
+        JSON.stringify(TASK_COMPATIBILITY.readableStoreSchemaVersions) &&
+      JSON.stringify(taskCompatibility.writableStoreSchemaVersions) ===
+        JSON.stringify(TASK_COMPATIBILITY.writableStoreSchemaVersions),
+    'task CLI compatibility metadata differs from the runtime contract',
+  );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
   assert(candidate.engines?.node === '>=22', 'Node 22+ must be declared');
   assert(

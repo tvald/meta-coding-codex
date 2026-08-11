@@ -6,11 +6,17 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const CLI = fileURLToPath(new URL("../readme/meta/framework-data/cli.mjs", import.meta.url));
+const SOURCE_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const STORE_MODULE = new URL("../readme/meta/framework-data/store.mjs", import.meta.url);
+const FRAMEWORK_CHECKS_MODULE = new URL("../readme/meta/framework-data/framework-checks.mjs", import.meta.url);
+const PACKAGE_INVENTORY = JSON.parse(await fs.readFile(path.join(SOURCE_ROOT, "package-files.json"), "utf8")).files;
+
+function installedBinary(root) {
+  return path.join(root, "node_modules", "meta-framework", "bin", "meta-framework.mjs");
+}
 
 function run(cwd, args, expectedStatus = 0) {
-  return runWithCli(CLI, cwd, args, expectedStatus);
+  return runWithCli(installedBinary(cwd), cwd, ["tasks", ...args], expectedStatus);
 }
 
 function runWithCli(cli, cwd, args, expectedStatus = 0) {
@@ -67,6 +73,37 @@ Use \`node readme/meta/framework-data/cli.mjs doctor\` and
   )));
   await fs.writeFile(path.join(root, "readme", "meta", "framework-changelog.md"),
     "# Framework Changelog\n\n<!-- Local framework entries go below this line. -->\n");
+  await fs.writeFile(path.join(root, "package.json"), `${JSON.stringify({
+    name: "framework-data-client-fixture",
+    private: true,
+    dependencies: { "meta-framework": "npm:@tvald/meta-framework@1.0.0" },
+  }, null, 2)}\n`);
+  await fs.writeFile(path.join(root, "package-lock.json"), `${JSON.stringify({
+    name: "framework-data-client-fixture",
+    lockfileVersion: 3,
+    requires: true,
+    packages: {
+      "": {
+        name: "framework-data-client-fixture",
+        dependencies: { "meta-framework": "npm:@tvald/meta-framework@1.0.0" },
+      },
+      "node_modules/meta-framework": {
+        name: "@tvald/meta-framework",
+        version: "1.0.0",
+        resolved: "https://registry.npmjs.org/@tvald/meta-framework/-/meta-framework-1.0.0.tgz",
+        integrity: `sha512-${Buffer.alloc(64).toString("base64")}`,
+      },
+    },
+  }, null, 2)}\n`);
+  const packageRoot = path.join(root, "node_modules", "meta-framework");
+  for (const relativePath of PACKAGE_INVENTORY) {
+    const source = path.join(SOURCE_ROOT, ...relativePath.split("/"));
+    const destination = path.join(packageRoot, ...relativePath.split("/"));
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+    await fs.copyFile(source, destination);
+    const info = await fs.stat(source);
+    await fs.chmod(destination, info.mode & 0o777);
+  }
   execFileSync("git", ["init", "-q"], { cwd: root });
   return root;
 }
@@ -85,7 +122,8 @@ test("version, help, and preflight expose the dependency-free runtime contract",
   const root = await makeRepository();
   try {
     const version = json(root, ["--version"]).value;
-    assert.deepEqual(version, { version: "1.0.0" });
+    assert.equal(version.package.version, "1.0.0");
+    assert.deepEqual(version.taskCli.readableStoreSchemaVersions, [1]);
     const help = run(root, ["--help"]).stdout;
     assert.match(help, /task add --outcome/u);
     assert.match(run(root, ["task", "add", "--help"]).stdout, /--expected-store-digest/u);
@@ -103,11 +141,9 @@ test("version, help, and preflight expose the dependency-free runtime contract",
 test("preflight pins shipped schema bytes", async () => {
   const root = await makeRepository();
   try {
-    const source = fileURLToPath(new URL("../readme/meta/framework-data", import.meta.url));
-    const runtime = path.join(root, "runtime");
-    await fs.cp(source, runtime, { recursive: true });
-    await fs.appendFile(path.join(runtime, "schemas", "task-v1.schema.json"), "\n");
-    const result = runWithCli(path.join(runtime, "cli.mjs"), root, ["preflight"], 1);
+    await fs.appendFile(path.join(root, "node_modules", "meta-framework", "readme", "meta",
+      "framework-data", "schemas", "task-v1.schema.json"), "\n");
+    const result = run(root, ["preflight"], 1);
     assert.match(result.stderr, /SCHEMA_FILES/u);
   } finally {
     await removeRepository(root);
@@ -177,10 +213,11 @@ test("preflight reports prepared and malformed state and rejects unsupported run
 
   const unsupported = await makeRepository();
   try {
-    const cliUrl = pathToFileURL(CLI).href;
+    const binary = installedBinary(unsupported);
+    const cliUrl = pathToFileURL(binary).href;
     const script = `
       Object.defineProperty(process.versions, "node", { value: "21.0.0" });
-      process.argv = [process.execPath, ${JSON.stringify(CLI)}, "preflight"];
+      process.argv = [process.execPath, ${JSON.stringify(binary)}, "tasks", "preflight"];
       await import(${JSON.stringify(cliUrl)});
     `;
     const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
@@ -588,6 +625,7 @@ test("preflight recognizes a valid current store only with the static Task Store
 test("doctor enforces framework sentinels, links, budgets, templates, maintenance, and staged evidence", async () => {
   const root = await makeRepository();
   try {
+    const { runFrameworkChecks } = await import(FRAMEWORK_CHECKS_MODULE);
     json(root, ["init"]);
     const baseline = json(root, ["doctor"]).value;
     assert.equal(baseline.ok, true);
@@ -596,7 +634,9 @@ test("doctor enforces framework sentinels, links, budgets, templates, maintenanc
 
     const processFile = path.join(root, "readme", "meta", "root-loop.md");
     await fs.unlink(processFile);
-    assert.ok(json(root, ["doctor"], 1).value.errors.some((error) => error.code === "DOCTOR_PROCESS_INVENTORY"));
+    assert.equal(json(root, ["doctor"]).value.ok, true, "client framework shadow must be ignored");
+    const missingProcess = await runFrameworkChecks({ root, frameworkRoot: root, tasks: new Map() });
+    assert.ok(missingProcess.errors.some((error) => error.code === "DOCTOR_PROCESS_INVENTORY"));
     await fs.writeFile(processFile, "# root-loop.md\n");
 
     const agents = path.join(root, "AGENTS.md");
@@ -618,7 +658,9 @@ test("doctor enforces framework sentinels, links, budgets, templates, maintenanc
 
     const template = path.join(root, "readme", "meta", "templates", "standards.md");
     await fs.unlink(template);
-    assert.ok(json(root, ["doctor"], 1).value.errors.some((error) => error.code === "DOCTOR_TEMPLATE_INVENTORY"));
+    assert.equal(json(root, ["doctor"]).value.ok, true, "client template shadow must be ignored");
+    const missingTemplate = await runFrameworkChecks({ root, frameworkRoot: root, tasks: new Map() });
+    assert.ok(missingTemplate.errors.some((error) => error.code === "DOCTOR_TEMPLATE_INVENTORY"));
     await fs.writeFile(template, "# standards.md\n");
 
     execFileSync("git", ["add", "readme/meta/framework-changelog.md"], { cwd: root });

@@ -195,9 +195,9 @@ passes.
 
 Why:
 
-The product owner supplied the complete target contract, current npm documentation
-confirms local binary, pack-inventory, lifecycle, and lockfile behavior, and the design
-preserves the already-tested task-store invariants while removing update reconciliation.
+The product owner supplied the complete target contract, current npm documentation confirms local binary,
+pack-inventory, lifecycle, and lockfile behavior, and T-0026 confirms branded roots, manifest compatibility, HTTPS/SRI
+guards, installed-client task mutation, and independent gates while preserving task-store invariants; genuine registry installation remains assigned to T-0031.
 
 ## Review Trigger
 

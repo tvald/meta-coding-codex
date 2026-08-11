@@ -70,6 +70,24 @@ test('package policy rejects every automatic lifecycle hook and implicit node-gy
   assert.throws(() => validateManifest({ ...manifest, gypfile: true }), /implicit node-gyp installation is forbidden/);
 });
 
+test('package policy rejects missing or drifting task compatibility metadata', () => {
+  const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
+  const mutations = [
+    (candidate) => { delete candidate.metaFramework.taskCli; },
+    (candidate) => { candidate.metaFramework.taskCli.version = '2.0.0'; },
+    (candidate) => { candidate.metaFramework.taskCli.envelopeVersions = [2]; },
+    (candidate) => { candidate.metaFramework.taskCli.readableStoreSchemaVersions = [2]; },
+    (candidate) => { candidate.metaFramework.taskCli.writableStoreSchemaVersions = [2]; },
+    (candidate) => { candidate.metaFramework.taskCli.unreviewed = true; },
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(manifest);
+    mutate(candidate);
+    assert.throws(() => validateManifest(candidate),
+      /task CLI compatibility metadata differs from the runtime contract/);
+  }
+});
+
 test('package audit proves exact inventory and byte reproducibility', () => {
   const result = run(process.execPath, ['scripts/check-npm-package.mjs'], { cwd: sourceRoot });
   assert.equal(result.status, 0, result.stderr);

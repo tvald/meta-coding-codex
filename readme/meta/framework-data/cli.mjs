@@ -29,6 +29,7 @@ import {
 import {
   activeTask,
   addTask,
+  assertRepositoryContext,
   assertOrdinaryDirectoryTree,
   assertExpectedDigest,
   compareTaskIds,
@@ -45,9 +46,12 @@ import {
 } from "./store.mjs";
 import { applyFormat1Migration, prepareFormat1Migration } from "./importer.mjs";
 import { runFrameworkChecks } from "./framework-checks.mjs";
+import { unwrapValidatedTaskRuntime } from "../../../lib/runtime-roots.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const TERMINAL_FILTER = new Set(TERMINAL_STATUSES);
+const MODULE_PATH = fileURLToPath(import.meta.url);
+const LEXICAL_FRAMEWORK_ROOT = path.resolve(path.dirname(MODULE_PATH), "../../..");
 
 function outputJson(value) {
   return canonicalJson(value).replace(/[\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ufeff]/gu,
@@ -58,8 +62,8 @@ function writeJson(value, stream = process.stdout) {
   stream.write(outputJson(value));
 }
 
-function usage() {
-  return `Usage: node readme/meta/framework-data/cli.mjs COMMAND [OPTIONS]
+function usage(programName = "node readme/meta/framework-data/cli.mjs") {
+  return `Usage: ${programName} COMMAND [OPTIONS]
 
 Commands:
   --help | --version
@@ -413,11 +417,11 @@ async function boundedDirectoryNames(directory, limit, label, { missingIsEmpty =
   return names;
 }
 
-async function preflight(context) {
+async function preflight(context, frameworkRoot) {
   const major = Number(process.versions.node.split(".")[0]);
   if (!Number.isInteger(major) || major < 22) fail("NODE_UNSUPPORTED", "Node.js 22 or newer is required");
   if (process.platform === "win32") fail("PLATFORM_UNSUPPORTED", "native Windows filesystems are not supported");
-  const schemaDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), "schemas");
+  const schemaDirectory = path.join(frameworkRoot, "readme", "meta", "framework-data", "schemas");
   const expectedHashes = new Map([
     ["control-v1.schema.json", "7774542f5017efbad110380641ad494627a61069daafbd347e682bf7d7b3bb17"],
     ["task-v1.schema.json", "286d1dfc5abfa617cc1125fed430af4fec41565a5e145addb975e147a5a706ad"],
@@ -534,7 +538,8 @@ async function preflight(context) {
       }
     } else if (cursor.kind === "recognized" && entrypoint.kind === "recognized" &&
         entrypoint.heading === "# Task Store" &&
-        entrypoint.text.includes("node readme/meta/framework-data/cli.mjs")) {
+        (entrypoint.text.includes("node readme/meta/framework-data/cli.mjs") ||
+          entrypoint.text.includes("npm run --silent meta -- tasks"))) {
       disposition = "ready_to_initialize";
     } else if (entrypoint.kind === "recognized" || cursor.kind === "recognized") disposition = "partial";
     else disposition = "uninitialized";
@@ -547,7 +552,8 @@ async function preflight(context) {
       const loaded = await withLock(context, () => loadStore(context));
       integrity = "valid";
       const staticEntrypoint = entrypoint.kind === "recognized" && entrypoint.heading === "# Task Store" &&
-        entrypoint.text.includes("node readme/meta/framework-data/cli.mjs");
+        (entrypoint.text.includes("node readme/meta/framework-data/cli.mjs") ||
+          entrypoint.text.includes("npm run --silent meta -- tasks"));
       if (cursor.kind === "recognized" && staticEntrypoint) disposition = "valid_current_store";
       else {
         disposition = "partial";
@@ -574,11 +580,16 @@ async function preflight(context) {
   };
 }
 
-async function doctorCommand(context, { staged = false } = {}) {
+async function doctorCommand(context, frameworkRoot, { staged = false } = {}) {
   try {
     return await withLock(context, async () => {
       const loaded = await loadStore(context);
-      const framework = await runFrameworkChecks({ root: context.root, tasks: loaded.tasks, staged });
+      const framework = await runFrameworkChecks({
+        root: context.root,
+        frameworkRoot,
+        tasks: loaded.tasks,
+        staged,
+      });
       if (!framework.ok) process.exitCode = 1;
       return {
         ok: framework.ok,
@@ -1226,8 +1237,8 @@ async function lockCommand(context, tokens) {
   fail("ARGUMENT_INVALID", "lock requires inspect or recover", 2);
 }
 
-async function dispatch(argv) {
-  if (argv.length === 0 || argv.includes("--help")) return { help: usage() };
+async function dispatch(argv, context, frameworkRoot, { programName } = {}) {
+  if (argv.length === 0 || argv.includes("--help")) return { help: usage(programName) };
   if (argv[0] === "--version") {
     if (argv.length !== 1) fail("ARGUMENT_INVALID", "--version accepts no arguments", 2);
     return { version: CLI_VERSION };
@@ -1235,16 +1246,15 @@ async function dispatch(argv) {
   const major = Number(process.versions.node.split(".")[0]);
   if (!Number.isInteger(major) || major < 22) fail("NODE_UNSUPPORTED", "Node.js 22 or newer is required");
   if (process.platform === "win32") fail("PLATFORM_UNSUPPORTED", "native Windows filesystems are not supported");
-  const context = await repositoryContext();
   const [command, ...rest] = argv;
   if (command === "preflight") {
     parseArguments(rest);
-    return preflight(context);
+    return preflight(context, frameworkRoot);
   }
   if (command === "init") {
     parseArguments(rest);
     return withLock(context, async () => {
-      const readiness = await preflight(context);
+      const readiness = await preflight(context, frameworkRoot);
       if (readiness.disposition !== "ready_to_initialize") {
         fail("INITIALIZATION_UNSAFE", "init requires recognized static project and task-store entrypoints", 4);
       }
@@ -1254,7 +1264,7 @@ async function dispatch(argv) {
   }
   if (command === "doctor") {
     const { values } = parseArguments(rest, { options: { staged: "flag" } });
-    return doctorCommand(context, { staged: values.staged === true });
+    return doctorCommand(context, frameworkRoot, { staged: values.staged === true });
   }
   if (command === "startup") return startupCommand(context, rest);
   if (command === "export") return taskListCommand(context, rest, { forceAll: true, kind: "export" });
@@ -1282,20 +1292,76 @@ async function dispatch(argv) {
   fail("ARGUMENT_INVALID", "unknown task command", 2);
 }
 
-async function main() {
+function isRootlessRequest(argv) {
+  return argv.length === 0 || argv.includes("--help") ||
+    (argv.length === 1 && argv[0] === "--version");
+}
+
+async function runFrameworkDataCli(argv, context, {
+  frameworkRoot,
+  programName,
+  errorPrefix = "framework-data",
+  sourceOnly = false,
+} = {}) {
   try {
-    const result = await dispatch(process.argv.slice(2));
+    const rootless = isRootlessRequest(argv);
+    if (!rootless) assertRepositoryContext(context);
+    if (!rootless && sourceOnly &&
+        (frameworkRoot !== context.root || frameworkRoot.split(path.sep).includes("node_modules"))) {
+      fail("PACKAGE_ENTRYPOINT_REQUIRED", "installed task commands require the package binary", 4);
+    }
+    const result = await dispatch(argv, context, frameworkRoot, { programName });
     if (result?.help) process.stdout.write(result.help);
     else writeJson(result);
   } catch (error) {
     if (error instanceof FrameworkDataError) {
-      process.stderr.write(`framework-data: ${error.code}: ${error.message}\n`);
+      process.stderr.write(`${errorPrefix}: ${error.code}: ${error.message}\n`);
       process.exitCode = error.exitCode;
       return;
     }
-    process.stderr.write("framework-data: INTERNAL_ERROR: unexpected failure\n");
+    process.stderr.write(`${errorPrefix}: INTERNAL_ERROR: unexpected failure\n`);
     process.exitCode = 1;
   }
 }
 
-await main();
+export async function runRootlessFrameworkDataCli(argv, options = {}) {
+  if (!isRootlessRequest(argv)) {
+    process.stderr.write(`${options.errorPrefix ?? "framework-data"}: ARGUMENT_INVALID: a client Git root is required\n`);
+    process.exitCode = 2;
+    return;
+  }
+  return runFrameworkDataCli(argv, null, options);
+}
+
+export async function runValidatedFrameworkDataCli(argv, runtime, options = {}) {
+  const validated = unwrapValidatedTaskRuntime(runtime);
+  return runFrameworkDataCli(argv, validated.context, {
+    ...options,
+    frameworkRoot: validated.packageRoot,
+  });
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === MODULE_PATH) {
+  const argv = process.argv.slice(2);
+  if (isRootlessRequest(argv)) {
+    await runRootlessFrameworkDataCli(argv);
+  } else {
+    let context;
+    let frameworkRoot;
+    try {
+      context = await repositoryContext();
+      frameworkRoot = await fs.realpath(LEXICAL_FRAMEWORK_ROOT);
+    } catch (error) {
+      if (error instanceof FrameworkDataError) {
+        process.stderr.write(`framework-data: ${error.code}: ${error.message}\n`);
+        process.exitCode = error.exitCode;
+      } else {
+        process.stderr.write("framework-data: INTERNAL_ERROR: unexpected failure\n");
+        process.exitCode = 1;
+      }
+    }
+    if (context !== undefined) {
+      await runFrameworkDataCli(argv, context, { frameworkRoot, sourceOnly: true });
+    }
+  }
+}

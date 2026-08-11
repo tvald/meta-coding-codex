@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { TextDecoder } from "node:util";
 import { TERMINAL_STATUSES, canonicalJson, normalizeTask } from "./schema.mjs";
+import { gitSubprocessEnvironment } from "../../../lib/git-environment.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
@@ -267,6 +268,7 @@ function gitOutput(root, args, label) {
       stdio: ["ignore", "pipe", "ignore"],
       timeout: 10_000,
       maxBuffer: MAX_GIT_OUTPUT_BYTES,
+      env: gitSubprocessEnvironment(),
     });
   } catch {
     throw new CheckFailure("DOCTOR_GIT_FAILED", `${label} could not be read within its bounded Git query`);
@@ -289,11 +291,20 @@ function decodeNulPaths(bytes, label) {
   return (text === "" ? [] : text.slice(0, -1).split("\0")).map((item) => validateRelativePath(item, label));
 }
 
-function listMarkdownPaths(root) {
+function listMarkdownPaths(root, { excludeFrameworkShadow = false } = {}) {
+  const pathspecs = [
+    "*.md",
+    ":(exclude)node_modules/**",
+    ":(exclude)**/node_modules/**",
+    ...(excludeFrameworkShadow ? [":(exclude)readme/meta/**"] : []),
+  ];
   const output = gitOutput(root,
-    ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "*.md"],
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...pathspecs],
     "Markdown inventory");
-  const paths = [...new Set(decodeNulPaths(output, "Markdown inventory"))].sort(compareText);
+  const paths = [...new Set(decodeNulPaths(output, "Markdown inventory"))]
+    .filter((relativePath) => !relativePath.split("/").includes("node_modules"))
+    .filter((relativePath) => !excludeFrameworkShadow || !relativePath.startsWith("readme/meta/"))
+    .sort(compareText);
   if (paths.length > MAX_MARKDOWN_FILES) {
     throw new CheckFailure("DOCTOR_RESOURCE_LIMIT", "Markdown inventory exceeds its file-count limit", null,
       { count: paths.length, limit: MAX_MARKDOWN_FILES });
@@ -627,6 +638,7 @@ function issueFrom(error, fallbackCode) {
  */
 export async function runFrameworkChecks({
   root,
+  frameworkRoot,
   tasks,
   staged = false,
   stagedPaths = undefined,
@@ -637,10 +649,14 @@ export async function runFrameworkChecks({
   const checks = [];
   const cache = new Map();
   const failedPaths = new Set();
+  const frameworkCache = new Map();
+  const failedFrameworkPaths = new Set();
   let repositoryRoot;
+  let frameworkRepositoryRoot;
 
   try {
     repositoryRoot = await validateRoot(root);
+    frameworkRepositoryRoot = frameworkRoot === root ? repositoryRoot : await validateRoot(frameworkRoot);
   } catch (error) {
     errors.push(issueFrom(error, "DOCTOR_ROOT_UNSAFE"));
     return { ok: false, errors, warnings, checks };
@@ -655,6 +671,20 @@ export async function runFrameworkChecks({
       return result;
     } catch (error) {
       failedPaths.add(relativePath);
+      errors.push(issueFrom(error, "DOCTOR_FILE_UNSAFE"));
+      return null;
+    }
+  };
+
+  const getFrameworkMarkdown = async (relativePath) => {
+    if (frameworkCache.has(relativePath)) return frameworkCache.get(relativePath);
+    if (failedFrameworkPaths.has(relativePath)) return null;
+    try {
+      const result = await readMarkdown(frameworkRepositoryRoot, relativePath);
+      frameworkCache.set(relativePath, result);
+      return result;
+    } catch (error) {
+      failedFrameworkPaths.add(relativePath);
       errors.push(issueFrom(error, "DOCTOR_FILE_UNSAFE"));
       return null;
     }
@@ -685,7 +715,9 @@ export async function runFrameworkChecks({
   warningStart = warnings.length;
   let markdownPaths = [];
   try {
-    markdownPaths = listMarkdownPaths(repositoryRoot);
+    markdownPaths = listMarkdownPaths(repositoryRoot, {
+      excludeFrameworkShadow: frameworkRepositoryRoot !== repositoryRoot,
+    });
   } catch (error) {
     errors.push(issueFrom(error, "DOCTOR_GIT_FAILED"));
   }
@@ -751,13 +783,13 @@ export async function runFrameworkChecks({
   for (const processFile of PROCESS_FILES) {
     const processPath = `readme/meta/${processFile}`;
     try {
-      const inspected = await inspectPath(repositoryRoot, processPath);
+      const inspected = await inspectPath(frameworkRepositoryRoot, processPath);
       if (!inspected.info.isFile() || inspected.info.nlink !== 1) {
         throw new CheckFailure("DOCTOR_PROCESS_INVENTORY", "required process document is not an ordinary file",
           processPath);
       }
-      const document = await readMarkdown(repositoryRoot, processPath);
-      cache.set(processPath, document);
+      const document = await readMarkdown(frameworkRepositoryRoot, processPath);
+      frameworkCache.set(processPath, document);
       processCount += 1;
     } catch (error) {
       errors.push({
@@ -775,7 +807,7 @@ export async function runFrameworkChecks({
   warningStart = warnings.length;
   let templates = [];
   try {
-    const inspected = await inspectPath(repositoryRoot, "readme/meta/templates");
+    const inspected = await inspectPath(frameworkRepositoryRoot, "readme/meta/templates");
     if (!inspected.info.isDirectory()) {
       throw new CheckFailure("DOCTOR_TEMPLATE_INVENTORY", "template path must be an ordinary directory",
         "readme/meta/templates");
@@ -789,12 +821,12 @@ export async function runFrameworkChecks({
     }
     for (const name of templates) {
       const templatePath = `readme/meta/templates/${name}`;
-      const template = await inspectPath(repositoryRoot, templatePath);
+      const template = await inspectPath(frameworkRepositoryRoot, templatePath);
       if (!template.info.isFile() || template.info.nlink !== 1) {
         throw new CheckFailure("DOCTOR_TEMPLATE_INVENTORY", "template inventory contains a non-ordinary file",
           templatePath);
       }
-      await getMarkdown(templatePath);
+      await getFrameworkMarkdown(templatePath);
     }
   } catch (error) {
     errors.push(issueFrom(error, "DOCTOR_TEMPLATE_INVENTORY"));
@@ -806,13 +838,17 @@ export async function runFrameworkChecks({
   warningStart = warnings.length;
   let budgetInspected = 0;
   const budgetViolations = [];
-  const checkBudget = async (relativePath, limit, hard, category, { required = false } = {}) => {
-    const exists = await inspectPath(repositoryRoot, relativePath, { required }).catch((error) => {
+  const checkBudget = async (relativePath, limit, hard, category, {
+    required = false,
+    ownerRoot = repositoryRoot,
+    readOwnerMarkdown = getMarkdown,
+  } = {}) => {
+    const exists = await inspectPath(ownerRoot, relativePath, { required }).catch((error) => {
       errors.push(issueFrom(error, "DOCTOR_FILE_UNSAFE"));
       return null;
     });
     if (exists === null) return;
-    const document = await getMarkdown(relativePath);
+    const document = await readOwnerMarkdown(relativePath);
     if (document === null) return;
     const lines = lineCount(document.text);
     budgetInspected += 1;
@@ -866,7 +902,7 @@ export async function runFrameworkChecks({
   }
   for (const processFile of PROCESS_FILES) {
     await checkBudget(`readme/meta/${processFile}`, FRAMEWORK_DOCTOR_LIMITS.processDocumentLines, false,
-      "meta_process");
+      "meta_process", { ownerRoot: frameworkRepositoryRoot, readOwnerMarkdown: getFrameworkMarkdown });
   }
   checks.push({ id: "document_budgets", status: statusFor(errors, warnings, errorStart, warningStart),
     details: { inspected: budgetInspected, violations: budgetViolations } });
@@ -881,9 +917,9 @@ export async function runFrameworkChecks({
       inspectPath(repositoryRoot, "scripts/package-core.sh", { required: false }),
       inspectPath(repositoryRoot, "scripts/install-core.sh", { required: false }),
     ]);
-    sourceRepository = sourceSignals.every((signal) =>
+    sourceRepository = frameworkRepositoryRoot === repositoryRoot && sourceSignals.every((signal) =>
       signal !== null && signal.info.isFile() && signal.info.nlink === 1);
-    const meta = await getMarkdown("readme/meta/framework-changelog.md");
+    const meta = await getFrameworkMarkdown("readme/meta/framework-changelog.md");
     if (meta !== null) {
       const markers = meta.text.split(FRAMEWORK_CHANGELOG_MARKER).length - 1;
       if (markers !== 1) {
@@ -902,7 +938,8 @@ export async function runFrameworkChecks({
     }
     const activeChangelogPath = sourceRepository ? "readme/learning/framework-changelog.md" :
       "readme/meta/framework-changelog.md";
-    const activeChangelog = await getMarkdown(activeChangelogPath);
+    const activeChangelog = sourceRepository ? await getMarkdown(activeChangelogPath) :
+      await getFrameworkMarkdown(activeChangelogPath);
     if (activeChangelog !== null) {
       const lines = lineCount(activeChangelog.text);
       const entries = changelogEntries(activeChangelog.text);

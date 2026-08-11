@@ -13,6 +13,22 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt The Installed Package Task Runtime
+
+- Status: Adopted.
+- Evidence: T-0026 packed-client mutation and adversarial root/metadata/lock fixtures,
+  full task-store regression suite, reproducible package audit, and independent
+  architecture, security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Exposed the guarded task store beneath the immutable package binary, separated
+  package resources from one physically validated client Git root, declared task-format
+  compatibility in package metadata, and rejected untrusted Git and lockfile inputs.
+- Success signal: An installed client can initialize and mutate its task store without a
+  copied meta tree or writes beneath the package, while mismatched roots and metadata
+  fail before client mutation.
+- Review or sunset trigger: Package/client path confusion, package mutation, manifest or
+  schema drift, bypassed lock integrity, unsafe Git discovery, or task CLI regression.
+
 ## 2026-08-11: Adopt A Guarded Task-Recovery Skill
 
 - Status: Adopted.
@@ -132,26 +148,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   model-scoped, and monthly windows without credential material entering the conversation.
 - Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
   schema change, or a second copy of the reader.
-
-## 2026-07-30: Pack Harness Adapters And Skills Into The Installer
-
-- Status: Adopted.
-- Evidence: User bug report and T-0013 inventory, reproducibility, additive-install,
-  symlink-escape, and negative-packaging checks; records backfilled for commit `0a8cd76`.
-- Change: Made `package-core.sh` stage and type-validate `.claude/agents`, `.codex/agents`,
-  and `.agents/skills`, and made `install-core.sh` and CI carry them in the exact core
-  inventory and install them additively without overwriting same-name host files or
-  traversing symlinked path components.
-- Success signal: A deployed repository receives the adapters and quota skill, and the
-  packer, installer, and CI inventories agree.
-- Review or sunset trigger: A packaged tree drifts from the installer inventory or an
-  additive install overwrites a host file.
-
-## 2026-07-14: Rename The Moving Latest Release
-
-- Status: Adopted.
-- Evidence: Direct product-owner instruction and T-0011 workflow-path checks.
-- Change: Renamed the moving `latest` release display title to `core-framework` without
-  changing its tag, asset, permissions, or publication sequence.
-- Success signal: Both release creation and update apply the new title.
-- Review or sunset trigger: A published `latest` release retains a different title.

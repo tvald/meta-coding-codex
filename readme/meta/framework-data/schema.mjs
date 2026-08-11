@@ -1,7 +1,11 @@
 import path from "node:path";
+import {
+  TASK_CLI_VERSION,
+  TASK_STORE_SCHEMA_VERSION,
+} from "../../../lib/task-compatibility.mjs";
 
-export const SCHEMA_VERSION = 1;
-export const CLI_VERSION = "1.0.0";
+export const SCHEMA_VERSION = TASK_STORE_SCHEMA_VERSION;
+export const CLI_VERSION = TASK_CLI_VERSION;
 export const DEFAULT_LIMIT = 50;
 export const MAX_LIMIT = 200;
 export const DEFAULT_QUERY_BYTES = 131_072;

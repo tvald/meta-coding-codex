@@ -152,3 +152,26 @@
   mutation, and the unavoidable upstream-status pipeline limitation remains visible.
 - Review or sunset trigger: Hidden install failure, truncation mutation, or preference
   for strict upstream-status propagation over the shorter command.
+
+## 2026-07-14: Rename The Moving Latest Release
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction and T-0011 workflow-path checks.
+- Change: Renamed the moving `latest` release display title to `core-framework` without
+  changing its tag, asset, permissions, or publication sequence.
+- Success signal: Both release creation and update apply the new title.
+- Review or sunset trigger: A published `latest` release retains a different title.
+
+## 2026-07-30: Pack Harness Adapters And Skills Into The Installer
+
+- Status: Adopted.
+- Evidence: User bug report and T-0013 inventory, reproducibility, additive-install,
+  symlink-escape, and negative-packaging checks; records backfilled for commit `0a8cd76`.
+- Change: Made `package-core.sh` stage and type-validate `.claude/agents`, `.codex/agents`,
+  and `.agents/skills`, and made `install-core.sh` and CI carry them in the exact core
+  inventory and install them additively without overwriting same-name host files or
+  traversing symlinked path components.
+- Success signal: A deployed repository receives the adapters and quota skill, and the
+  packer, installer, and CI inventories agree.
+- Review or sunset trigger: A packaged tree drifts from the installer inventory or an
+  additive install overwrites a host file.

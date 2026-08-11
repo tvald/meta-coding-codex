@@ -33,9 +33,9 @@
 
 | Mitigation | Owner | Verification | Status |
 | --- | --- | --- | --- |
-| Explicit immutable package root and mutable client Git root | T-0026 | Existing regressions plus wrong-root, symlink, and packed-client tests | Planned |
-| Exact lifecycle-free npm inventory and versioned binary | T-0025 | `npm pack` audit, clean install, missing-dependency failure | Planned |
-| Explicit local CLI path | T-0025 and T-0031 | Missing dependency with hostile same-name PATH executable is never invoked | Planned |
+| Explicit immutable package root and mutable client Git root | T-0026 | Installed binary regressions plus foreign, symlink, shadow, hostile-Git, direct-bypass, nested-Git, and package-write negatives | Done |
+| Exact lifecycle-free npm inventory and versioned binary | T-0025 | `npm pack` audit, clean install, missing-dependency failure | Done |
+| Explicit local CLI path | T-0025 and T-0031 | Missing dependency with hostile same-name PATH executable is never invoked | Done for focused package boundary; aggregate repeat remains T-0031 |
 | Script-disabled install and lifecycle/dependency-free prompt extensions | T-0028 and T-0031 | Hostile direct/transitive script fixtures plus manifest/lockfile rejection | Planned |
 | One-owner facet registry and deterministic profiles | T-0027 | Completeness, conflicts, budgets, provenance, snapshot equivalence | Planned |
 | Lockfile-backed allowlisted extensions | T-0028 | Undeclared, incompatible, conflicting, unsafe-path, and oversized negatives | Planned |
