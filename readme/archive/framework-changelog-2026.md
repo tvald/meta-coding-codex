@@ -1,5 +1,21 @@
 # Framework Changelog Archive: 2026
 
+## 2026-07-30: Adopt Tiered Per-Window Usage Cutoffs
+
+- Status: Adopted.
+- Evidence: Product-owner instruction on quota waste and T-0014 budget, hardcoded-cutoff
+  grep, and link checks; see
+  [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md).
+- Change: Generalized the capacity guard to threshold every advertised window—five-hour,
+  weekly, each model-scoped window, and monthly—and replaced the flat 95% cutoff with
+  tiered 95% five-hour, 98% weekly, and 99% monthly, so long-window quota stays usable
+  while an accidental hard-limit hit that would terminate the orchestrator is still
+  prevented. Aligned the resumption capacity-wait trigger and the task-notes template.
+- Success signal: The guard thresholds the windows its skills report and reserves only a
+  small margin on distant-reset windows.
+- Review or sunset trigger: An accidental hard-limit crossing despite the guard, or a new
+  provider window class the tiers do not cover.
+
 ## 2026-07-10: Address External Framework Critique
 
 - Status: Adopted, with modified adoption for routing risk, approval authority, and

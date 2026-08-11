@@ -117,6 +117,8 @@ test('package policy rejects missing or drifting prompt compiler metadata', () =
     (candidate) => { candidate.metaFramework.promptCompiler.envelopeVersions = [2]; },
     (candidate) => { candidate.metaFramework.promptCompiler.promptFormatVersions = [2]; },
     (candidate) => { candidate.metaFramework.promptCompiler.registrySchemaVersions = [2]; },
+    (candidate) => { candidate.metaFramework.promptCompiler.extensionManifestVersions = [2]; },
+    (candidate) => { candidate.metaFramework.promptCompiler.extensionApiVersions = [2]; },
     (candidate) => { candidate.metaFramework.promptCompiler.profiles.reverse(); },
     (candidate) => { candidate.metaFramework.promptCompiler.harnesses = ['portable']; },
     (candidate) => { candidate.metaFramework.promptCompiler.unreviewed = true; },

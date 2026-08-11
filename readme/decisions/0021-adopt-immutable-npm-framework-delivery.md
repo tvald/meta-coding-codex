@@ -123,14 +123,14 @@ name remains `meta-framework`.
   fields needed by framework policy. Unavailable, unsupported, malformed, unauthorized,
   or failed inspection remains distinguishable from safe capacity, and credentials,
   tokens, raw responses, account identity, and unrelated billing data never enter output.
-- Load extension facets only from the ordered
-  `package.json#metaFramework.extensions` allowlist. Each name must be an exact direct
-  dependency resolved from the client package and lockfile, with a bounded data-only
-  `meta-framework.extension.json` at its validated package root. Treat all extension
-  content as untrusted; validate identity, compatibility, lifecycle/dependency absence,
-  schema, profiles, paths, file types, sizes, namespaces, conflicts, and attribution, and
-  never let extension ordering create last-writer-wins behavior or shadow core safety.
-  Prompt composition loads no extension code; a named command is a separate boundary.
+- Load extension facets only from the ordered `package.json#metaFramework.extensions`
+  allowlist. Bind each exact stable direct dependency to the v3 root/installed lock
+  version, HTTPS tarball, SHA-512 integrity, physical root, and package identity. Accept
+  only a canonical bounded `meta-framework.extension.json` plus lifecycle-free, dependency-
+  free, non-executable Markdown facets beneath that package. Treat every instruction as
+  untrusted; validate compatibility, profiles, paths, modes, sizes, namespaces, conflicts,
+  attribution, and aggregate budgets before one stdout write. Never scan, import, execute,
+  merge, override core safety, or expose client paths and lock URLs in prompt provenance.
 - Version the immutable package with SemVer and independently version the CLI envelope,
   prompt format, task-store schema, and extension manifest/API. Package metadata declares
   readable and writable compatibility sets; unsupported state fails before mutation.
