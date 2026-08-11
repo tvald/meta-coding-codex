@@ -22,6 +22,13 @@ framework_core_inventory() {
         'readme/meta/automation-policy.md' \
         'readme/meta/development-standards.md' \
         'readme/meta/framework-changelog.md' \
+        'readme/meta/framework-data/cli.mjs' \
+        'readme/meta/framework-data/framework-checks.mjs' \
+        'readme/meta/framework-data/importer.mjs' \
+        'readme/meta/framework-data/schema.mjs' \
+        'readme/meta/framework-data/schemas/control-v1.schema.json' \
+        'readme/meta/framework-data/schemas/task-v1.schema.json' \
+        'readme/meta/framework-data/store.mjs' \
         'readme/meta/framework-improvement.md' \
         'readme/meta/knowledge-ingestion.md' \
         'readme/meta/knowledge-management.md' \
@@ -64,7 +71,7 @@ install_framework_core() {
     fi
     [ "$#" -eq 0 ] || fail "this installer does not accept those arguments"
 
-    for command_name in awk cmp cp curl find grep ln mkdir mktemp pwd rm rmdir \
+    for command_name in awk cmp cp curl find git grep ln mkdir mktemp node pwd rm rmdir \
         sort uniq unzip wc; do
         command -v "$command_name" >/dev/null 2>&1 ||
             fail "required command not found: $command_name"
@@ -72,6 +79,14 @@ install_framework_core() {
 
     DESTINATION_ROOT=$(pwd -P) || fail "cannot resolve the current directory"
     [ "$DESTINATION_ROOT" != / ] || fail "refusing to install into filesystem root"
+    PROJECT_GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ||
+        fail "run from the root of an initialized Git repository"
+    PROJECT_GIT_ROOT=$(CDPATH='' cd "$PROJECT_GIT_ROOT" && pwd -P) ||
+        fail "cannot resolve the Git repository root"
+    [ "$PROJECT_GIT_ROOT" = "$DESTINATION_ROOT" ] ||
+        fail "run from the root of the Git repository"
+    node -e 'const major = Number(process.versions.node.split(".")[0]); process.exit(major >= 22 && process.platform !== "win32" ? 0 : 1)' ||
+        fail "Node.js 22 or newer on a supported non-Windows platform is required"
 
     # Relative paths remain anchored to the directory in which this shell started even
     # if that directory is renamed while installation is in progress.
@@ -213,7 +228,8 @@ install_framework_core() {
 
     while IFS= read -r entry || [ -n "$entry" ]; do
         case $entry in
-            AGENTS.md|readme/meta/*.md| \
+            AGENTS.md|readme/meta/*.md|readme/meta/framework-data/*.mjs| \
+            readme/meta/framework-data/schemas/*.json| \
             .claude/agents/*.md|.claude/skills/*.md|.claude/skills/*.yaml| \
             .codex/agents/*.toml| \
             .agents/skills/*.md|.agents/skills/*.yaml)
@@ -292,6 +308,8 @@ install_framework_core() {
     ' "$STAGED_FRAMEWORK_CHANGELOG"; then
         fail "framework changelog seed contains local entries"
     fi
+    node "$STAGING_DIRECTORY/readme/meta/framework-data/cli.mjs" --version >/dev/null ||
+        fail "staged framework data CLI version check failed"
 
     # Recheck immediately before atomically claiming destination paths.
     if [ -e "$META_DESTINATION" ] || [ -L "$META_DESTINATION" ]; then
@@ -404,6 +422,8 @@ install_framework_core() {
             ! cmp -s "../${OWNER_TOKEN_FILE#./}" "../${LOCK_MARKER#./}"; then
             fail "documentation destination changed before installation completed"
         fi
+        node meta/framework-data/cli.mjs --version >/dev/null ||
+            fail "installed framework data CLI version check failed"
         if [ "$OWN_README" = true ]; then
             rm -f .framework-install-owner ||
                 fail "cannot finalize the claimed documentation directory"

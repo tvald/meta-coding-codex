@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0013",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Pack harness adapters and skills into the core packager and installer",
+  "authority": {
+    "reference": "User instruction, 2026-07-30",
+    "acceptedDate": "2026-07-30"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0009"
+  ],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0013-installer-adapter-packing-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0013-installer-adapter-packing-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "`0a8cd76`, [quality record](../quality/2026-07-30-installer-adapter-packing.md)"
+  }
+}

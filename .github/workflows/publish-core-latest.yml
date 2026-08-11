@@ -29,12 +29,29 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Use supported Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38  # v6.5.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
       - name: Check runner tools
         shell: bash
         run: |
           set -euo pipefail
+          command -v git
+          command -v node
           command -v zip
           command -v unzip
+          node -e 'const major = Number(process.versions.node.split(".")[0]); process.exit(major >= 22 && process.platform !== "win32" ? 0 : 1)'
+
+      - name: Verify framework data boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/framework-data*.mjs
+          node readme/meta/framework-data/cli.mjs doctor
+          node readme/meta/framework-data/cli.mjs startup >/dev/null
 
       - name: Build the core archive
         shell: bash
@@ -61,6 +78,24 @@ jobs:
           ./scripts/install-core.sh --print-expected-inventory > "$installer_expected"
           cmp "$expected" "$installer_expected"
           cp "$expected" dist/core-inventory.txt
+
+      - name: Verify a fresh payload can initialize task state
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture=$(mktemp -d)
+          trap 'rm -rf "$fixture"' EXIT
+          unzip -qq "dist/${RELEASE_ASSET_NAME}" -d "$fixture"
+          (
+            cd "$fixture"
+            git init -q
+            cp readme/meta/templates/project-state.md readme/README.md
+            mkdir -p readme/tasks
+            cp readme/meta/templates/task-catalog.md readme/tasks/README.md
+            node readme/meta/framework-data/cli.mjs init
+            node readme/meta/framework-data/cli.mjs doctor
+            node readme/meta/framework-data/cli.mjs startup >/dev/null
+          )
 
       - name: Transfer the verified payload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1

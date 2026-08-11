@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0004",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Add quota-aware subagent suspension and resumption",
+  "authority": {
+    "reference": "User instruction, 2026-07-13",
+    "acceptedDate": "2026-07-13"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0004-quota-aware-subagent-control-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0004-quota-aware-subagent-control-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "`8c57799`"
+  }
+}

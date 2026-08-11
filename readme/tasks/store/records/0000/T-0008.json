@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0008",
+  "recordVersion": 1,
+  "taskRevision": 2,
+  "outcome": "Build the core zip on every push to `main`, publish it as `latest`, and document installation",
+  "authority": {
+    "reference": "User instructions, 2026-07-14",
+    "acceptedDate": "2026-07-14"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0007"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0008-latest-release-workflow-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0008-latest-release-workflow-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0011](../decisions/0011-publish-moving-latest-core-release.md)"
+  }
+}

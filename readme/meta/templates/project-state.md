@@ -1,53 +1,49 @@
 # Project State
 
-Read this file at the start of every session. It is the bounded project-wide cursor and
-documentation index, not a task list or history log. Keep it at or below 80 lines and
-link to canonical records for detail.
+Read this bounded project cursor at session start, then run the task-store startup query.
+Keep this file at or below 80 lines. It is a documentation index and home for genuinely
+project-wide facts, not a task projection or history log.
 
-## Task Cursor
+## Task State
 
-- Task catalog: `readme/tasks/README.md`
-- Primary task: None
-- Primary details: None
+- Task entrypoint: [Task store](tasks/README.md)
+- Startup query: `node readme/meta/framework-data/cli.mjs startup`
 
-The task catalog owns outcomes, status, dependencies, task-specific approvals or
-blockers, next actions, detail links, and results. Do not copy them here.
+Task identity, authority, lifecycle, dependencies, gates, next actions, details, and
+results live only in the structured task store. Do not copy primary or recent-task state
+here.
 
-## Global Parked Approvals
+## Standing Project Policies
 
-Task-specific approvals belong in the catalog. Use this table only for an approval that
-gates several tasks or the whole project.
-
-| ID | Gated Action | Status | Affected Tasks | Decision Record |
-| --- | --- | --- | --- | --- |
-| None | | | | |
+| Policy | Authority |
+| --- | --- |
+| None | |
 
 ## Known Global Dead Ends
 
 - None.
 
-## Recently Completed
-
-Keep at most five linked summaries; detailed results remain in the catalog.
-
-| Date | Outcome | Durable Record |
-| --- | --- | --- |
-| None | | |
+Keep only currently relevant cross-task dead ends. Put task-specific attempts in the
+linked task note.
 
 ## Documentation Map
 
-- Reusable framework: `readme/meta/README.md`
-- Task catalog: `readme/tasks/README.md`
+- Reusable framework: [meta/README.md](meta/README.md)
+- Task store: [tasks/README.md](tasks/README.md)
 - Stable project knowledge: `readme/project/` (created on demand)
 - Decisions: `readme/decisions/`
-- Task details: `readme/tasks/`
-- Quality and threats: `readme/quality/` and `readme/threat-models/`
-- Incidents and learning: `readme/incidents/` and `readme/learning/`
-- Archives: `readme/archive/` (created on demand)
+- Task narratives: `readme/tasks/`
+- Quality evidence: `readme/quality/`
+- Threat models: `readme/threat-models/`
+- Incidents: `readme/incidents/` (created on demand)
+- Learning: `readme/learning/`
+- Archives and legacy migration evidence: `readme/archive/` (created on demand)
 
-## Hygiene
+## Maintenance
 
-- Last consistency and pruning pass: YYYY-MM-DD
-- Completed repository-changing tasks since that pass: 0
-- Next pass due: YYYY-MM-DD or after 10 completed repository-changing tasks, whichever
-  comes first
+- Last maintenance pass: YYYY-MM-DD
+- Legacy repository-changing completion baseline: 0
+- Next trigger: YYYY-MM-DD or 10 repository-changing completions
+
+Derive the task-count trigger from structured completion fields after the last pass;
+never maintain a duplicate task counter or completion list here.

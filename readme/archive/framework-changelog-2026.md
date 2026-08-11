@@ -109,3 +109,18 @@
   no mutable host state, optional integration, or local authority enters it.
 - Review or sunset trigger: Archive drift, unsafe replacement, missing core content,
   host-state leakage, or a demonstrated need to distribute executable runtime tooling.
+
+## 2026-07-14: Publish A Moving Latest Core Release
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction, current official GitHub event/token/ref,
+  release/action/runner sources, and T-0008 schema, archive, mock-transition, and install
+  checks; see [Decision 0011](../decisions/0011-publish-moving-latest-core-release.md).
+- Change: Added a serialized two-job workflow that builds the T-0007 archive with read
+  permission, transfers verified bytes, and uses a narrow write job to move `latest` and
+  draft-safely replace one release asset after fail-closed exact release/ref discovery.
+  Added collision-aware stable-URL install commands.
+- Success signal: Every main push converges on the current verified core without an older
+  run becoming final, and existing destination AGENTS guidance is preserved for merging.
+- Review or sunset trigger: Stale final release, token expansion, persistent draft or
+  asset mismatch, action/runner deprecation, or destination overwrite.

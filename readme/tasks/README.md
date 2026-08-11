@@ -1,44 +1,53 @@
-# Task Catalog
+# Task Store
 
-This is the canonical discovery and lifecycle record for every accepted task. Physical
-row order has no scheduling meaning. The Root Orchestrator is the sole writer.
+Canonical task state lives under `readme/tasks/store/` and is accessed through the
+repository-pinned CLI. This file is a static entrypoint, not a generated catalog or a
+second state owner.
 
-- Format: 1
-- Next task ID: T-0023
-- Primary task: None
-- Scheduling: Idle
-- Global pause source or reason: None
-- Archived task rows: [T-0001–T-0002](../archive/tasks/2026-08-catalog.md)
+## Required Commands
 
-## Tasks
+Run from the repository root:
 
-| ID | Outcome | Authority / Rev | Status | Depends On | Route / Risk | Approval Or Blocker | Next Safe Action | Details | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-0003 | Pilot optional Codex and Claude Code agent adapters | User instruction, 2026-07-10 / r1 | Done | T-0002 | Initiative / High | None | None | [Brief](0003-agent-adapter-pilot-brief.md), [notes](0003-agent-adapter-pilot-notes.md) | `dc26eca` |
-| T-0004 | Add quota-aware subagent suspension and resumption | User instruction, 2026-07-13 / r1 | Done | None | Initiative / High | None | None | [Brief](0004-quota-aware-subagent-control-brief.md), [notes](0004-quota-aware-subagent-control-notes.md) | `8c57799` |
-| T-0005 | Add a dependency-free Codex quota-monitor skill | User instruction, 2026-07-13 / r1 | Done | T-0004 | Initiative / High | None | None | [Brief](0005-codex-quota-monitor-skill-brief.md), [notes](0005-codex-quota-monitor-skill-notes.md) | `058349e` |
-| T-0006 | Reconcile durable project state with imported task-loop commit `d5ff9f5` and verify core/state separation | User instructions, 2026-07-14 / r2 | Done | None | Initiative / High | None | None | [Brief](0006-task-loop-state-reconciliation-brief.md), [notes](0006-task-loop-state-reconciliation-notes.md) | Decisions [0008](../decisions/0008-adopt-durable-task-orchestration.md) and [0009](../decisions/0009-authorize-bounded-project-delegation.md) |
-| T-0007 | Add a shell script that packages the portable framework core as a zip archive | User instruction, 2026-07-14 / r1 | Done | T-0006 | Quick change / High | None | None | [Brief](0007-core-package-script-brief.md), [notes](0007-core-package-script-notes.md) | [Decision 0010](../decisions/0010-automate-portable-core-archive.md) |
-| T-0008 | Build the core zip on every push to `main`, publish it as `latest`, and document installation | User instructions, 2026-07-14 / r2 | Done | T-0007 | Initiative / High | None | None | [Brief](0008-latest-release-workflow-brief.md), [notes](0008-latest-release-workflow-notes.md) | [Decision 0011](../decisions/0011-publish-moving-latest-core-release.md) |
-| T-0009 | Replace inline installation commands with a safe script usable through `curl` piped to Bash | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / High | None | None | [Brief](0009-piped-core-installer-brief.md), [notes](0009-piped-core-installer-notes.md) | [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md) |
-| T-0010 | Streamline the public install command to conventional `curl -fsSL … \| bash` form | User instruction, 2026-07-14 / r1 | Done | T-0009 | Quick change / High | None | None | [Brief](0010-streamline-installer-command-brief.md), [notes](0010-streamline-installer-command-notes.md) | [Decision 0013](../decisions/0013-streamline-installer-invocation.md) |
-| T-0011 | Rename the moving-latest release display title from `Latest framework core` to `core-framework` | User instruction, 2026-07-14 / r1 | Done | T-0008 | Quick change / Medium | None | None | None | [Quality record](../quality/2026-07-14-core-release-title.md) |
-| T-0012 | Add a credential-safe Claude Code usage-telemetry skill and ship it through the core installer | User instruction, 2026-07-30 / r1 | Done | T-0005, T-0013 | Initiative / High | None | None | [Brief](0012-claude-quota-monitor-skill-brief.md), [notes](0012-claude-quota-monitor-skill-notes.md) | [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md) |
-| T-0013 | Pack harness adapters and skills into the core packager and installer | User instruction, 2026-07-30 / r1 | Done | T-0009 | Quick change / High | None | None | [Brief](0013-installer-adapter-packing-brief.md), [notes](0013-installer-adapter-packing-notes.md) | `0a8cd76`, [quality record](../quality/2026-07-30-installer-adapter-packing.md) |
-| T-0014 | Adopt tiered per-window usage capacity cutoffs in the guard | User instruction, 2026-07-30 / r1 | Done | T-0012 | Initiative / High | None | None | [Brief](0014-tiered-usage-cutoffs-brief.md), [notes](0014-tiered-usage-cutoffs-notes.md) | [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md) |
-| T-0015 | Adopt the role adapters and set a repo-wide skip-Pilot disposition policy | User instruction, 2026-07-30 / r1 | Done | T-0003 | Initiative / Medium | None | None | [Brief](0015-adopt-adapters-skip-pilot-brief.md), [notes](0015-adopt-adapters-skip-pilot-notes.md) | [Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md) |
-| T-0016 | Reconcile imported meta-framework changes and establish the framework-changelog stub and boundary | User instructions, 2026-08-05 / r2 | Done | None | Initiative / High | None | None | [Brief](0016-imported-framework-reconciliation-brief.md), [notes](0016-imported-framework-reconciliation-notes.md) | [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md), [quality](../quality/2026-08-05-imported-framework-reconciliation.md) |
-| T-0017 | Evaluate which meta-framework processes should be codified as skills or scripts | User instruction, 2026-08-11 / r1 | Done | None | Discover / Low | None | None | [Notes](0017-process-codification-evaluation-notes.md) | [Assessment](0017-process-codification-evaluation-notes.md#findings) |
-| T-0018 | Evaluate script-gated framework data stores and long-horizon process scalability | User instruction, 2026-08-11 / r1 | Done | None | Decide / Medium | None | None | [Notes](0018-data-store-scalability-evaluation-notes.md) | [Assessment](0018-data-store-scalability-evaluation-notes.md#findings) |
-| T-0019 | Promote the highest-value T-0017 and T-0018 recommendations into dedicated tasks and retain the rest for product-owner review | User instruction, 2026-08-11 / r1 | Done | T-0017, T-0018 | Quick change / Low | None | None | [Notes](0019-promote-exploration-features-notes.md) | Promoted T-0020–T-0022; retained remaining candidates in the source assessments |
-| T-0020 | Build and adopt the required `framework-data` CLI, structured task store, migration, and integrated doctor | User instruction, 2026-08-11 via T-0019 / r1 | Ready | None | Initiative / High | None | Run the implementation readiness gate and decide the runtime, schema, distribution, migration, and rollback boundary | [Brief](0020-framework-data-cli-brief.md) | Pending |
-| T-0021 | Add a guarded `project-onboarding` skill backed by the structured preflight | User instruction, 2026-08-11 via T-0019 / r1 | Pending | T-0020 | Initiative / High | None | After T-0020 is Done, run the implementation readiness gate against the canonical onboarding and packaging boundaries | [Brief](0021-project-onboarding-skill-brief.md) | Pending |
-| T-0022 | Add a guarded `task-recovery` skill backed by bounded durable-state queries | User instruction, 2026-08-11 via T-0019 / r1 | Pending | T-0020 | Initiative / High | None | After T-0020 is Done, run the implementation readiness gate against resumption, delegation, quota, and packaging boundaries | [Brief](0022-task-recovery-skill-brief.md) | Pending |
+```sh
+node readme/meta/framework-data/cli.mjs doctor
+node readme/meta/framework-data/cli.mjs startup
+```
+
+Use bounded queries for discovery and recovery:
+
+```sh
+node readme/meta/framework-data/cli.mjs task list
+node readme/meta/framework-data/cli.mjs task get T-0001
+node readme/meta/framework-data/cli.mjs task context T-0001
+node readme/meta/framework-data/cli.mjs task deps T-0001
+node readme/meta/framework-data/cli.mjs task candidates
+```
+
+Use `node readme/meta/framework-data/cli.mjs --help` for semantic mutation commands,
+required optimistic-concurrency values, migration, initialization, pause, and export.
+
+If a crashed process leaves a cooperative lock, inspect it with
+`node readme/meta/framework-data/cli.mjs lock inspect`. Recover only after establishing
+that no owner is live, using the exact observed token with
+`node readme/meta/framework-data/cli.mjs lock recover --expected-token TOKEN
+--confirm-owner-not-live`; an incomplete owner write reports the token `incomplete`.
+Never infer owner death from lock age, PID, or host.
 
 ## Operating Contract
 
-- Lifecycle, ownership, selection, detail, and archive rules:
-  `readme/meta/knowledge-management.md#task-lifecycle-and-selection`
-- Intake and task-close behavior: `readme/meta/root-loop.md`
-- Interruption and message-targeting behavior: `readme/meta/resumption-protocol.md`
-- This file owns only project task facts. Do not add another work or priority list.
+- The Root Orchestrator is the sole semantic mutation authority. Other agents query the
+  store and return proposed changes.
+- Never edit task JSON directly. Raw files remain inspectable for Git review and
+  recovery, but the CLI is the only authorized mutation path.
+- CLI success establishes structural integrity and transition prerequisites, not user
+  authority, approval truth, route/risk judgment, task priority, or semantic completion.
+- Full-store integrity failure blocks every normal query and mutation. Do not skip,
+  repair, or partially render malformed records.
+- Task briefs and notes remain targeted Markdown narratives beside this entrypoint and
+  are linked from their structured task records.
+- Legacy task catalogs and archives are immutable migration evidence, not canonical
+  state; normal reads never consult them.
+- Lifecycle, selection, authority, and completion policy:
+  `readme/meta/knowledge-management.md#task-lifecycle-and-selection`.
+- Intake and close behavior: `readme/meta/root-loop.md`.
+- Interruption behavior: `readme/meta/resumption-protocol.md`.

@@ -1,14 +1,15 @@
 # Task Brief
 
-Create this only when the catalog row is insufficient for selection, acceptance,
-routing, or review. The catalog remains the owner of status, dependencies, approvals or
-blockers, next action, and result.
+Create this only when the structured task record is insufficient for selection,
+acceptance, routing, or review. The task store remains the owner of status, dependencies,
+gates, next action, and result.
 
 ## Identity And Source
 
 - Task ID:
 - Initial revision: r1
-- Catalog: `readme/tasks/README.md`
+- Task store: `readme/tasks/store/` through
+  `node readme/meta/framework-data/cli.mjs task get <ID>`
 - Accepted source: User instruction / accepted in-scope finding / decision
 - Source reference and date:
 - Parent or split task IDs: None
@@ -54,7 +55,7 @@ Out of scope:
 
 Complete when the task is selected or framing makes the route clear.
 
-- Cataloged route and risk: See this task's catalog row.
+- Recorded route and risk: See this task's structured record.
 - Why this route:
 - Why this risk gate:
 - Upstream artifacts required:

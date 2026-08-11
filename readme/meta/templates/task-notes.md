@@ -1,13 +1,14 @@
 # Task Notes
 
-Use for long-running, risky, paused, or parallel execution. The task catalog links this
-note and remains the owner of outcome, status, dependencies, task-specific approval or
-blocker, next safe action, and result.
+Use for long-running, risky, paused, or parallel execution. The structured task record
+links this note and remains the owner of outcome, status, dependencies, gate, next safe
+action, and result.
 
 ## Task Identity
 
 - Task ID:
-- Catalog: `readme/tasks/README.md`
+- Task store: `readme/tasks/store/` through
+  `node readme/meta/framework-data/cli.mjs task get <ID>`
 - Brief or acceptance source:
 - Started:
 - Last updated:
@@ -39,9 +40,9 @@ blocker, next safe action, and result.
 
 ## Parked Approval Detail
 
-The catalog owns the approval ID, status, bound revision, and this detail link. Persist
-the approval source, exact action, and boundary here; missing fields cannot authorize
-work.
+The structured gate owns the approval ID, source, action, boundary, status, bound task
+revision, and this detail link. This section may add execution evidence without copying
+or weakening those facts.
 
 | ID | Task Revision | Approval Source | Action And Boundary | Dependent Work |
 | --- | --- | --- | --- | --- |

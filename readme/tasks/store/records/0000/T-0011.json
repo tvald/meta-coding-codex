@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0011",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Rename the moving-latest release display title from `Latest framework core` to `core-framework`",
+  "authority": {
+    "reference": "User instruction, 2026-07-14",
+    "acceptedDate": "2026-07-14"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0008"
+  ],
+  "route": "quick_change",
+  "risk": "medium",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Quality record](../quality/2026-07-14-core-release-title.md)"
+  }
+}

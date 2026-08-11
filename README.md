@@ -1,7 +1,8 @@
 # AI-Assisted Development Framework
 
-This repository contains a portable, Markdown-only core for AI-assisted software
-development plus optional Codex and Claude Code harness integrations. It is
+This repository contains a portable core for AI-assisted software development plus
+optional Codex and Claude Code harness integrations. Policy is Markdown; a
+dependency-free Node.js CLI provides the required structured task boundary. It is
 designed to be added to an existing project without bringing along the decisions, task
 history, or documentation state of the framework repository itself.
 
@@ -14,7 +15,7 @@ canonical agent launcher; [`CLAUDE.md`](CLAUDE.md) imports it for Claude Code.
 The reusable add-on consists of:
 
 - `readme/meta/`, containing the framework entrypoint, process guidance, references,
-  and templates; and
+  templates, pinned task CLI, and schemas; and
 - the root AGENTS entry instruction, merged into rather than blindly replacing a
   destination project's existing instructions.
 
@@ -47,7 +48,8 @@ From the root of the project that will receive the framework, run:
 curl -fsSL https://raw.githubusercontent.com/tvald/meta-coding-codex/main/scripts/install-core.sh | bash
 ```
 
-This requires Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and common POSIX file tools.
+This requires Git, Node.js 22 or newer, Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and
+common POSIX file tools. Run it from the root of an initialized Git repository.
 
 The [installer script](scripts/install-core.sh) validates and stages the latest release
 before changing the project. If the project already has `AGENTS.md`, it preserves it
@@ -57,6 +59,13 @@ project-specific agent guidance.
 The installer refuses an existing `AGENTS.framework.md` or `readme/meta` instead of
 overwriting or mixing an installation. Its lock serializes installer runs only; run it
 while no other local process is renaming or replacing the destination paths.
+
+The installer is fresh-only. To update an existing framework installation, stage the
+new core outside the target repository, review and deliberately reconcile its files
+while preserving local `readme/meta/framework-changelog.md` entries, then run the pinned
+Format 1 migration dry-run/hash/apply path. Rehearse a Git revert before any
+post-cutover structured task mutation; after new records exist, use forward
+reconciliation rather than a revert that could discard them.
 
 This convenience command executes the current installer from this repository with your
 user's permissions. Inspect or download the linked script before running it when you
@@ -81,17 +90,18 @@ write elsewhere; paths containing a `..` segment are rejected:
 ./scripts/package-core.sh /tmp/ai-coding-meta-framework-core.zip
 ```
 
-The archive contains the complete `readme/meta/` tree—including the blank framework
-changelog seed—the portable startup portion of `AGENTS.md`, and the optional adapter and
-quota-monitor skill trees above. It excludes local changelog entries, project state,
-the root `CLAUDE.md` bridge, and this repository's standing delegation request.
+The archive contains the complete `readme/meta/` tree—including the pinned data CLI,
+schemas, and blank framework changelog seed—the portable startup portion of `AGENTS.md`,
+and the optional adapter and quota-monitor skill trees above. It excludes local
+changelog entries, structured host task records, project state, the root `CLAUDE.md`
+bridge, and this repository's standing delegation request.
 Generated archives under `dist/` are ignored by Git. Packaged timestamps, modes, entry
 order, and extra metadata are normalized so unchanged content produces a byte-identical
 archive with the supported Info-ZIP tools.
 
 ## Add It To A Project
 
-1. Copy `readme/meta/` into the destination repository.
+1. Copy `readme/meta/` into the destination Git repository and verify supported Node.
 2. Merge the startup requirement from this repository's `AGENTS.md` into the
    destination's applicable agent instructions. Do not copy project-local operating
    choices such as the standing delegation request unless the destination owner adopts
@@ -102,7 +112,8 @@ archive with the supported Info-ZIP tools.
    `.agents/skills/codex-quota-monitor/`, and `.claude/skills/claude-quota-monitor/` for
    the harnesses and quota monitoring the destination uses. Resolve same-name agents or
    skills deliberately; never overwrite an existing definition blindly.
-5. Do not copy `readme/README.md` or the sibling project-documentation directories.
+5. Do not copy `readme/README.md`, `readme/tasks/store/`, or other project-state
+   siblings.
 6. Start a primary agent session. It reads the meta README and follows onboarding to
    initialize useful project documentation. If `readme/README.md` already contains
    non-framework documentation, onboarding preserves and resolves that collision rather
@@ -115,9 +126,11 @@ prescribe an in-place command that deletes an existing project's documentation.
 
 The framework supplies a context-first operating loop, risk-scaled verification,
 explicit autonomy boundaries, durable project knowledge, interruption recovery, and an
-evidence-based improvement process. It adds no runtime dependency and does not require
-a particular programming language, platform, or agent product. The optional harness
-adapters are removable without changing core behavior.
+evidence-based improvement process. It requires Node.js 22+, Git, and tested local Linux
+filesystem semantics for task state; macOS and WSL remain unverified design targets,
+while native Windows and network filesystems are unsupported. Project implementation
+remains language-agnostic.
+Optional harness adapters are removable without changing core behavior.
 
 For behavior, startup order, state categories, templates, and bootstrap details, use
 the [meta framework entrypoint](readme/meta/README.md) as the canonical source.

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0010",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Streamline the public install command to conventional `curl -fsSL … | bash` form",
+  "authority": {
+    "reference": "User instruction, 2026-07-14",
+    "acceptedDate": "2026-07-14"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0009"
+  ],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0010-streamline-installer-command-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0010-streamline-installer-command-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0013](../decisions/0013-streamline-installer-invocation.md)"
+  }
+}

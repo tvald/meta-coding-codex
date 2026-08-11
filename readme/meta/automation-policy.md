@@ -13,8 +13,9 @@ Agents may do these without asking when they are relevant to the current task:
 
 - Read project docs, source code, tests, and decision records.
 - Search current external sources when facts may have changed.
-- Create or update the task catalog, task briefs or notes, product briefs, assumptions,
-  glossary entries, source maps, standards, and decision records.
+- Create or update structured task records through the repository-pinned CLI, plus task
+  briefs or notes, product briefs, assumptions, glossary entries, source maps,
+  standards, and decision records.
 - Add or update tests that verify touched behavior.
 - Run build, lint, typecheck, test, format, and local app commands.
 - Install local development utilities needed to inspect, test, or format the project when repository policy allows it.
@@ -35,20 +36,20 @@ Agents may do these without asking when they are relevant to the current task:
 
 ## Task Intake Persistence
 
-The Root Orchestrator may persist newly delivered instructions to
-`readme/tasks/README.md` without waiting for the active implementation task to finish.
-Write the minimal row immediately as working-tree state and preserve it through
-interruptions. Do not create a commit for an unfinished task merely to persist intake;
-that requires separate explicit user direction or established repository authority.
-At task completion, stage only that task's catalog hunks and preserve unrelated pending
-rows. Intake does not mark a task complete or grant implementation authority.
+The Root Orchestrator may persist newly delivered instructions through
+`node readme/meta/framework-data/cli.mjs task add` without waiting for the Active task
+to finish. Write the minimal record
+immediately and preserve it through interruptions. Do not create a commit for unfinished
+intake merely to persist it; that requires separate explicit user direction or
+repository authority. At completion, stage only the selected task's record and owned
+files. Intake does not mark a task complete or grant gated external authority.
 
 ## Local Commit Completion
 
 A completed task that changes files in a Git repository must end with a local commit.
 The agent does this without asking for separate approval after implementation and
-verification are complete. Include that task's catalog/result update in the same
-commit. Adjacent catalog rows or satisfied dependencies do not justify bundling
+verification are complete. Include that task's structured result update in the same
+commit. Adjacent task records or satisfied dependencies do not justify bundling
 unrelated implementations.
 
 Use this sequence:
@@ -120,8 +121,10 @@ stale-worker, and final-response behavior.
 
 At the end of each non-trivial task, the agent should decide whether to update:
 
-- `readme/tasks/README.md` for task intake, lifecycle, dependencies, and results.
-- `readme/README.md` for the primary-task pointer, recent outcome, and hygiene counter.
+- `readme/tasks/store/` through the CLI for task intake, lifecycle, dependencies, gates,
+  and results; keep `readme/tasks/README.md` static.
+- `readme/README.md` only when standing policies, dead ends, documentation links, or the
+  maintenance baseline changed; task projections come from the store.
 - `readme/project/brief.md` for stable product facts.
 - `readme/project/assumptions.md` for unresolved uncertainty.
 - `readme/project/source-map.md` for important sources and freshness.
@@ -189,8 +192,9 @@ A required approval blocks the dependent action, not unrelated safe work within 
 existing scope. Checkpoint the gated item, continue independent work when useful, and
 batch compatible decision requests so the product owner can resolve them together.
 
-Park each task-specific approval in the catalog and put necessary detail in its linked
-task record. Reserve `readme/README.md` for global or cross-task approvals. Present a
+Record each task-specific approval as a structured gate with its detail reference.
+Cross-task approvals must be bound explicitly to every affected task rather than copied
+into the project cursor. Present a
 decision in ten lines or fewer using:
 
 ```md

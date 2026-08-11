@@ -8,7 +8,7 @@ agent restart, approval waits, and deliberate user interruption.
 
 | Type | Examples | Required Response |
 | --- | --- | --- |
-| Unplanned pause | Sleep, network loss, compaction, session restart | Reconstruct catalog, task, repository, and worker state; continue from the next safe action |
+| Unplanned pause | Sleep, network loss, compaction, session restart | Reconstruct task-store, repository, and worker state; continue from the next safe action |
 | Approval wait | Release, destructive action, sensitive permission | Park the gated task; continue independent eligible work from a clean boundary |
 | Task guidance | Changed constraint, goal, example, or priority for a task | Halt conflicting task work, record the amendment, and reframe only that task |
 | Global user stop | Stop all, pause, wait, hold on | Stop nonessential work, checkpoint active tasks, suspend workers, and do not schedule work |
@@ -17,27 +17,30 @@ agent restart, approval waits, and deliberate user interruption.
 
 ## Durable Recovery State
 
-`readme/README.md` is the first pointer and `readme/tasks/README.md` is the canonical
-task catalog. Read the catalog before task details. The catalog owns global scheduling
-pause, stable identity and revision, authority provenance, outcome, lifecycle status,
-dependencies, selected route/risk, task-specific approval or blocker, next safe action,
-and detail/result links.
+`readme/README.md` is the first project pointer and `readme/tasks/README.md` is the static
+task-store entrypoint. Run `node readme/meta/framework-data/cli.mjs doctor` and
+`node readme/meta/framework-data/cli.mjs startup` before task details.
+The structured store owns pause, stable identity and revisions, authority provenance,
+outcome, lifecycle, dependencies, route/risk, task gate, next action, and detail/result
+links.
 
 Create a brief when scope, acceptance, route, or risk needs detail. Create a task note
 for long-running, risky, paused, or parallel execution. A task note contains the
 execution checkpoint, work-item status, changed files, commits, observed checks, worker
-roster, relevant decisions, failed approaches, parked-approval detail, and work still
-needed. It links the catalog instead of copying catalog-owned fields.
+roster, relevant decisions, failed approaches, approval evidence, and work still needed.
+It links the structured record instead of copying current task fields.
 
 ## Resume Loop
 
-1. Read `AGENTS.md`, the meta README, `readme/README.md`, the task catalog, the primary
-   task's brief or notes, and any newly delivered message.
+1. Read `AGENTS.md`, the meta README, `readme/README.md`, and the static task entrypoint.
+   Run `doctor`, `startup`, and targeted `task context` for the returned primary task,
+   then read any newly delivered message.
 2. Inspect `git status`, recent commits, relevant diffs, running tools, worktrees, and
    worker state. Do not repeat a risky side effect until its prior result is known.
-3. Validate unique task IDs, authority provenance, current revisions, valid links and
-   dependencies, no dependency cycle, and no more than one primary `Active` task.
-   Quarantine unverifiable nonterminal tasks as `Blocked` before tool-using work.
+3. Require whole-store integrity: canonical schemas, unique IDs, current revisions,
+   safe links, valid dependencies, no cycle or Git conflict, pause consistency, and at
+   most one `Active` task. If doctor fails, emit no partial task query and reconcile the
+   named corruption before tool-using work.
 4. Classify newly delivered messages using the rules below and persist every accepted
    independent task before continuing implementation.
 5. Revalidate the active task's status, revision, accepted amendments, dependency
@@ -47,8 +50,8 @@ needed. It links the catalog instead of copying catalog-owned fields.
    observed failure; never integrate output invalidated for that task.
 7. Re-run only checks needed to establish current state, then resume the active task or
    use the root loop to select an eligible one.
-8. Refresh catalog, cursor, and task note after meaningful progress and before a long
-   pause.
+8. Refresh the structured task record and task note after meaningful progress and before
+   a long pause. Update the cursor only when its own project-wide facts changed.
 
 If multiple tasks incorrectly appear primary-`Active`, checkpoint them and reconcile
 ownership before editing. Do not guess which dirty changes belong to which task.
@@ -63,23 +66,23 @@ replacement:
 - A new independent outcome creates a new task and does not preempt a safe active
   increment.
 - Guidance or an approval naming a task ID, or unambiguously referring to one task,
-  updates only that task. A material amendment increments its revision and records
+  updates only that task. A material amendment increments `taskRevision` and records
   source, reason, and impact; re-run affected framing, approval, route, risk, worker,
   and verification gates.
 - A pause, cancellation, replacement, or reprioritization with a clear task target is
   scoped to that task. Cancellation and supersession record a disposition; they do not
   silently undo commits or external effects.
-- Unqualified `stop`, `pause`, `wait`, or `hold on` sets catalog scheduling to `Paused`,
-  records its source or reason, and checkpoints active work. Only authoritative resume
-  guidance returns scheduling to `Running`. An ambiguous cancellation, replacement, or conflict is checkpointed and
+- Unqualified `stop`, `pause`, `wait`, or `hold on` checkpoints the Active task first,
+  then sets structured scheduling to `Paused` with its source/reason. Only authoritative
+  resume guidance clears pause. An ambiguous cancellation, replacement, or conflict is checkpointed and
   clarified for the affected tasks rather than inferred globally.
 - `cancel all`, `replace all`, or equivalent explicit global scope applies to every
   nonterminal task. Preserve terminal history, effects, and task-specific dispositions.
 
-Approval or worker output is usable only when its recorded task ID and revision match
-the catalog. Output becomes stale when its task revision, ownership, or stop state
+Approval or worker output is usable only when its recorded task ID and semantic revision
+match the store. Output becomes stale when its task revision, ownership, or stop state
 invalidates it; unrelated task arrival does not stale it. A final response addresses
-the current request and relevant catalog state; it never presents pending, parked,
+the current request and relevant task-store state; it never presents pending, parked,
 blocked, or `Needs verification` work as completed.
 
 ## Capacity-Wait Recovery
@@ -109,4 +112,4 @@ globally paused work.
 
 Before closing resumed work, confirm that its latest accepted instruction is satisfied,
 stale output was reviewed before use, checks cover both sides of the interruption, and
-the catalog records every remaining verification, approval, dependency, or blocker.
+the structured record exposes every remaining verification, gate, dependency, or blocker.

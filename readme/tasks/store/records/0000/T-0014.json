@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0014",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Adopt tiered per-window usage capacity cutoffs in the guard",
+  "authority": {
+    "reference": "User instruction, 2026-07-30",
+    "acceptedDate": "2026-07-30"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0012"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0014-tiered-usage-cutoffs-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0014-tiered-usage-cutoffs-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md)"
+  }
+}

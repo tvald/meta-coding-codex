@@ -38,8 +38,8 @@ case $# in
         ;;
 esac
 
-for command_name in awk basename chmod cmp cp dirname find grep mkdir mktemp mv pwd \
-    rm rmdir sort touch unzip zip; do
+for command_name in awk basename chmod cmp cp dirname find git grep mkdir mktemp mv node \
+    pwd rm rmdir sort touch unzip wc zip; do
     command -v "$command_name" >/dev/null 2>&1 ||
         fail "required command not found: $command_name"
 done
@@ -49,6 +49,8 @@ REPOSITORY_ROOT=$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)
 README_SOURCE=$REPOSITORY_ROOT/readme
 META_SOURCE=$README_SOURCE/meta
 FRAMEWORK_CHANGELOG_SOURCE=$META_SOURCE/framework-changelog.md
+FRAMEWORK_DATA_SOURCE=$META_SOURCE/framework-data
+FRAMEWORK_DATA_CLI=$FRAMEWORK_DATA_SOURCE/cli.mjs
 AGENTS_SOURCE=$REPOSITORY_ROOT/AGENTS.md
 CLAUDE_AGENTS_SOURCE=$REPOSITORY_ROOT/.claude/agents
 CLAUDE_SKILLS_SOURCE=$REPOSITORY_ROOT/.claude/skills
@@ -65,6 +67,39 @@ SKILLS_SOURCE=$REPOSITORY_ROOT/.agents/skills
     fail "framework changelog seed must not be a symbolic link"
 [ -f "$AGENTS_SOURCE" ] || fail "missing startup source: $AGENTS_SOURCE"
 [ ! -L "$AGENTS_SOURCE" ] || fail "startup source must not be a symbolic link"
+[ -d "$FRAMEWORK_DATA_SOURCE" ] ||
+    fail "missing framework data runtime: $FRAMEWORK_DATA_SOURCE"
+[ ! -L "$FRAMEWORK_DATA_SOURCE" ] ||
+    fail "framework data runtime must not be a symbolic link"
+[ -f "$FRAMEWORK_DATA_CLI" ] || fail "missing framework data CLI: $FRAMEWORK_DATA_CLI"
+[ ! -L "$FRAMEWORK_DATA_CLI" ] ||
+    fail "framework data CLI must not be a symbolic link"
+
+REPOSITORY_GIT_ROOT=$(git -C "$REPOSITORY_ROOT" rev-parse --show-toplevel 2>/dev/null) ||
+    fail "repository root is not an initialized Git worktree"
+REPOSITORY_GIT_ROOT=$(CDPATH='' cd "$REPOSITORY_GIT_ROOT" && pwd -P)
+[ "$REPOSITORY_GIT_ROOT" = "$REPOSITORY_ROOT" ] ||
+    fail "script directory is not at the Git repository root"
+node -e 'const major = Number(process.versions.node.split(".")[0]); process.exit(major >= 22 && process.platform !== "win32" ? 0 : 1)' ||
+    fail "Node.js 22 or newer on a supported non-Windows platform is required"
+node "$FRAMEWORK_DATA_CLI" --version >/dev/null ||
+    fail "framework data CLI version check failed"
+
+for framework_data_file in \
+    "$FRAMEWORK_DATA_SOURCE/cli.mjs" \
+    "$FRAMEWORK_DATA_SOURCE/framework-checks.mjs" \
+    "$FRAMEWORK_DATA_SOURCE/importer.mjs" \
+    "$FRAMEWORK_DATA_SOURCE/schema.mjs" \
+    "$FRAMEWORK_DATA_SOURCE/schemas/control-v1.schema.json" \
+    "$FRAMEWORK_DATA_SOURCE/schemas/task-v1.schema.json" \
+    "$FRAMEWORK_DATA_SOURCE/store.mjs"; do
+    if [ ! -f "$framework_data_file" ] || [ -L "$framework_data_file" ]; then
+        fail "missing or unsafe framework data runtime file: $framework_data_file"
+    fi
+done
+FRAMEWORK_DATA_FILE_COUNT=$(find "$FRAMEWORK_DATA_SOURCE" -type f | wc -l)
+[ "$FRAMEWORK_DATA_FILE_COUNT" -eq 7 ] ||
+    fail "framework data runtime inventory must contain exactly seven files"
 
 # Optional harness adapters (Claude Code and Codex agent definitions, plus the Codex
 # quota-monitor skill) ship inside the same portable core so a destination that uses
@@ -84,11 +119,14 @@ MARKER_COUNT=$(grep -c '^## Operating Contract$' "$AGENTS_SOURCE" || true)
     fail "AGENTS.md must contain exactly one '## Operating Contract' boundary"
 
 # Restrict every packaged tree to plain directories and the file types each surface is
-# allowed to publish: Markdown for the core and Claude adapters, TOML for the Codex
-# adapters, and Markdown or YAML for the skill.
+# allowed to publish: Markdown plus the pinned ESM/JSON runtime for the core, Markdown
+# for Claude adapters, TOML for Codex adapters, and Markdown or YAML for skills.
 UNEXPECTED_CORE_ENTRIES=$(
     find "$META_SOURCE" \
-        \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
+        \( \( ! -type d ! -type f \) -o \
+        \( -type f ! -name '*.md' \
+        ! -path "$FRAMEWORK_DATA_SOURCE/*.mjs" \
+        ! -path "$FRAMEWORK_DATA_SOURCE/schemas/*.json" \) \) -print
     find "$CLAUDE_AGENTS_SOURCE" \
         \( \( ! -type d ! -type f \) -o \( -type f ! -name '*.md' \) \) -print
     find "$CLAUDE_SKILLS_SOURCE" \

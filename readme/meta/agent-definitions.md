@@ -58,7 +58,8 @@ Responsibilities:
 
 - Run the root loop.
 - Run the resume check before continuing interrupted work.
-- Solely own task intake, catalog writes, eligibility, and primary-task selection.
+- Solely own semantic task-store mutations, eligibility judgment, and primary selection;
+  invoke the repository-pinned CLI while workers return proposals.
 - Decide whether selected work stays single-agent or is decomposed.
 - Maintain the plan, quality bar, and final integration.
 - Maintain the agent roster for multi-agent work: assignment, ownership, status, last known output, and restart policy.
@@ -252,9 +253,8 @@ isolated checkout needs an approved shared commit, patch, or equivalent transfer
 safe transfer exists, do not decompose. Do not create unauthorized checkpoint commits
 merely to satisfy parallelism.
 
-- Use one writer at a time for `readme/README.md`, task notes, decisions, command
-  catalogs, and other shared knowledge files. Workers return proposed knowledge updates
-  to the Root Orchestrator unless explicitly assigned ownership.
+- Use one writer for task state and each shared knowledge file. Workers return proposed
+  updates to the Root Orchestrator unless explicitly assigned ownership.
 - Integrate the smallest coherent worker result first. Run its focused checks before
   integration, then the affected integration checks after each merge or integration
   batch. Run the full task-required suite after all results are combined.

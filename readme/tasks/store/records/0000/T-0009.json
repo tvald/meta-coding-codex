@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0009",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Replace inline installation commands with a safe script usable through `curl` piped to Bash",
+  "authority": {
+    "reference": "User instruction, 2026-07-14",
+    "acceptedDate": "2026-07-14"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0008"
+  ],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0009-piped-core-installer-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0009-piped-core-installer-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md)"
+  }
+}

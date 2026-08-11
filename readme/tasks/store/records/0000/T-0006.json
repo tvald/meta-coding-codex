@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0006",
+  "recordVersion": 1,
+  "taskRevision": 2,
+  "outcome": "Reconcile durable project state with imported task-loop commit `d5ff9f5` and verify core/state separation",
+  "authority": {
+    "reference": "User instructions, 2026-07-14",
+    "acceptedDate": "2026-07-14"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0006-task-loop-state-reconciliation-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0006-task-loop-state-reconciliation-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "Decisions [0008](../decisions/0008-adopt-durable-task-orchestration.md) and [0009](../decisions/0009-authorize-bounded-project-delegation.md)"
+  }
+}

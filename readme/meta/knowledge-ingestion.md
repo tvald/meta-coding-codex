@@ -10,7 +10,7 @@ Agents may ingest:
 - Requirements documents, design docs, tickets, meeting notes, diagrams, and spreadsheets.
 - Existing source code, tests, telemetry, support reports, and incident notes.
 - API docs, standards, legal or compliance references, and vendor documentation.
-- The task catalog, previous decision records, assumptions, briefs, and task notes.
+- Bounded task-store queries, previous decisions, assumptions, briefs, and task notes.
 
 Use primary or official sources for technical APIs, regulations, security guidance, and vendor behavior when possible.
 
@@ -41,7 +41,9 @@ Create or update these artifacts only when useful:
 - `readme/project/brief.md`: stable product context.
 - `readme/project/assumptions.md`: unresolved assumptions, confidence, owner, and validation plan.
 - `readme/project/glossary.md`: domain terms, acronyms, and canonical names.
-- `readme/tasks/README.md`: stable task intake, lifecycle, dependencies, and discovery.
+- `readme/tasks/store/` through `node readme/meta/framework-data/cli.mjs`: stable task
+  intake, lifecycle,
+  dependencies, and discovery; `readme/tasks/README.md` is only its static entrypoint.
 - `readme/tasks/NNNN-topic-brief.md` and `NNNN-topic-notes.md`: proportional scope,
   acceptance, amendments, and resumable execution detail.
 - `readme/decisions/NNNN-title.md`: decisions that should not be rediscovered.

@@ -1,10 +1,10 @@
 # AI Coding Meta-Framework
 
-This directory is the self-contained, reusable entrypoint for a portable, Markdown-only
-framework core that gives coding agents an operating loop, durable project memory,
-risk-scaled quality gates, and explicit autonomy boundaries without a runtime
-dependency. Optional declarative harness adapters may expose selected roles without
-becoming framework policy.
+This directory is the self-contained, reusable entrypoint for a portable framework core
+that gives coding agents an operating loop, durable project memory, risk-scaled quality
+gates, and explicit autonomy boundaries. Policy remains Markdown; the required
+repository-pinned task data boundary uses dependency-free Node.js 22+ and Git. Optional
+declarative harness adapters may expose selected roles without becoming framework policy.
 
 Every primary harness session and every delegated agent must read this file before task
 work. This file explains what is reusable, what belongs to the host project, and which
@@ -15,15 +15,18 @@ process owner to load next.
 1. Read the applicable root `AGENTS.md` instructions.
 2. Read this meta README in full.
 3. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
-4. Read `readme/tasks/README.md` when it exists; it is the canonical task catalog.
-5. Read only the process and project documents relevant to the assignment.
+4. Read the static `readme/tasks/README.md` entrypoint, then run
+   `node readme/meta/framework-data/cli.mjs doctor` and the bounded
+   `node readme/meta/framework-data/cli.mjs startup` query.
+5. Read only the returned primary task details and process/project documents relevant
+   to the assignment.
 
-If `readme/README.md` is missing or does not begin with `# Project State`, or
-`readme/tasks/README.md` is missing or does not begin with `# Task Catalog`, the add-on
-is not fully onboarded. A primary session follows [onboarding.md](onboarding.md),
-preserving colliding documentation, and instantiates the missing cursor or catalog. A
-delegated agent does not initialize shared documentation unless the orchestrator
-assigned that ownership.
+If `readme/README.md` is missing or does not begin with `# Project State`,
+`readme/tasks/README.md` is missing or does not begin with `# Task Store`, or
+`readme/tasks/store/` is absent, the add-on is not fully onboarded. A primary session
+follows [onboarding.md](onboarding.md), preserving collisions and distinguishing a fresh
+store from explicit legacy migration. A delegated agent does not initialize shared
+state unless the orchestrator assigned that ownership.
 
 ## Directory Contract
 
@@ -42,22 +45,28 @@ The host project's agent-maintained documentation uses these mutable paths:
 
 | Path | Purpose |
 | --- | --- |
-| `readme/README.md` | Always-read catalog and primary-task pointer, global approvals, recent outcomes, and documentation index |
+| `readme/README.md` | Always-read bounded project policy, documentation index, dead ends, and maintenance baseline |
 | `readme/project/` | Stable project brief, context, standards, assumptions, glossary, source map, automation backlog, and project-specific agent guidance |
 | `readme/decisions/` | Append-only significant project or local-framework decisions |
-| `readme/tasks/` | Canonical `README.md` task catalog plus proportional briefs and resumable notes |
+| `readme/tasks/` | Static `README.md` entrypoint, canonical sharded `store/`, and proportional briefs and resumable notes |
 | `readme/quality/` | Durable readiness, verification, and review records |
 | `readme/threat-models/` | Lightweight security and trust-boundary analyses |
 | `readme/incidents/` | Incident and near-miss records |
 | `readme/learning/` | Retrospectives; an excluded upstream framework-source changelog only under explicit source-project policy |
 | `readme/archive/` | Overflow moved from active artifacts without rewriting history |
 
-The project cursor and task catalog are mandatory after onboarding. Create other
-optional files and directories only when they will contain useful information.
+The project cursor, task entrypoint, and structured task store are mandatory after
+onboarding. Create other optional files and directories only when useful.
 Established host documentation may remain at its required conventional location; link
 to its canonical owner instead of copying facts into framework-managed records.
 
-## Optional Harness Integrations
+## Required Data Boundary And Optional Harness Integrations
+
+`framework-data/` is required core runtime, not an optional integration. It owns task
+shape, deterministic serialization, bounded queries, mechanical transitions, and the
+Format 1 importer. Markdown process documents retain policy and judgment. The CLI never
+authenticates an agent role or establishes authority, approval truth, priority, risk, or
+semantic completion.
 
 The portable core is complete with this `readme/meta/` tree and the merged root
 `AGENTS.md` startup instruction. A root `CLAUDE.md` may import `AGENTS.md` so Claude Code
@@ -94,6 +103,7 @@ Agent—are adopted optional integrations that host projects may omit entirely.
 - Small reversible steps and observed verification results.
 - Durable additive task intake with dependency- and safety-based selection, not FIFO.
 - One canonical home for each fact, rule, decision, and command catalog.
+- Bounded task queries and semantic, optimistic-concurrency-protected mutations.
 - Repository-backed state and learning only. No harness may use an out-of-repository
   memory store for durable project knowledge. Detail and rationale:
   [knowledge-management.md](knowledge-management.md#repository-is-the-only-memory-store).
@@ -138,8 +148,8 @@ Agent—are adopted optional integrations that host projects may omit entirely.
   consequential uncertainty.
 - [decision-record.md](templates/decision-record.md) → `readme/decisions/`: significant
   choices.
-- [task-catalog.md](templates/task-catalog.md) → `readme/tasks/README.md`: durable task
-  identity, lifecycle, dependencies, discovery, and results.
+- [task-catalog.md](templates/task-catalog.md) → `readme/tasks/README.md`: static task
+  store entrypoint and command boundary; structured host records own task facts.
 - [task-brief.md](templates/task-brief.md) and
   [task-notes.md](templates/task-notes.md) → `readme/tasks/`: scoped outcomes and
   resumable work.
@@ -156,11 +166,12 @@ every project artifact only after it has useful content.
 
 ## Package And Bootstrap
 
-A clean core package contains this `readme/meta/` tree, including the blank framework
-changelog seed, and a merged root AGENTS startup instruction. It may also carry the
-matching `.codex/agents/`, `.claude/agents/`, and Codex or Claude quota-monitor skill as
-optional integrations. Never overwrite an established instruction, same-name agent, or
-same-name skill. The package excludes local changelog entries, `readme/README.md`, and
+A clean core package contains this `readme/meta/` tree, including the pinned
+`framework-data/` runtime, schemas, and blank framework changelog seed, plus a merged
+root AGENTS startup instruction. It may also carry the matching `.codex/agents/`,
+`.claude/agents/`, and Codex or Claude quota-monitor skill as optional integrations.
+Never overwrite an established instruction, same-name agent, or same-name skill. The
+package excludes local changelog entries, `readme/README.md`, `readme/tasks/store/`, and
 every mutable project-documentation sibling.
 Packaging is the supported reset path; do not delete an existing project's documentation
 to simulate a reset.
@@ -168,17 +179,18 @@ to simulate a reset.
 On first use:
 
 1. The primary session reads root instructions and this file.
-2. It runs [onboarding.md](onboarding.md) because the project cursor or task catalog is
-   absent, or recognizes and safely resolves a non-framework document at either
-   mandatory path.
-3. It instantiates the project cursor and task catalog from
+2. It runs [onboarding.md](onboarding.md) because the cursor, task entrypoint, or store
+   is absent, or recognizes and safely resolves unrelated or legacy state.
+3. It instantiates the project cursor and static task entrypoint from
    [project-state.md](templates/project-state.md) and
-   [task-catalog.md](templates/task-catalog.md).
+   [task-catalog.md](templates/task-catalog.md), then runs
+   `node readme/meta/framework-data/cli.mjs init`; legacy
+   Format 1 state uses explicit dry-run/hash/apply migration instead.
 4. It derives commands from manifests and CI, executes safe candidates, and records
    only observed successes in `readme/project/standards.md`.
 5. It creates project knowledge categories only when inventory produces real content.
-6. It proves a new agent can recover the outcome, catalog, primary and eligible tasks,
-   next action, commands, constraints, and approvals from repository evidence.
+6. It proves a new agent can recover the outcome, primary and eligible tasks, next
+   action, commands, constraints, and approvals from bounded repository queries.
 
 For greenfield work, record product and technology choices as decisions rather than
 pretending to derive them. For an established project, preserve existing instruction

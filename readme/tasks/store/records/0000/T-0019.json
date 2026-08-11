@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0019",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Promote the highest-value T-0017 and T-0018 recommendations into dedicated tasks and retain the rest for product-owner review",
+  "authority": {
+    "reference": "User instruction, 2026-08-11",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0017",
+    "T-0018"
+  ],
+  "route": "quick_change",
+  "risk": "low",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Notes",
+      "path": "readme/tasks/0019-promote-exploration-features-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "Promoted T-0020–T-0022; retained remaining candidates in the source assessments"
+  }
+}

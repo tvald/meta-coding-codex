@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0015",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Adopt the role adapters and set a repo-wide skip-Pilot disposition policy",
+  "authority": {
+    "reference": "User instruction, 2026-07-30",
+    "acceptedDate": "2026-07-30"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0003"
+  ],
+  "route": "initiative",
+  "risk": "medium",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0015-adopt-adapters-skip-pilot-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0015-adopt-adapters-skip-pilot-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md)"
+  }
+}

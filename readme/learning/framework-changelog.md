@@ -13,6 +13,24 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt A Structured Task Store And Framework Data CLI
+
+- Status: Adopted.
+- Evidence: Product-owner malformed-row report and implementation direction; T-0017–
+  T-0020 analysis; Decision 0018; 26 passing tests; independent architecture, security,
+  code, migration/package, and verification gates; exact 43-file package and fresh
+  install checks.
+- Change: Replaced the hand-edited task table and archive workflow with sharded canonical
+  JSON records behind a dependency-free Node CLI. Added bounded queries, semantic CAS
+  mutations, strict migration, outside-canonical crash-safe staging, explicit lock
+  recovery, and integrated structural/process doctor checks across startup, packaging,
+  installation, and CI.
+- Success signal: malformed or stale state fails closed; normal startup remains bounded
+  at 10,000 tasks; terminal history stays queryable without archive movement; a killed
+  pre-claim writer cannot corrupt canonical state.
+- Review or sunset trigger: lost task data, unbounded query/context growth, broken lock
+  recovery, platform durability demand, migration ambiguity, or direct-edit incidents.
+
 ## 2026-08-05: Reconcile Downstream Framework Changes And Ship A Changelog Seed
 
 - Status: Revised; individual imported groups were Adopted, Revised, or Rejected under
@@ -134,18 +152,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   local path replacement leave no escaped or installer-owned partial content.
 - Review or sunset trigger: Inventory drift, overwrite, escaped write, partial install,
   portability failure, remote-source compromise, or need for signed/update semantics.
-
-## 2026-07-14: Publish A Moving Latest Core Release
-
-- Status: Adopted.
-- Evidence: Direct product-owner instruction, current official GitHub event/token/ref,
-  release/action/runner sources, and T-0008 schema, archive, mock-transition, and install
-  checks; see [Decision 0011](../decisions/0011-publish-moving-latest-core-release.md).
-- Change: Added a serialized two-job workflow that builds the T-0007 archive with read
-  permission, transfers verified bytes, and uses a narrow write job to move `latest` and
-  draft-safely replace one release asset after fail-closed exact release/ref discovery.
-  Added collision-aware stable-URL install commands.
-- Success signal: Every main push converges on the current verified core without an older
-  run becoming final, and existing destination AGENTS guidance is preserved for merging.
-- Review or sunset trigger: Stale final release, token expansion, persistent draft or
-  asset mismatch, action/runner deprecation, or destination overwrite.

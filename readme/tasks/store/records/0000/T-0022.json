@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0022",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Add a guarded `task-recovery` skill backed by bounded durable-state queries",
+  "authority": {
+    "reference": "User instruction, 2026-08-11 via T-0019",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0020"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After T-0020 is Done, run the implementation readiness gate against resumption, delegation, quota, and packaging boundaries",
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0022-task-recovery-skill-brief.md"
+    }
+  ],
+  "completion": null
+}

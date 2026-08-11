@@ -4,13 +4,15 @@ This repository uses the portable AI development framework in `readme/meta/`.
 
 Every primary harness session and every delegated agent must read this file and then
 [readme/meta/README.md](readme/meta/README.md) before doing task work. If
-`readme/README.md` exists, every agent also reads that bounded project cursor before
-following only the process and project documents relevant to its assignment.
+`readme/README.md` exists, every agent also reads that bounded project cursor. A primary
+session then runs the repository-pinned task-store doctor and bounded startup query
+before following only the process and project documents relevant to its assignment.
 
-If `readme/README.md` is absent or is not a `# Project State` cursor, or
-`readme/tasks/README.md` is absent or is not a `# Task Catalog`, the framework has not
-been fully onboarded for this project. The primary session follows the bootstrap or
-collision path in the meta README and
+If `readme/README.md` is absent or is not a `# Project State` cursor,
+`readme/tasks/README.md` is absent or is not a `# Task Store` entrypoint, or the task
+store is absent, the framework has not been fully onboarded for this project. The
+primary session follows the bootstrap, legacy-migration, or collision path in the meta
+README and
 [onboarding procedure](readme/meta/onboarding.md). A delegated agent reports the issue
 to its orchestrator and does not initialize shared project documentation unless that
 ownership was assigned explicitly.
@@ -36,6 +38,8 @@ ownership was assigned explicitly.
   [Decision 0016](readme/decisions/0016-adopt-adapters-and-skip-pilot-disposition.md).
 - Mutable project documentation lives in the categorized `readme/` siblings described
   by the meta README, with `readme/README.md` as its always-read cursor.
+- The Root Orchestrator mutates task state only through
+  `node readme/meta/framework-data/cli.mjs`; direct JSON edits are unauthorized.
 - Run the [root loop](readme/meta/root-loop.md), choose one route from
   [workflow routing](readme/meta/workflow-routing.md), and apply the independent gate in
   the [quality system](readme/meta/quality-system.md).

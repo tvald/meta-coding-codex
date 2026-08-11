@@ -50,23 +50,23 @@ Out of scope:
 
 ## Acceptance Criteria
 
-- [ ] An accepted decision selects and justifies the runtime, schema, record layout,
+- [x] An accepted decision selects and justifies the runtime, schema, record layout,
   distribution boundary, lock semantics, migration, and rollback strategy.
-- [ ] Normal reads are bounded and disclose filters, totals, omissions, truncation,
+- [x] Normal reads are bounded and disclose filters, totals, omissions, truncation,
   continuation state, schema version, and integrity status; exact-ID and dependency
   queries retain terminal records.
-- [ ] Mutations use semantic commands, validate the complete store, reject stale writes
+- [x] Mutations use semantic commands, validate the complete store, reject stale writes
   and unsafe paths, and replace records atomically under a repository-wide lock.
-- [ ] `doctor` fails closed on malformed schemas, duplicate IDs, invalid transitions,
+- [x] `doctor` fails closed on malformed schemas, duplicate IDs, invalid transitions,
   dependency cycles, inconsistent scheduling state, merge markers, and direct-edit
   corruption without auto-repairing or making semantic judgments.
-- [ ] A dry-run-first, escaping-aware importer proves field-for-field migration from
+- [x] A dry-run-first, escaping-aware importer proves field-for-field migration from
   active and archived Format 1 rows and supports rollback from the prior Git commit.
-- [ ] Task archives are no longer needed after cutover; default queries hide terminal
+- [x] Task archives are no longer needed after cutover; default queries hide terminal
   records without making them undiscoverable.
-- [ ] Package, installer, bootstrap, process, template, and CI surfaces use one canonical
+- [x] Package, installer, bootstrap, process, template, and CI surfaces use one canonical
   tool implementation and cannot silently fall back to hand-edited task state.
-- [ ] Tests cover malformed and oversized input, interruption, concurrency, stale
+- [x] Tests cover malformed and oversized input, interruption, concurrency, stale
   revisions, lock ownership, symlink/path substitution, schema evolution, collision,
   deterministic output, and representative 10,000-task bounded-query performance.
 

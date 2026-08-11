@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0005",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Add a dependency-free Codex quota-monitor skill",
+  "authority": {
+    "reference": "User instruction, 2026-07-13",
+    "acceptedDate": "2026-07-13"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0004"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0005-codex-quota-monitor-skill-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0005-codex-quota-monitor-skill-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "`058349e`"
+  }
+}

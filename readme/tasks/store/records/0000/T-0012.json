@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0012",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Add a credential-safe Claude Code usage-telemetry skill and ship it through the core installer",
+  "authority": {
+    "reference": "User instruction, 2026-07-30",
+    "acceptedDate": "2026-07-30"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0005",
+    "T-0013"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0012-claude-quota-monitor-skill-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0012-claude-quota-monitor-skill-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "[Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md)"
+  }
+}

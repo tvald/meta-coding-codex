@@ -44,7 +44,7 @@ Re-route immediately when:
 ## Next-Action Router
 
 At the end of substantial work, record one concrete next action in the selected task's
-catalog row:
+structured record:
 
 - implement the next ready slice;
 - review a named diff or artifact;

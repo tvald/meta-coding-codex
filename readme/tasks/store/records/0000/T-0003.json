@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0003",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Pilot optional Codex and Claude Code agent adapters",
+  "authority": {
+    "reference": "User instruction, 2026-07-10",
+    "acceptedDate": "2026-07-10"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0002"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0003-agent-adapter-pilot-brief.md"
+    },
+    {
+      "label": "notes",
+      "path": "readme/tasks/0003-agent-adapter-pilot-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": null,
+    "repositoryChanged": null,
+    "evidence": "`dc26eca`"
+  }
+}

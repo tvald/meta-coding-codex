@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meta-coding.local/framework-data/control-v1.schema.json",
+  "title": "Framework task-store control record",
+  "$comment": "Pinned structural interchange documentation. The repository-pinned CLI is authoritative for semantic, transition, path, text-safety, and cross-record validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "recordVersion", "pause"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "recordVersion": { "type": "integer", "minimum": 1 },
+    "pause": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reason", "source"],
+          "properties": {
+            "reason": { "type": "string", "minLength": 1, "maxLength": 4096 },
+            "source": { "type": "string", "minLength": 1, "maxLength": 4096 }
+          }
+        }
+      ]
+    }
+  }
+}

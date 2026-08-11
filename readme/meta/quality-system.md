@@ -61,6 +61,8 @@ For each task, decide which checks apply:
 - Security check.
 - Performance smoke test.
 - Documentation link or command validation.
+- `node readme/meta/framework-data/cli.mjs doctor` for any task-state, process, package,
+  installer, or migration change.
 - Manual inspection for UI or workflow changes.
 
 Declare which checks are required for the task before material implementation when
@@ -70,7 +72,7 @@ checks Not applicable; do not call a required check optional after seeing its re
 ## Task Isolation
 
 Each selected task has its own route, risk gate, acceptance criteria, verification
-evidence, completion status, and commit boundary. The number or risk of pending catalog
+evidence, completion status, and commit boundary. The number or risk of pending stored
 tasks does not change the selected task's route or permit weaker gates.
 
 A `Blocked` or `Needs verification` task blocks its dependents. Independent eligible
@@ -81,7 +83,7 @@ earlier task's acceptance, reopen it or create a corrective task and withhold an
 aggregate completion claim.
 
 `Done`, `Needs verification`, `Blocked`, `Cancelled`, and `Superseded` are task-scoped.
-The presence of one `Done` task does not make pending catalog work complete, and the
+The presence of one `Done` task does not make pending task-store work complete, and the
 presence of one blocked task does not stall unrelated safe work.
 
 ## Verification Outcomes
