@@ -19,6 +19,7 @@ results live only in the structured task store.
 | Skip the Pilot disposition: use Adopt, Revise, or Reject. | [Decision 0016](decisions/0016-adopt-adapters-and-skip-pilot-disposition.md) |
 | Keep upstream history in `readme/learning/framework-changelog.md` and the distributable changelog as a blank seed. | [Decision 0017](decisions/0017-ship-blank-framework-changelog-seed.md) |
 | Mutate and normally query canonical task state only through the repository-pinned Node CLI. | [Decision 0018](decisions/0018-adopt-node-structured-task-store.md) |
+| Keep one guarded project-onboarding skill body and preserve same-name cross-harness bundles atomically. | [Decision 0019](decisions/0019-adopt-guarded-project-onboarding-skill.md) |
 
 ## Known Global Dead Ends
 

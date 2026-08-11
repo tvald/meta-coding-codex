@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Onboarding"
+  short_description: "Safely onboard the framework into a repository"
+  default_prompt: "Use $project-onboarding to onboard this repository through the guarded framework preflight."

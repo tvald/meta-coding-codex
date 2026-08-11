@@ -124,3 +124,19 @@
   run becoming final, and existing destination AGENTS guidance is preserved for merging.
 - Review or sunset trigger: Stale final release, token expansion, persistent draft or
   asset mismatch, action/runner deprecation, or destination overwrite.
+
+## 2026-07-14: Add A Fail-Closed Piped Core Installer
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction and T-0009 streamed, hostile-archive,
+  collision, rollback, pathname-race, portability, and independent review checks; see
+  [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md).
+- Change: Replaced the inline extractor with a portable one-line curl-to-Bash installer
+  that validates a producer-synchronized 26-file core before mutation, preserves host
+  instructions, and bounds no-clobber claims and rollback inside the destination. Added
+  a workflow check that prevents producer/installer inventory drift.
+- Success signal: A fresh adopter root receives only the reusable core, existing host
+  state remains unchanged, and incomplete streams, hostile archives, collisions, or
+  local path replacement leave no escaped or installer-owned partial content.
+- Review or sunset trigger: Inventory drift, overwrite, escaped write, partial install,
+  portability failure, remote-source compromise, or need for signed/update semantics.

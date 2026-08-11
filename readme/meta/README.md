@@ -74,14 +74,16 @@ loads the same owner. Project files under `.codex/agents/` and `.claude/agents/`
 expose selected roles through native discovery. Repo skills under
 `.agents/skills/codex-quota-monitor/` and `.claude/skills/claude-quota-monitor/` may
 expose the Codex and Claude Code telemetry procedures required by the portable usage
-capacity guard.
+capacity guard. The canonical `.agents/skills/project-onboarding/` skill and its thin
+`.claude/skills/project-onboarding/` discovery link may expose onboarding without
+becoming another policy owner.
 
 These files are optional integration surfaces, not additional policy owners. They:
 
 - point to [agent-definitions.md](agent-definitions.md) and other canonical process
   owners instead of copying their rules;
 - keep agent adapters limited to vendor-required discovery metadata and least-privilege
-  capability settings, and the skill limited to its telemetry procedure and UI metadata;
+  capability settings, and skills limited to bounded procedures and UI metadata;
 - do not add executable code, dependencies, model pins, MCP servers, hooks, permission
   bypasses, or integration ownership; and
 - can be omitted or removed without changing the core framework workflow.
@@ -92,6 +94,12 @@ policy owner. The Codex skill reads the already-installed Codex App Server; the 
 skill reads the authenticated Claude Code usage surface within a single subprocess and
 never surfaces credentials, tokens, or billing data to the session. Neither is one of the
 three role adapters.
+
+The project-onboarding skill contains execution order and fail-closed disposition
+handling only. It loads [onboarding.md](onboarding.md) as its policy owner. Its Claude
+surface links the maintained `.agents` body instead of copying the workflow. A same-name
+skill directory at either provider path is one installer collision domain: preserve the
+whole bundle for deliberate reconciliation rather than mixing host and framework files.
 
 The three role adapters—Reviewer, QA And Verification Agent, and Security And Risk
 Agent—are adopted optional integrations that host projects may omit entirely.
@@ -169,7 +177,8 @@ every project artifact only after it has useful content.
 A clean core package contains this `readme/meta/` tree, including the pinned
 `framework-data/` runtime, schemas, and blank framework changelog seed, plus a merged
 root AGENTS startup instruction. It may also carry the matching `.codex/agents/`,
-`.claude/agents/`, and Codex or Claude quota-monitor skill as optional integrations.
+`.claude/agents/`, quota-monitor skills, and project-onboarding discovery bundle as
+optional integrations.
 Never overwrite an established instruction, same-name agent, or same-name skill. The
 package excludes local changelog entries, `readme/README.md`, `readme/tasks/store/`, and
 every mutable project-documentation sibling.

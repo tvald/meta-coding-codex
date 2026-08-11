@@ -65,7 +65,7 @@ function assertInside(root, target, label, { allowRoot = false } = {}) {
   }
 }
 
-async function assertOrdinaryDirectoryTree(root, target, label, { allowRoot = false } = {}) {
+export async function assertOrdinaryDirectoryTree(root, target, label, { allowRoot = false } = {}) {
   const resolvedRoot = path.resolve(root);
   const resolvedTarget = path.resolve(target);
   assertInside(resolvedRoot, resolvedTarget, label, { allowRoot });

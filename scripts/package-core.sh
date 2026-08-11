@@ -101,10 +101,10 @@ FRAMEWORK_DATA_FILE_COUNT=$(find "$FRAMEWORK_DATA_SOURCE" -type f | wc -l)
 [ "$FRAMEWORK_DATA_FILE_COUNT" -eq 7 ] ||
     fail "framework data runtime inventory must contain exactly seven files"
 
-# Optional harness adapters (Claude Code and Codex agent definitions, plus the Codex
-# quota-monitor skill) ship inside the same portable core so a destination that uses
-# those harnesses receives their discovery metadata. Each is a required source in this
-# repository; the installer decides per file whether to add or preserve it.
+# Optional harness adapters and skills ship inside the same portable core so a
+# destination that uses those harnesses receives their discovery metadata. Each is a
+# required source in this repository; the installer decides whether to add or preserve
+# each agent file or same-name skill bundle.
 [ -d "$CLAUDE_AGENTS_SOURCE" ] || fail "missing adapter directory: $CLAUDE_AGENTS_SOURCE"
 [ ! -L "$CLAUDE_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
 [ -d "$CLAUDE_SKILLS_SOURCE" ] || fail "missing skill directory: $CLAUDE_SKILLS_SOURCE"
@@ -113,6 +113,23 @@ FRAMEWORK_DATA_FILE_COUNT=$(find "$FRAMEWORK_DATA_SOURCE" -type f | wc -l)
 [ ! -L "$CODEX_AGENTS_SOURCE" ] || fail "adapter directory must not be a symbolic link"
 [ -d "$SKILLS_SOURCE" ] || fail "missing skill directory: $SKILLS_SOURCE"
 [ ! -L "$SKILLS_SOURCE" ] || fail "skill directory must not be a symbolic link"
+
+PROJECT_ONBOARDING_SKILL=$SKILLS_SOURCE/project-onboarding/SKILL.md
+PROJECT_ONBOARDING_METADATA=$SKILLS_SOURCE/project-onboarding/agents/openai.yaml
+PROJECT_ONBOARDING_CLAUDE=$CLAUDE_SKILLS_SOURCE/project-onboarding/SKILL.md
+for project_onboarding_file in "$PROJECT_ONBOARDING_SKILL" \
+    "$PROJECT_ONBOARDING_METADATA" "$PROJECT_ONBOARDING_CLAUDE"; do
+    if [ ! -f "$project_onboarding_file" ] || [ -L "$project_onboarding_file" ]; then
+        fail "missing or unsafe project-onboarding discovery file: $project_onboarding_file"
+    fi
+done
+grep -Fq '../../../readme/meta/onboarding.md' "$PROJECT_ONBOARDING_SKILL" ||
+    fail "project-onboarding skill does not link its canonical policy owner"
+grep -Fq '../../../.agents/skills/project-onboarding/SKILL.md' \
+    "$PROJECT_ONBOARDING_CLAUDE" ||
+    fail "Claude project-onboarding adapter does not link the maintained skill"
+grep -Fq "\$project-onboarding" "$PROJECT_ONBOARDING_METADATA" ||
+    fail "project-onboarding UI metadata does not trigger the maintained skill"
 
 MARKER_COUNT=$(grep -c '^## Operating Contract$' "$AGENTS_SOURCE" || true)
 [ "$MARKER_COUNT" -eq 1 ] ||

@@ -9,10 +9,13 @@ framework_core_inventory() {
     printf '%s\n' \
         '.agents/skills/codex-quota-monitor/SKILL.md' \
         '.agents/skills/codex-quota-monitor/agents/openai.yaml' \
+        '.agents/skills/project-onboarding/SKILL.md' \
+        '.agents/skills/project-onboarding/agents/openai.yaml' \
         '.claude/agents/reviewer.md' \
         '.claude/agents/security-reviewer.md' \
         '.claude/agents/verifier.md' \
         '.claude/skills/claude-quota-monitor/SKILL.md' \
+        '.claude/skills/project-onboarding/SKILL.md' \
         '.codex/agents/reviewer.toml' \
         '.codex/agents/security-reviewer.toml' \
         '.codex/agents/verifier.toml' \
@@ -130,6 +133,10 @@ install_framework_core() {
     EXPECTED_INVENTORY=$WORK_DIRECTORY/inventory-expected.txt
     EXPECTED_META_INVENTORY=$WORK_DIRECTORY/meta-inventory-expected.txt
     ADAPTER_INVENTORY=$WORK_DIRECTORY/adapter-inventory.txt
+    SKILL_NAME_INVENTORY=$WORK_DIRECTORY/skill-name-inventory.txt
+    SKILL_FILE_INVENTORY=$WORK_DIRECTORY/skill-file-inventory.txt
+    PRESERVED_SKILL_NAMES=$WORK_DIRECTORY/preserved-skill-names.txt
+    INSTALLED_ADAPTER_PATHS=$WORK_DIRECTORY/installed-adapter-paths.txt
     LONG_INVENTORY=$WORK_DIRECTORY/inventory-long.txt
     EXTRACTED_INVENTORY=$WORK_DIRECTORY/extracted-inventory.txt
     INSTALLED_META_INVENTORY=$WORK_DIRECTORY/meta-inventory-installed.txt
@@ -143,9 +150,14 @@ install_framework_core() {
     OWN_LOCK=false
     OWN_AGENT=false
     OWN_README=false
+    SKILL_BUNDLE_ACTIVE=false
 
     restore_signal_traps() {
-        trap 'exit 1' HUP INT QUIT TERM
+        if [ "$SKILL_BUNDLE_ACTIVE" = true ]; then
+            trap '' HUP INT QUIT TERM
+        else
+            trap 'exit 1' HUP INT QUIT TERM
+        fi
     }
 
     owns_marker() {
@@ -265,6 +277,10 @@ install_framework_core() {
     grep '^readme/meta/' "$EXPECTED_INVENTORY" > "$EXPECTED_META_INVENTORY"
     grep -E '^\.(agents|claude|codex)/' "$EXPECTED_INVENTORY" \
         > "$ADAPTER_INVENTORY" || true
+    grep -E '^\.(agents|claude)/skills/[^/]+/' "$ADAPTER_INVENTORY" \
+        > "$SKILL_FILE_INVENTORY" || true
+    awk -F/ '{ print $3 }' "$SKILL_FILE_INVENTORY" | sort -u \
+        > "$SKILL_NAME_INVENTORY"
 
     # Inflate only after central-directory metadata and exact inventory pass their caps.
     unzip -P '' -tq "$ARCHIVE" >/dev/null ||
@@ -436,13 +452,15 @@ install_framework_core() {
     INSTALL_COMPLETE=true
     restore_signal_traps
 
-    # Optional harness adapters install additively once the core is in place. They are
-    # non-destructive by construction: a same-name agent or skill file already present is
-    # preserved, never overwritten, so a partial run can only leave additional framework
-    # files behind. A failure here does not undo the completed core installation.
+    # Optional harness integrations install additively once the core is in place. Agent
+    # files are preserved individually. A skill name is one cross-harness collision
+    # domain: if either provider path already exists, every packaged file for that skill
+    # is preserved so framework metadata can never be mixed with a host-owned body.
+    # A failure here does not undo the completed core installation.
     ADAPTERS_INSTALLED=0
     ADAPTERS_PRESERVED=0
     ADAPTERS_FAILED=0
+    : > "$INSTALLED_ADAPTER_PATHS"
 
     # Create each missing directory component beneath the destination root without
     # following a symbolic link that a colliding path may have planted. Returns non-zero
@@ -490,6 +508,7 @@ install_framework_core() {
     install_adapter_file() {
         _adapter_src=$1
         _adapter_dest=$2
+        _adapter_link_only=${3:-false}
         if [ -e "$_adapter_dest" ] || [ -L "$_adapter_dest" ]; then
             ADAPTERS_PRESERVED=$((ADAPTERS_PRESERVED + 1))
             return 0
@@ -501,11 +520,18 @@ install_framework_core() {
             return 0
         fi
         trap '' HUP INT QUIT TERM
-        if ln "$_adapter_src" "$_adapter_dest" 2>/dev/null ||
+        _adapter_created=false
+        if ln "$_adapter_src" "$_adapter_dest" 2>/dev/null; then
+            _adapter_created=true
+        elif [ "$_adapter_link_only" = false ] &&
             cp -p "$_adapter_src" "$_adapter_dest"; then
+            _adapter_created=true
+        fi
+        if [ "$_adapter_created" = true ]; then
             restore_signal_traps
             if cmp -s "$_adapter_src" "$_adapter_dest"; then
                 ADAPTERS_INSTALLED=$((ADAPTERS_INSTALLED + 1))
+                printf '%s\n' "$_adapter_dest" >> "$INSTALLED_ADAPTER_PATHS"
             else
                 rm -f "$_adapter_dest" || true
                 ADAPTERS_FAILED=$((ADAPTERS_FAILED + 1))
@@ -521,10 +547,86 @@ install_framework_core() {
         return 0
     }
 
+    : > "$PRESERVED_SKILL_NAMES"
+    while IFS= read -r skill_name || [ -n "$skill_name" ]; do
+        [ -n "$skill_name" ] || continue
+        if [ -e ".agents/skills/$skill_name" ] || [ -L ".agents/skills/$skill_name" ] ||
+            [ -e ".claude/skills/$skill_name" ] || [ -L ".claude/skills/$skill_name" ]; then
+            printf '%s\n' "$skill_name" >> "$PRESERVED_SKILL_NAMES"
+            printf '%s: preserving existing skill bundle for reconciliation: %s\n' \
+                "$PROGRAM" "$skill_name"
+        fi
+    done < "$SKILL_NAME_INVENTORY"
+
+    # Install all discovery files for one fresh skill as a bundle. If any file collides
+    # or fails during the copy, remove only byte-identical files this invocation added;
+    # never remove a path another actor replaced.
+    install_skill_bundle() {
+        _skill_name=$1
+        _bundle_installed_before=$ADAPTERS_INSTALLED
+        _bundle_preserved_before=$ADAPTERS_PRESERVED
+        _bundle_failed_before=$ADAPTERS_FAILED
+
+        if grep -Fqx "$_skill_name" "$PRESERVED_SKILL_NAMES"; then
+            while IFS= read -r _bundle_rel || [ -n "$_bundle_rel" ]; do
+                case $_bundle_rel in
+                    .agents/skills/"$_skill_name"/*|.claude/skills/"$_skill_name"/*)
+                        ADAPTERS_PRESERVED=$((ADAPTERS_PRESERVED + 1))
+                        ;;
+                esac
+            done < "$SKILL_FILE_INVENTORY"
+            return 0
+        fi
+
+        while IFS= read -r _bundle_rel || [ -n "$_bundle_rel" ]; do
+            case $_bundle_rel in
+                .agents/skills/"$_skill_name"/*|.claude/skills/"$_skill_name"/*)
+                    install_adapter_file "$STAGING_DIRECTORY/$_bundle_rel" "$_bundle_rel" true
+                    ;;
+            esac
+        done < "$SKILL_FILE_INVENTORY"
+
+        if [ "$ADAPTERS_PRESERVED" -ne "$_bundle_preserved_before" ] ||
+            [ "$ADAPTERS_FAILED" -ne "$_bundle_failed_before" ]; then
+            while IFS= read -r _bundle_rel || [ -n "$_bundle_rel" ]; do
+                case $_bundle_rel in
+                    .agents/skills/"$_skill_name"/*|.claude/skills/"$_skill_name"/*)
+                        if grep -Fqx "$_bundle_rel" "$INSTALLED_ADAPTER_PATHS" &&
+                            [ -f "$_bundle_rel" ] && [ ! -L "$_bundle_rel" ] &&
+                            [ "$STAGING_DIRECTORY/$_bundle_rel" -ef "$_bundle_rel" ]; then
+                            rm -f "$_bundle_rel" || true
+                        fi
+                        ;;
+                esac
+            done < "$SKILL_FILE_INVENTORY"
+            rmdir ".agents/skills/$_skill_name/agents" 2>/dev/null || true
+            rmdir ".agents/skills/$_skill_name" 2>/dev/null || true
+            rmdir ".claude/skills/$_skill_name" 2>/dev/null || true
+            ADAPTERS_INSTALLED=$_bundle_installed_before
+            if [ "$ADAPTERS_FAILED" -eq "$_bundle_failed_before" ]; then
+                ADAPTERS_FAILED=$((ADAPTERS_FAILED + 1))
+            fi
+            printf '%s: skill bundle was not installed completely: %s\n' \
+                "$PROGRAM" "$_skill_name" >&2
+        fi
+        return 0
+    }
+
     while IFS= read -r adapter_rel || [ -n "$adapter_rel" ]; do
         [ -n "$adapter_rel" ] || continue
-        install_adapter_file "$STAGING_DIRECTORY/$adapter_rel" "$adapter_rel"
+        case $adapter_rel in
+            .agents/skills/*|.claude/skills/*) ;;
+            *) install_adapter_file "$STAGING_DIRECTORY/$adapter_rel" "$adapter_rel" ;;
+        esac
     done < "$ADAPTER_INVENTORY"
+    while IFS= read -r skill_name || [ -n "$skill_name" ]; do
+        [ -n "$skill_name" ] || continue
+        trap '' HUP INT QUIT TERM
+        SKILL_BUNDLE_ACTIVE=true
+        install_skill_bundle "$skill_name"
+        SKILL_BUNDLE_ACTIVE=false
+        restore_signal_traps
+    done < "$SKILL_NAME_INVENTORY"
 
     printf 'Installed the portable framework core in %s.\n' "$DESTINATION_ROOT"
     if [ "$PRESERVE_AGENTS" = true ]; then

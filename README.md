@@ -27,15 +27,18 @@ Optional harness integration files are:
 - `.agents/skills/codex-quota-monitor/`, containing the dependency-free Codex App
   Server telemetry procedure used by the capacity guard; and
 - `.claude/skills/claude-quota-monitor/`, containing the credential-contained Claude
-  Code telemetry procedure.
+  Code telemetry procedure; and
+- `.agents/skills/project-onboarding/`, containing the maintained onboarding procedure
+  adapter, plus `.claude/skills/project-onboarding/` as its thin Claude discovery link.
 
 These adopted adapters expose only Reviewer, Verifier, and Security Reviewer.
 They do not own process semantics, add executable code or dependencies, pin models, add
 MCP servers, or expand parent permissions. Omit them when the destination does not use
 the corresponding harness. The quota-monitor skills own no threshold policy and can be
-omitted when the destination does not use that harness for delegated work. The release
-archive carries these optional files so the installer can add them without a second
-download; their presence does not make their use mandatory.
+omitted when the destination does not use that harness for delegated work. The
+project-onboarding skill owns no onboarding policy; it loads the canonical meta
+procedure. The release archive carries these optional files so the installer can add
+them without a second download; their presence does not make their use mandatory.
 
 Everything else under `readme/` is mutable documentation for this repository as a
 project. It is useful here but is intentionally excluded from a clean add-on package.
@@ -92,7 +95,7 @@ write elsewhere; paths containing a `..` segment are rejected:
 
 The archive contains the complete `readme/meta/` tree—including the pinned data CLI,
 schemas, and blank framework changelog seed—the portable startup portion of `AGENTS.md`,
-and the optional adapter and quota-monitor skill trees above. It excludes local
+and the optional adapter and skill trees above. It excludes local
 changelog entries, structured host task records, project state, the root `CLAUDE.md`
 bridge, and this repository's standing delegation request.
 Generated archives under `dist/` are ignored by Git. Packaged timestamps, modes, entry
@@ -109,9 +112,11 @@ archive with the supported Info-ZIP tools.
 3. For Claude Code, merge the `@AGENTS.md` import into an existing `CLAUDE.md`, or copy
    this bridge when no project file exists. Never replace established Claude guidance.
 4. Optionally merge the files from `.codex/agents/`, `.claude/agents/`,
-   `.agents/skills/codex-quota-monitor/`, and `.claude/skills/claude-quota-monitor/` for
-   the harnesses and quota monitoring the destination uses. Resolve same-name agents or
-   skills deliberately; never overwrite an existing definition blindly.
+   `.agents/skills/codex-quota-monitor/`, `.claude/skills/claude-quota-monitor/`, and the
+   two `project-onboarding` discovery paths for the harnesses the destination uses.
+   Resolve same-name agents or skills deliberately; never overwrite an existing
+   definition blindly. Treat all files for one same-name cross-harness skill as one
+   collision bundle.
 5. Do not copy `readme/README.md`, `readme/tasks/store/`, or other project-state
    siblings.
 6. Start a primary agent session. It reads the meta README and follows onboarding to

@@ -13,6 +13,23 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt A Guarded Project-Onboarding Skill
+
+- Status: Adopted.
+- Evidence: Product-owner promotion of the T-0017/T-0018 recommendations; T-0021
+  skill-creator validation, 30-test suite, 46-file reproducible package, additive and
+  atomic-collision installer fixtures, forward tests, and independent design/security
+  and final Reviewer/Security/QA passes; see
+  [Decision 0019](../decisions/0019-adopt-guarded-project-onboarding-skill.md).
+- Change: Added one maintained onboarding skill with a thin Claude discovery link,
+  exact preflight disposition handling, command-execution limits, and bounded cold-start
+  proof. Hardened preflight against symlinked documentation ancestors and made same-name
+  cross-harness skill installation an atomic collision bundle.
+- Success signal: A fresh Root completes every onboarding phase, while delegated,
+  colliding, malformed, unsupported, or mixed-origin states stop without unsafe writes.
+- Review or sunset trigger: Missed phase, overwrite, mixed-origin skill, unsafe command,
+  provider discovery drift, or cold-start recovery failure.
+
 ## 2026-08-11: Adopt A Structured Task Store And Framework Data CLI
 
 - Status: Adopted.
@@ -136,19 +153,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   mutation, and the unavoidable upstream-status pipeline limitation remains visible.
 - Review or sunset trigger: Hidden install failure, truncation mutation, or preference
   for strict upstream-status propagation over the shorter command.
-
-## 2026-07-14: Add A Fail-Closed Piped Core Installer
-
-- Status: Adopted.
-- Evidence: Direct product-owner instruction and T-0009 streamed, hostile-archive,
-  collision, rollback, pathname-race, portability, and independent review checks; see
-  [Decision 0012](../decisions/0012-add-fail-closed-piped-installer.md).
-- Change: Replaced the inline extractor with a portable one-line curl-to-Bash installer
-  that validates a producer-synchronized 26-file core before mutation, preserves host
-  instructions, and bounds no-clobber claims and rollback inside the destination. Added
-  a workflow check that prevents producer/installer inventory drift.
-- Success signal: A fresh adopter root receives only the reusable core, existing host
-  state remains unchanged, and incomplete streams, hostile archives, collisions, or
-  local path replacement leave no escaped or installer-owned partial content.
-- Review or sunset trigger: Inventory drift, overwrite, escaped write, partial install,
-  portability failure, remote-source compromise, or need for signed/update semantics.

@@ -17,6 +17,12 @@ README and
 to its orchestrator and does not initialize shared project documentation unless that
 ownership was assigned explicitly.
 
+When the framework-owned `project-onboarding` skill has been installed or explicitly
+reconciled without a same-name collision, a primary session may use it as the procedural
+adapter for that onboarding owner. Discovery alone does not establish provenance; if
+ownership is unknown or skill discovery is unavailable, follow the linked canonical
+procedure directly.
+
 ## Operating Contract
 
 - `readme/meta/` is reusable framework policy. Do not put project facts or task history

@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const CLI = fileURLToPath(new URL("../readme/meta/framework-data/cli.mjs", import.meta.url));
 const STORE_MODULE = new URL("../readme/meta/framework-data/store.mjs", import.meta.url);
@@ -111,6 +111,89 @@ test("preflight pins shipped schema bytes", async () => {
     assert.match(result.stderr, /SCHEMA_FILES/u);
   } finally {
     await removeRepository(root);
+  }
+});
+
+test("preflight rejects symbolic documentation ancestors without touching their targets", async () => {
+  for (const ancestor of ["readme", "readme/tasks"]) {
+    for (const recognized of [false, true]) {
+      const root = await makeRepository();
+      const outside = await fs.mkdtemp(path.join(os.tmpdir(), "framework-preflight-outside-"));
+      try {
+        const target = path.join(outside, ancestor === "readme" ? "readme" : "tasks");
+        await fs.mkdir(target, { recursive: true });
+        await fs.writeFile(path.join(target, "outside-marker.txt"), "must remain unchanged\n");
+        if (recognized) {
+          if (ancestor === "readme") {
+            await fs.mkdir(path.join(target, "tasks"), { recursive: true });
+            await fs.writeFile(path.join(target, "README.md"), "# Project State\n");
+            await fs.writeFile(path.join(target, "tasks", "README.md"),
+              "# Task Store\n\nUse `node readme/meta/framework-data/cli.mjs doctor`.\n");
+          } else {
+            await fs.writeFile(path.join(target, "README.md"),
+              "# Task Store\n\nUse `node readme/meta/framework-data/cli.mjs doctor`.\n");
+          }
+        }
+        if (ancestor === "readme") {
+          await fs.rm(path.join(root, "readme"), { recursive: true });
+          await fs.symlink(target, path.join(root, "readme"));
+        } else {
+          await fs.rm(path.join(root, "readme", "tasks"), { recursive: true });
+          await fs.symlink(target, path.join(root, "readme", "tasks"));
+        }
+        const before = await fs.readFile(path.join(target, "outside-marker.txt"), "utf8");
+        const result = run(root, ["preflight"], 1);
+        assert.match(result.stderr, /PATH_UNSAFE/u);
+        assert.equal(await fs.readFile(path.join(target, "outside-marker.txt"), "utf8"), before);
+        await assert.rejects(fs.lstat(path.join(target, "store")), { code: "ENOENT" });
+      } finally {
+        await removeRepository(root);
+        await fs.rm(outside, { recursive: true, force: true });
+      }
+    }
+  }
+});
+
+test("preflight reports prepared and malformed state and rejects unsupported runtime", async () => {
+  const prepared = await makeRepository();
+  try {
+    await fs.writeFile(path.join(prepared, "readme", "tasks", ".framework-data-init-interrupted"),
+      "prepared\n");
+    assert.equal(json(prepared, ["preflight"]).value.disposition, "prepared");
+  } finally {
+    await removeRepository(prepared);
+  }
+
+  const malformed = await makeRepository();
+  try {
+    json(malformed, ["init"]);
+    await fs.writeFile(path.join(malformed, "readme", "tasks", "store", "control.json"), "{}\n");
+    const result = json(malformed, ["preflight"]);
+    assert.equal(result.value.disposition, "malformed");
+    assert.equal(result.value.integrity, "invalid");
+  } finally {
+    await removeRepository(malformed);
+  }
+
+  const unsupported = await makeRepository();
+  try {
+    const cliUrl = pathToFileURL(CLI).href;
+    const script = `
+      Object.defineProperty(process.versions, "node", { value: "21.0.0" });
+      process.argv = [process.execPath, ${JSON.stringify(CLI)}, "preflight"];
+      await import(${JSON.stringify(cliUrl)});
+    `;
+    const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
+      cwd: unsupported,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /NODE_UNSUPPORTED/u);
+    await assert.rejects(fs.lstat(path.join(unsupported, "readme", "tasks", "store")),
+      { code: "ENOENT" });
+  } finally {
+    await removeRepository(unsupported);
   }
 });
 

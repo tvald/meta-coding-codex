@@ -29,6 +29,7 @@ import {
 import {
   activeTask,
   addTask,
+  assertOrdinaryDirectoryTree,
   assertExpectedDigest,
   compareTaskIds,
   initializeStore,
@@ -447,6 +448,18 @@ async function preflight(context) {
     }
     if (schema.type !== "object" || schema.additionalProperties !== false) fail("SCHEMA_FILES", "shipped JSON schema is not fail-closed");
   }
+  const assertSafeDirectoryIfPresent = async (relative, label) => {
+    const target = path.join(context.root, ...relative.split("/"));
+    const info = await fs.lstat(target).catch((error) => {
+      if (error.code === "ENOENT") return null;
+      fail("PATH_UNSAFE", `${label} cannot be inspected`);
+    });
+    if (info === null) return false;
+    await assertOrdinaryDirectoryTree(context.root, target, label);
+    return true;
+  };
+  const readmePresent = await assertSafeDirectoryIfPresent("readme", "readme directory");
+  if (readmePresent) await assertSafeDirectoryIfPresent("readme/tasks", "task directory");
   const readArtifact = async (relative, expectedHeadings) => {
     const headings = Array.isArray(expectedHeadings) ? expectedHeadings : [expectedHeadings];
     const target = path.join(context.root, ...relative.split("/"));

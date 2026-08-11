@@ -43,19 +43,19 @@ Out of scope:
 
 ## Acceptance Criteria
 
-- [ ] The skill has a precise trigger and loads the canonical onboarding process rather
+- [x] The skill has a precise trigger and loads the canonical onboarding process rather
   than embedding a second policy copy.
-- [ ] It distinguishes clean bootstrap, partial framework state, and collisions, and
+- [x] It distinguishes clean bootstrap, partial framework state, and collisions, and
   preserves established files unless the canonical process authorizes a safe merge.
-- [ ] It uses bounded structured preflight results and stops on integrity failure or
+- [x] It uses bounded structured preflight results and stops on integrity failure or
   ambiguous ownership.
-- [ ] It discovers candidate commands from repository evidence, executes only safe
+- [x] It discovers candidate commands from repository evidence, executes only safe
   candidates, and records only observed successes in the canonical command owner.
-- [ ] Its result proves a cold-start agent can recover tasks, constraints, commands,
+- [x] Its result proves a cold-start agent can recover tasks, constraints, commands,
   approvals, and next actions from repository state.
-- [ ] Package/installer inventories and supported harness discovery surfaces install one
+- [x] Package/installer inventories and supported harness discovery surfaces install one
   maintained skill without drift or overwrite.
-- [ ] Fixtures cover clean, established, partial, collision, malformed-state, and
+- [x] Fixtures cover clean, established, partial, collision, malformed-state, and
   unsupported-runtime cases.
 
 ## Constraints
