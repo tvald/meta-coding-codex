@@ -483,7 +483,8 @@ test('source and packed-installed commands are byte-identical for every declared
       assert.equal(packedResult.stdout, source.stdout, args.join(' '));
       assert.doesNotMatch(packedResult.stdout, /DO_NOT_LEAK_CLIENT|DO_NOT_LEAK_TASK|hostile-value/u);
     }
-    const npmPrompt = run('npm', ['run', '--silent', 'meta', '--', 'agent-prompt', '--profile', 'root'], {
+    const npmPrompt = run('npm', ['run', '--ignore-scripts', '--silent', 'meta', '--',
+      'agent-prompt', '--profile', 'root'], {
       cwd: clientRoot,
       env: { ...environment, npm_config_cache: cache, npm_config_update_notifier: 'false' },
     });
