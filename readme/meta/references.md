@@ -28,9 +28,9 @@ These sources influenced the framework. Agents should use current primary source
 - OpenAI, "Subagents": project-scoped custom Codex agents, configuration layers,
   sandbox controls, and multi-agent coordination (checked 2026-07-10):
   https://learn.chatgpt.com/docs/agent-configuration/subagents
-- OpenAI, "Skills": repo-scoped reusable Codex workflows with optional scripts and
-  progressive disclosure (checked 2026-07-13):
-  https://learn.chatgpt.com/docs/customization/overview#skills
+- OpenAI, "Build skills": repo-scoped reusable Codex workflows, progressive
+  disclosure, optional resources, and `.agents/skills` discovery (checked 2026-08-11):
+  https://learn.chatgpt.com/docs/build-skills
 - OpenAI, "Codex App Server": initialized JSONL transport plus ChatGPT rate-limit read
   and update messages (checked and locally exercised 2026-07-13):
   https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt
@@ -40,6 +40,9 @@ These sources influenced the framework. Agents should use current primary source
 - Anthropic, "How Claude remembers your project": Claude Code loads `CLAUDE.md`, and a
   project can import an existing `AGENTS.md` owner (checked 2026-07-10):
   https://code.claude.com/docs/en/memory
+- Anthropic, "Extend Claude with skills": project-scoped `.claude/skills` discovery,
+  `SKILL.md` entrypoints, and optional supporting resources (checked 2026-08-11):
+  https://code.claude.com/docs/en/skills
 - AGENTS.md open format: project instructions as a README for agents. https://agents.md/
 - `tvald/meta-coding-claude`, task and work-management process: durable task artifacts,
   proportional detail, safe checkpoints, and post-distillation archives. Primary

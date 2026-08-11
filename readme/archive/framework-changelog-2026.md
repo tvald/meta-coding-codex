@@ -140,3 +140,15 @@
   local path replacement leave no escaped or installer-owned partial content.
 - Review or sunset trigger: Inventory drift, overwrite, escaped write, partial install,
   portability failure, remote-source compromise, or need for signed/update semantics.
+
+## 2026-07-14: Streamline The Piped Installer Command
+
+- Status: Adopted.
+- Evidence: Direct product-owner preference and T-0010 stream/install review; see
+  [Decision 0013](../decisions/0013-streamline-installer-invocation.md).
+- Change: Replaced the outer pipefail wrapper with conventional `curl -fsSL URL | bash`
+  syntax and moved guarded-stream completion detection into the installer.
+- Success signal: Complete pipes install unchanged, guarded truncations fail before
+  mutation, and the unavoidable upstream-status pipeline limitation remains visible.
+- Review or sunset trigger: Hidden install failure, truncation mutation, or preference
+  for strict upstream-status propagation over the shorter command.

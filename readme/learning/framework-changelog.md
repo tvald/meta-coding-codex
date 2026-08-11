@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt A Guarded Task-Recovery Skill
+
+- Status: Adopted.
+- Evidence: Product-owner promotion of T-0017/T-0018 findings; T-0022 bounded scenario,
+  package, installer, forward, and independent gates; see
+  [Decision 0020](../decisions/0020-adopt-guarded-task-recovery-skill.md).
+- Change: Added one proposal-only recovery skill with a thin Claude link, finite
+  dispositions, bounded task/Git evidence, and conservative revision, effect, approval,
+  worker, verification, and capacity handling.
+- Success signal: Interrupted work yields one evidence-backed safe action without stale
+  output, uncertain retry, ownership guesses, or unbounded history reads.
+- Review or sunset trigger: Duplicated effect, overwritten work, false completion,
+  provider discovery drift, unbounded context, or demonstrated need for a helper.
+
 ## 2026-08-11: Adopt A Guarded Project-Onboarding Skill
 
 - Status: Adopted.
@@ -141,15 +155,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   changing its tag, asset, permissions, or publication sequence.
 - Success signal: Both release creation and update apply the new title.
 - Review or sunset trigger: A published `latest` release retains a different title.
-
-## 2026-07-14: Streamline The Piped Installer Command
-
-- Status: Adopted.
-- Evidence: Direct product-owner preference and T-0010 stream/install review; see
-  [Decision 0013](../decisions/0013-streamline-installer-invocation.md).
-- Change: Replaced the outer pipefail wrapper with conventional `curl -fsSL URL | bash`
-  syntax and moved guarded-stream completion detection into the installer.
-- Success signal: Complete pipes install unchanged, guarded truncations fail before
-  mutation, and the unavoidable upstream-status pipeline limitation remains visible.
-- Review or sunset trigger: Hidden install failure, truncation mutation, or preference
-  for strict upstream-status propagation over the shorter command.

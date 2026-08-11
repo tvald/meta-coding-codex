@@ -29,16 +29,19 @@ Optional harness integration files are:
 - `.claude/skills/claude-quota-monitor/`, containing the credential-contained Claude
   Code telemetry procedure; and
 - `.agents/skills/project-onboarding/`, containing the maintained onboarding procedure
-  adapter, plus `.claude/skills/project-onboarding/` as its thin Claude discovery link.
+  adapter, plus `.claude/skills/project-onboarding/` as its thin Claude discovery link;
+  and
+- `.agents/skills/task-recovery/`, containing the maintained interruption-recovery
+  procedure adapter, plus `.claude/skills/task-recovery/` as its thin Claude link.
 
 These adopted adapters expose only Reviewer, Verifier, and Security Reviewer.
 They do not own process semantics, add executable code or dependencies, pin models, add
 MCP servers, or expand parent permissions. Omit them when the destination does not use
 the corresponding harness. The quota-monitor skills own no threshold policy and can be
 omitted when the destination does not use that harness for delegated work. The
-project-onboarding skill owns no onboarding policy; it loads the canonical meta
-procedure. The release archive carries these optional files so the installer can add
-them without a second download; their presence does not make their use mandatory.
+project-onboarding and task-recovery skills own no policy; they load their canonical
+meta procedures. The release archive carries these optional files so the installer can
+add them without a second download; their presence does not make their use mandatory.
 
 Everything else under `readme/` is mutable documentation for this repository as a
 project. It is useful here but is intentionally excluded from a clean add-on package.
@@ -113,7 +116,8 @@ archive with the supported Info-ZIP tools.
    this bridge when no project file exists. Never replace established Claude guidance.
 4. Optionally merge the files from `.codex/agents/`, `.claude/agents/`,
    `.agents/skills/codex-quota-monitor/`, `.claude/skills/claude-quota-monitor/`, and the
-   two `project-onboarding` discovery paths for the harnesses the destination uses.
+   `project-onboarding` and `task-recovery` discovery paths for the harnesses the
+   destination uses.
    Resolve same-name agents or skills deliberately; never overwrite an existing
    definition blindly. Treat all files for one same-name cross-harness skill as one
    collision bundle.

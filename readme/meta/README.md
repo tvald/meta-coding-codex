@@ -76,7 +76,9 @@ expose selected roles through native discovery. Repo skills under
 expose the Codex and Claude Code telemetry procedures required by the portable usage
 capacity guard. The canonical `.agents/skills/project-onboarding/` skill and its thin
 `.claude/skills/project-onboarding/` discovery link may expose onboarding without
-becoming another policy owner.
+becoming another policy owner. The matching `.agents/skills/task-recovery/` body and
+`.claude/skills/task-recovery/` link may expose targeted interruption recovery while
+leaving resumption, delegation, and capacity policy in their Markdown owners.
 
 These files are optional integration surfaces, not additional policy owners. They:
 
@@ -100,6 +102,12 @@ handling only. It loads [onboarding.md](onboarding.md) as its policy owner. Its 
 surface links the maintained `.agents` body instead of copying the workflow. A same-name
 skill directory at either provider path is one installer collision domain: preserve the
 whole bundle for deliberate reconciliation rather than mixing host and framework files.
+
+The task-recovery skill contains bounded reconciliation order, safe-stop dispositions,
+and a recovery result contract. It loads [resumption-protocol.md](resumption-protocol.md)
+and only the relevant worker, approval, or usage-capacity owner when that recovery path
+applies. Its Claude surface is another thin link to the maintained `.agents` body and
+uses the same cross-harness collision boundary.
 
 The three role adapters—Reviewer, QA And Verification Agent, and Security And Risk
 Agent—are adopted optional integrations that host projects may omit entirely.
@@ -177,8 +185,8 @@ every project artifact only after it has useful content.
 A clean core package contains this `readme/meta/` tree, including the pinned
 `framework-data/` runtime, schemas, and blank framework changelog seed, plus a merged
 root AGENTS startup instruction. It may also carry the matching `.codex/agents/`,
-`.claude/agents/`, quota-monitor skills, and project-onboarding discovery bundle as
-optional integrations.
+`.claude/agents/`, quota-monitor skills, and the project-onboarding and task-recovery
+discovery bundles as optional integrations.
 Never overwrite an established instruction, same-name agent, or same-name skill. The
 package excludes local changelog entries, `readme/README.md`, `readme/tasks/store/`, and
 every mutable project-documentation sibling.

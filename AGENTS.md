@@ -23,6 +23,11 @@ adapter for that onboarding owner. Discovery alone does not establish provenance
 ownership is unknown or skill discovery is unavailable, follow the linked canonical
 procedure directly.
 
+After an interruption or worker/capacity recovery trigger, a primary session may use
+the `task-recovery` skill only when its framework ownership was installed or explicitly
+reconciled without a same-name collision. Discovery alone is not provenance; otherwise
+follow [the resumption protocol](readme/meta/resumption-protocol.md) directly.
+
 ## Operating Contract
 
 - `readme/meta/` is reusable framework policy. Do not put project facts or task history

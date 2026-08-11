@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Recovery"
+  short_description: "Recover interrupted work from bounded evidence"
+  default_prompt: "Use $task-recovery to recover the interrupted task from bounded durable and live evidence."

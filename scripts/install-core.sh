@@ -11,11 +11,14 @@ framework_core_inventory() {
         '.agents/skills/codex-quota-monitor/agents/openai.yaml' \
         '.agents/skills/project-onboarding/SKILL.md' \
         '.agents/skills/project-onboarding/agents/openai.yaml' \
+        '.agents/skills/task-recovery/SKILL.md' \
+        '.agents/skills/task-recovery/agents/openai.yaml' \
         '.claude/agents/reviewer.md' \
         '.claude/agents/security-reviewer.md' \
         '.claude/agents/verifier.md' \
         '.claude/skills/claude-quota-monitor/SKILL.md' \
         '.claude/skills/project-onboarding/SKILL.md' \
+        '.claude/skills/task-recovery/SKILL.md' \
         '.codex/agents/reviewer.toml' \
         '.codex/agents/security-reviewer.toml' \
         '.codex/agents/verifier.toml' \

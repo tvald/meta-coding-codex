@@ -57,9 +57,11 @@ jobs:
         shell: bash
         run: ./scripts/package-core.sh "dist/${RELEASE_ASSET_NAME}"
 
-      - name: Verify onboarding skill installation boundaries
+      - name: Verify skill installation boundaries
         shell: bash
-        run: ./tests/project-onboarding-install.test.sh
+        run: |
+          ./tests/project-onboarding-install.test.sh
+          ./tests/task-recovery-install.test.sh
 
       - name: Verify the release payload
         shell: bash

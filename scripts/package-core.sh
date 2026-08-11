@@ -117,10 +117,14 @@ FRAMEWORK_DATA_FILE_COUNT=$(find "$FRAMEWORK_DATA_SOURCE" -type f | wc -l)
 PROJECT_ONBOARDING_SKILL=$SKILLS_SOURCE/project-onboarding/SKILL.md
 PROJECT_ONBOARDING_METADATA=$SKILLS_SOURCE/project-onboarding/agents/openai.yaml
 PROJECT_ONBOARDING_CLAUDE=$CLAUDE_SKILLS_SOURCE/project-onboarding/SKILL.md
-for project_onboarding_file in "$PROJECT_ONBOARDING_SKILL" \
-    "$PROJECT_ONBOARDING_METADATA" "$PROJECT_ONBOARDING_CLAUDE"; do
-    if [ ! -f "$project_onboarding_file" ] || [ -L "$project_onboarding_file" ]; then
-        fail "missing or unsafe project-onboarding discovery file: $project_onboarding_file"
+TASK_RECOVERY_SKILL=$SKILLS_SOURCE/task-recovery/SKILL.md
+TASK_RECOVERY_METADATA=$SKILLS_SOURCE/task-recovery/agents/openai.yaml
+TASK_RECOVERY_CLAUDE=$CLAUDE_SKILLS_SOURCE/task-recovery/SKILL.md
+for framework_skill_file in "$PROJECT_ONBOARDING_SKILL" \
+    "$PROJECT_ONBOARDING_METADATA" "$PROJECT_ONBOARDING_CLAUDE" \
+    "$TASK_RECOVERY_SKILL" "$TASK_RECOVERY_METADATA" "$TASK_RECOVERY_CLAUDE"; do
+    if [ ! -f "$framework_skill_file" ] || [ -L "$framework_skill_file" ]; then
+        fail "missing or unsafe framework skill discovery file: $framework_skill_file"
     fi
 done
 grep -Fq '../../../readme/meta/onboarding.md' "$PROJECT_ONBOARDING_SKILL" ||
@@ -130,6 +134,12 @@ grep -Fq '../../../.agents/skills/project-onboarding/SKILL.md' \
     fail "Claude project-onboarding adapter does not link the maintained skill"
 grep -Fq "\$project-onboarding" "$PROJECT_ONBOARDING_METADATA" ||
     fail "project-onboarding UI metadata does not trigger the maintained skill"
+grep -Fq '../../../readme/meta/resumption-protocol.md' "$TASK_RECOVERY_SKILL" ||
+    fail "task-recovery skill does not link its canonical policy owner"
+grep -Fq '../../../.agents/skills/task-recovery/SKILL.md' "$TASK_RECOVERY_CLAUDE" ||
+    fail "Claude task-recovery adapter does not link the maintained skill"
+grep -Fq "\$task-recovery" "$TASK_RECOVERY_METADATA" ||
+    fail "task-recovery UI metadata does not trigger the maintained skill"
 
 MARKER_COUNT=$(grep -c '^## Operating Contract$' "$AGENTS_SOURCE" || true)
 [ "$MARKER_COUNT" -eq 1 ] ||
