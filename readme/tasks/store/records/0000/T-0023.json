@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0023",
-  "recordVersion": 6,
+  "recordVersion": 10,
   "taskRevision": 6,
   "outcome": "Deliver the meta framework as an immutable npm package with retained canonical long-form documentation, local npm-script execution with lifecycle hooks disabled, derived agent prompts, package-owned task tooling, thin harness bootstraps, and locked extensions",
   "authority": {
     "reference": "User instructions and architecture clarifications, plus T-0024 inherited-PATH and T-0029 npm lifecycle-hook safety evidence, 2026-08-11",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0024",
     "T-0025",
@@ -31,12 +31,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Complete the dependency-ordered implementation subtasks using the explicit local dependency-alias launcher through npm run --ignore-scripts, then run the aggregate clean-client verification gate",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "All T-0024 through T-0032 dependencies are Done; all 14 umbrella criteria are checked; exact 52-file package, 56 package tests, 94 full tests, aggregate clean-client replacement/rollback, public pre-release compatibility, and high-risk gates passed"
+  }
 }

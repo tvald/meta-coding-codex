@@ -254,40 +254,40 @@ Out of scope:
 
 ## Umbrella Acceptance Criteria
 
-- [ ] A clean fixture can install a locked package, expose the local `meta` npm script,
+- [x] A clean fixture can install a locked package, expose the local `meta` npm script,
   load each supported prompt profile, and run task doctor/startup without a copied
   `readme/meta` tree.
-- [ ] Removing or withholding the local dependency makes the npm script fail without a
+- [x] Removing or withholding the local dependency makes the npm script fail without a
   registry download, cache-installed fallback, or execution of a hostile same-name
   binary inherited through `PATH`.
-- [ ] Prompt output is deterministic, bounded, profile-specific, attributable to a
+- [x] Prompt output is deterministic, bounded, profile-specific, attributable to a
   package version and digest, and complete for every role contract it claims to serve.
-- [ ] Complete long-form mechanics, rationale, and intent remain inspectable in the
+- [x] Complete long-form mechanics, rationale, and intent remain inspectable in the
   package and source repository; prompt profiles are derived projections rather than
   replacement documentation or independent policy owners.
-- [ ] Every emitted instruction is attributable through stable facet identifiers to one
+- [x] Every emitted instruction is attributable through stable facet identifiers to one
   canonical owner, and build checks reject missing, orphaned, conflicting, or divergent
   document, facet, and profile mappings.
-- [ ] Bounded `docs` and `explain` commands retrieve exact canonical detail by declared
+- [x] Bounded `docs` and `explain` commands retrieve exact canonical detail by declared
   identifier without exposing arbitrary package or client filesystem reads.
-- [ ] Codex and Claude use the same semantic role profiles; provider discovery behavior
+- [x] Codex and Claude use the same semantic role profiles; provider discovery behavior
   is absent from compiled prompts, and any native adapter difference is narrow and
   covered by a harness-specific test.
-- [ ] Existing task-store safety and bounded-query tests pass through the package CLI;
+- [x] Existing task-store safety and bounded-query tests pass through the package CLI;
   package-internal resources never redirect project mutations into `node_modules`.
-- [ ] Codex and Claude primary bootstraps are thin, project-owned, and sufficient to
+- [x] Codex and Claude primary bootstraps are thin, project-owned, and sufficient to
   load the correct framework prompt and dynamic project state.
-- [ ] Declared extensions compose only into allowed profiles, while undeclared,
+- [x] Declared extensions compose only into allowed profiles, while undeclared,
   incompatible, conflicting, oversized, or unsafe extensions fail closed.
-- [ ] Quota and capability commands hide provider mechanics behind a stable bounded
+- [x] Quota and capability commands hide provider mechanics behind a stable bounded
   result, distinguish unavailable evidence from safe capacity, and do not expose
   credentials or unrelated account data.
-- [ ] The packed artifact contains exactly the intended immutable framework files and
+- [x] The packed artifact contains exactly the intended immutable framework files and
   excludes client state, local framework edits, credentials, caches, and release-only
   residue.
-- [ ] Supported installation and update documentation uses npm dependency replacement;
+- [x] Supported installation and update documentation uses npm dependency replacement;
   no supported path copies or edits framework source in a client repository.
-- [ ] Relevant unit, integration, package, clean-consumer, negative, compatibility,
+- [x] Relevant unit, integration, package, clean-consumer, negative, compatibility,
   security, documentation, and deterministic-output checks pass, with independent gates
   applied according to each subtask's risk.
 
@@ -318,3 +318,9 @@ Out of scope:
 All subtasks are Done, their required checks and independent gates have passed, the
 clean-client proof satisfies the umbrella criteria, and the repository documents one
 unambiguous npm-based installation, agent startup, extension, and update contract.
+
+Completion evidence is recorded in the T-0024 through T-0032 quality records. T-0031
+provides the final 52-file artifact, aggregate replacement/rollback, 56-test package,
+94-test regression, public-release compatibility, and independent gate results. The
+candidate is intentionally unpublished; licensing, scope ownership, credentials,
+provenance, and publication require separate owner authorization.
