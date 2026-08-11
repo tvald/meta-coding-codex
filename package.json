@@ -3,6 +3,20 @@
   "version": "1.0.0",
   "description": "Immutable, repository-backed operating framework for AI-assisted software development",
   "type": "module",
+  "metaFramework": {
+    "taskCli": {
+      "version": "1.0.0",
+      "envelopeVersions": [
+        1
+      ],
+      "readableStoreSchemaVersions": [
+        1
+      ],
+      "writableStoreSchemaVersions": [
+        1
+      ]
+    }
+  },
   "bin": {
     "meta-framework": "bin/meta-framework.mjs"
   },
@@ -12,13 +26,15 @@
     ".claude/skills/",
     ".codex/agents/",
     "bin/",
+    "lib/",
     "package-files.json",
     "readme/meta/"
   ],
   "scripts": {
     "package:check": "node scripts/check-npm-package.mjs",
     "test": "node --test tests/*.test.mjs",
-    "test:package": "node --test tests/npm-package.test.mjs"
+    "test:package": "node --test tests/npm-package.test.mjs tests/package-task-cli.test.mjs",
+    "test:tasks": "node --test tests/package-task-cli.test.mjs"
   },
   "engines": {
     "node": ">=22",

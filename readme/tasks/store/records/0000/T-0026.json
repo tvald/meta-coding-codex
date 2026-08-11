@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0026",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Expose the guarded task store through the installed package CLI while separating immutable package resources from mutable client-repository paths",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0024",
     "T-0025"
@@ -22,12 +22,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Refactor resource and project-root resolution, expose tasks doctor/startup and semantic mutations under the package binary, and preserve all existing safety and bounded-query tests",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "npm test 47/47; package task 7/7; package aggregate 14/14; framework data 33/33; exact 55-file package audit; doctor and independent Architect, QA, Security, and Reviewer gates passed"
+  }
 }

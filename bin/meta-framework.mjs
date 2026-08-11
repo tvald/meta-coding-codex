@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'node:fs';
-
-const manifestUrl = new URL('../package.json', import.meta.url);
-
-function readPackageIdentity() {
-  const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8'));
-  if (manifest.name !== '@tvald/meta-framework' || typeof manifest.version !== 'string') {
-    throw new Error('invalid package identity');
-  }
-  return { name: manifest.name, version: manifest.version };
-}
+import {
+  readPackageIdentity as readPackageRuntimeIdentity,
+  RuntimeRootError,
+  validateTaskRuntimeRoots,
+} from '../lib/runtime-roots.mjs';
+import {
+  TASK_ENVELOPE_SCHEMA_VERSION,
+} from '../lib/task-compatibility.mjs';
 
 function printHelp() {
   process.stdout.write(`meta-framework
@@ -19,6 +16,8 @@ Usage:
   meta-framework --help
   meta-framework --version
   meta-framework version [--json]
+  meta-framework tasks --version
+  meta-framework tasks COMMAND [OPTIONS]
 `);
 }
 
@@ -27,8 +26,26 @@ function fail(message) {
   process.exitCode = 2;
 }
 
+function failRuntime(error) {
+  process.stderr.write(`meta-framework: ${error.code}: ${error.message}\n`);
+  process.exitCode = 1;
+}
+
+function failFrameworkData(error) {
+  const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
+    error.code : 'INTERNAL_ERROR';
+  const safeMessage = typeof error?.message === 'string' && error.message.length <= 512 &&
+    !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069\ufeff]/u.test(error.message) ?
+    error.message : 'task runtime failed';
+  process.stderr.write(`meta-framework tasks: ${safeCode}: ${safeMessage}\n`);
+  process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 9 ?
+    error.exitCode : 1;
+}
+
 try {
-  const identity = readPackageIdentity();
+  const packageRuntime = readPackageRuntimeIdentity(import.meta.url);
+  const identity = packageRuntime.identity;
+  const taskCompatibility = packageRuntime.taskCompatibility;
   const args = process.argv.slice(2);
 
   if (args.length === 0 || (args.length === 1 && ['--help', '-h', 'help'].includes(args[0]))) {
@@ -38,10 +55,38 @@ try {
   } else if (args[0] === 'version' && args.length === 1) {
     process.stdout.write(`${identity.version}\n`);
   } else if (args[0] === 'version' && args.length === 2 && args[1] === '--json') {
-    process.stdout.write(`${JSON.stringify({ schemaVersion: 1, ...identity })}\n`);
+    process.stdout.write(`${JSON.stringify({ schemaVersion: TASK_ENVELOPE_SCHEMA_VERSION, ...identity })}\n`);
+  } else if (args[0] === 'tasks' && args.length === 2 && args[1] === '--version') {
+    process.stdout.write(`${JSON.stringify({
+      schemaVersion: TASK_ENVELOPE_SCHEMA_VERSION,
+      package: identity,
+      taskCli: {
+        version: taskCompatibility.version,
+        envelopeVersions: [...taskCompatibility.envelopeVersions],
+        readableStoreSchemaVersions: [...taskCompatibility.readableStoreSchemaVersions],
+        writableStoreSchemaVersions: [...taskCompatibility.writableStoreSchemaVersions],
+      },
+    })}\n`);
+  } else if (args[0] === 'tasks' && (args.length === 1 || args.slice(1).includes('--help'))) {
+    const { runRootlessFrameworkDataCli } = await import('../readme/meta/framework-data/cli.mjs');
+    await runRootlessFrameworkDataCli(args.length === 1 ? ['--help'] : args.slice(1), {
+      programName: 'meta-framework tasks',
+      errorPrefix: 'meta-framework tasks',
+    });
+  } else if (args[0] === 'tasks') {
+    const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+    const context = await repositoryContext();
+    const runtime = validateTaskRuntimeRoots({ packageRuntime, context });
+    const { runValidatedFrameworkDataCli } = await import('../readme/meta/framework-data/cli.mjs');
+    await runValidatedFrameworkDataCli(args.length === 1 ? ['--help'] : args.slice(1), runtime, {
+      programName: 'meta-framework tasks',
+      errorPrefix: 'meta-framework tasks',
+    });
   } else {
     fail('unknown command; run --help');
   }
-} catch {
-  fail('package metadata is unavailable or invalid');
+} catch (error) {
+  if (error instanceof RuntimeRootError) failRuntime(error);
+  else if (error?.name === 'FrameworkDataError') failFrameworkData(error);
+  else fail('package runtime is unavailable or invalid');
 }
