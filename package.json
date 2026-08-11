@@ -1,0 +1,45 @@
+{
+  "name": "@tvald/meta-framework",
+  "version": "1.0.0",
+  "description": "Immutable, repository-backed operating framework for AI-assisted software development",
+  "type": "module",
+  "bin": {
+    "meta-framework": "bin/meta-framework.mjs"
+  },
+  "files": [
+    ".agents/skills/",
+    ".claude/agents/",
+    ".claude/skills/",
+    ".codex/agents/",
+    "bin/",
+    "package-files.json",
+    "readme/meta/"
+  ],
+  "scripts": {
+    "package:check": "node scripts/check-npm-package.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:package": "node --test tests/npm-package.test.mjs"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tvald/meta-coding-codex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tvald/meta-coding-codex/issues"
+  },
+  "homepage": "https://github.com/tvald/meta-coding-codex#readme",
+  "keywords": [
+    "ai-agents",
+    "codex",
+    "development-workflow",
+    "task-orchestration"
+  ],
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "access": "public"
+  }
+}
