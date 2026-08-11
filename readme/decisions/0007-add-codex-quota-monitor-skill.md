@@ -16,7 +16,10 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), implemented for quota
+  acquisition by T-0032, where the immutable package command replaces the copied skill
+  procedure and uses one initialized App Server child/full read per stateless invocation.
+  Its fail-closed window semantics and prohibition on account mutations remain current.
 
 ## Context
 

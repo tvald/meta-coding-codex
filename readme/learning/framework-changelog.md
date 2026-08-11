@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt Package-Owned Provider Probes
+
+- Status: Adopted.
+- Evidence: T-0032 fixture and live normalized probes, exact package audit, full
+  regression suite, threat model, and independent Architect, Security, QA, and Reviewer
+  gates; see [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Replaced copied quota procedures with versioned package commands for normalized
+  Codex and Claude quota and delegation evidence, including strict schema drift,
+  credential/redaction, client-root executable, process-group, and safe-stop controls.
+- Success signal: Shared policy invokes one provider-neutral command and receives only
+  bounded evidence; malformed, unavailable, unsafe, or orphaning providers stop safely.
+- Review or sunset trigger: Credential or provider data leak, false-safe capacity,
+  capability-as-authority use, schema drift, client executable invocation, or orphan.
+
 ## 2026-08-11: Adopt The Installed Package Task Runtime
 
 - Status: Adopted.
@@ -130,21 +144,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   small margin on distant-reset windows.
 - Review or sunset trigger: An accidental hard-limit crossing despite the guard, or a new
   provider window class the tiers do not cover.
-
-## 2026-07-30: Add A Claude Code Usage Telemetry Skill
-
-- Status: Adopted.
-- Evidence: Product-owner instruction, a live `oauth/usage` read confirming model-scoped
-  windows, an independent Security And Risk Agent review with no Critical or High
-  findings, and T-0012 containment, inventory, and installer checks; see
-  [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md).
-- Change: Added the optional `claude-quota-monitor` skill whose credential-scoped `node`
-  reader parses the authoritative `limits[]` array first, preserves model-scoped windows,
-  and prints only normalized capacity fields while keeping the token inside the
-  subprocess. Shipped it through the additive core installer by packaging `.claude/skills`
-  and pointed the capacity guard at it. This is the framework's first credential-reading
-  surface, bounded by a threat-model card.
-- Success signal: A Claude Code Root Orchestrator obtains current five-hour, weekly,
-  model-scoped, and monthly windows without credential material entering the conversation.
-- Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
-  schema change, or a second copy of the reader.

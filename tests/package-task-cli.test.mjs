@@ -463,7 +463,54 @@ test('task mutations reject incompatible package metadata before store changes',
       assert.match(rejected.stderr, /^meta-framework: PACKAGE_METADATA: /u);
       assert.equal(treeDigest(storePath), before);
     }
+    for (const mutate of [
+      (manifest) => { manifest.metaFramework.providerProbe.envelopeVersions = [2]; },
+      (manifest) => { manifest.metaFramework.providerProbe.harnesses = ['codex']; },
+      (manifest) => { manifest.metaFramework.providerProbe.capabilities = ['unknown']; },
+    ]) {
+      const incompatible = structuredClone(original);
+      mutate(incompatible);
+      writeJson(packageManifestPath, incompatible);
+      const rejected = run(process.execPath, [client.binary, 'tasks', 'preflight'], {
+        cwd: client.clientRoot,
+      });
+      assert.equal(rejected.status, 1);
+      assert.equal(rejected.stdout, '');
+      assert.match(rejected.stderr, /^meta-framework: PACKAGE_METADATA: /u);
+      assert.equal(treeDigest(storePath), before);
+    }
     writeJson(packageManifestPath, original);
+  } finally {
+    rmSync(workRoot, { recursive: true, force: true });
+  }
+});
+
+test('packed provider probe validates the installed alias without touching task or package state', () => {
+  const workRoot = mkdtempSync(join(tmpdir(), 'meta-framework-provider-alias-'));
+  try {
+    const client = makeInstalledClient(workRoot);
+    const packageDigest = treeDigest(client.packageRoot);
+    const version = run(process.execPath, [client.binary, 'quota', '--version'], { cwd: client.clientRoot });
+    assert.equal(version.status, 0, version.stderr);
+    assert.deepEqual(JSON.parse(version.stdout).providerProbe, {
+      version: '1.0.0',
+      envelopeVersions: [1],
+      harnesses: ['claude', 'codex'],
+      capabilities: ['delegation'],
+    });
+    const unavailable = run(process.execPath, [client.binary, 'quota', '--harness', 'claude'], {
+      cwd: client.clientRoot,
+      env: {
+        ...process.env,
+        CLAUDE_CONFIG_DIR: join(workRoot, 'missing-claude-config'),
+      },
+    });
+    assert.equal(unavailable.status, 1, unavailable.stderr);
+    assert.equal(JSON.parse(unavailable.stdout).disposition, 'unavailable');
+    assert.equal(JSON.parse(unavailable.stdout).reason, 'provider_unavailable');
+    assert.equal(lstatSync(join(client.clientRoot, 'readme', 'tasks', 'store'),
+      { throwIfNoEntry: false }), undefined);
+    assert.equal(treeDigest(client.packageRoot), packageDigest);
   } finally {
     rmSync(workRoot, { recursive: true, force: true });
   }

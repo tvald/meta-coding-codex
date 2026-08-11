@@ -41,7 +41,7 @@
 | Lockfile-backed allowlisted extensions | T-0028 | Undeclared, incompatible, conflicting, unsafe-path, and oversized negatives | Planned |
 | Thin harness bootstraps | T-0029 | Clean Codex/Claude startup and provider-difference audit | Planned |
 | Transactional client initializer | T-0029 | Existing bootstrap/state, symlink, interruption, and exact rollback negatives | Planned |
-| Secret-contained normalized provider probes | T-0032 | Stubbed responses, malformed/auth failures, output redaction, cutoff equivalence | Planned |
+| Secret-contained normalized provider probes | T-0032 | Stubbed and live normalized probes, malformed/auth failures, output redaction, cutoff equivalence, hostile process boundaries, and independent gates | Done |
 | Aggregate consumer/security/release matrix | T-0031 | Packed install, compatibility, downgrade, deterministic output, independent gates | Planned |
 
 ## Agentic Risks

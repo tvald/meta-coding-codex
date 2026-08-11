@@ -8,6 +8,7 @@ import {
 import {
   TASK_ENVELOPE_SCHEMA_VERSION,
 } from '../lib/task-compatibility.mjs';
+import { PROVIDER_PROBE_SCHEMA_VERSION } from '../lib/provider-contract.mjs';
 
 function printHelp() {
   process.stdout.write(`meta-framework
@@ -18,6 +19,10 @@ Usage:
   meta-framework version [--json]
   meta-framework tasks --version
   meta-framework tasks COMMAND [OPTIONS]
+  meta-framework quota --version
+  meta-framework quota --harness HARNESS
+  meta-framework capability --version
+  meta-framework capability --harness HARNESS --name NAME
 `);
 }
 
@@ -31,22 +36,86 @@ function failRuntime(error) {
   process.exitCode = 1;
 }
 
-function failFrameworkData(error) {
+function failFrameworkData(error, prefix) {
   const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
     error.code : 'INTERNAL_ERROR';
   const safeMessage = typeof error?.message === 'string' && error.message.length <= 512 &&
     !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069\ufeff]/u.test(error.message) ?
     error.message : 'task runtime failed';
-  process.stderr.write(`meta-framework tasks: ${safeCode}: ${safeMessage}\n`);
+  process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
   process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 9 ?
     error.exitCode : 1;
 }
 
+function parseProbeOptions(tokens, names) {
+  const values = {};
+  for (let index = 0; index < tokens.length; index += 2) {
+    const option = tokens[index];
+    const value = tokens[index + 1];
+    if (!names.includes(option) || typeof value !== 'string' || value.startsWith('--') ||
+        Object.hasOwn(values, option) || !/^[a-z][a-z0-9-]{0,63}$/u.test(value)) {
+      return null;
+    }
+    values[option] = value;
+  }
+  return tokens.length === names.length * 2 && names.every((name) => Object.hasOwn(values, name)) ? values : null;
+}
+
+function probeVersion(packageRuntime) {
+  const compatibility = packageRuntime.providerProbeCompatibility;
+  process.stdout.write(`${JSON.stringify({
+    schemaVersion: PROVIDER_PROBE_SCHEMA_VERSION,
+    package: packageRuntime.identity,
+    providerProbe: {
+      version: compatibility.version,
+      envelopeVersions: [...compatibility.envelopeVersions],
+      harnesses: [...compatibility.harnesses],
+      capabilities: [...compatibility.capabilities],
+    },
+  })}\n`);
+}
+
+function probeOutput(packageRuntime, kind, harness, capability, inspected) {
+  let envelope = {
+    schemaVersion: PROVIDER_PROBE_SCHEMA_VERSION,
+    probeVersion: packageRuntime.providerProbeCompatibility.version,
+    package: packageRuntime.identity,
+    kind,
+    harness,
+    checkedAt: inspected.observedAt,
+    disposition: inspected.disposition,
+    reason: inspected.reason,
+    result: kind === 'quota' ? { windows: inspected.windows } :
+      ['enabled', 'disabled'].includes(inspected.disposition) ? { name: capability } : null,
+  };
+  let encoded = JSON.stringify(envelope);
+  if (Buffer.byteLength(encoded) > 16_384) {
+    envelope = {
+      ...envelope,
+      disposition: 'failed',
+      reason: 'inspection_failed',
+      result: kind === 'quota' ? { windows: [] } : null,
+    };
+    encoded = JSON.stringify(envelope);
+  }
+  process.stdout.write(`${encoded}\n`);
+  if ((kind === 'quota' && envelope.disposition !== 'proceed') ||
+      (kind === 'capability' && envelope.disposition !== 'enabled')) process.exitCode = 1;
+}
+
+async function providerClientRoot(packageRuntime) {
+  const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+  const context = await repositoryContext();
+  return validateTaskRuntimeRoots({ packageRuntime, context }).clientRoot;
+}
+
+let frameworkDataErrorPrefix = 'meta-framework';
 try {
   const packageRuntime = readPackageRuntimeIdentity(import.meta.url);
   const identity = packageRuntime.identity;
   const taskCompatibility = packageRuntime.taskCompatibility;
   const args = process.argv.slice(2);
+  if (args[0] === 'tasks') frameworkDataErrorPrefix = 'meta-framework tasks';
 
   if (args.length === 0 || (args.length === 1 && ['--help', '-h', 'help'].includes(args[0]))) {
     printHelp();
@@ -82,11 +151,36 @@ try {
       programName: 'meta-framework tasks',
       errorPrefix: 'meta-framework tasks',
     });
+  } else if (['quota', 'capability'].includes(args[0]) && args.length === 2 && args[1] === '--version') {
+    probeVersion(packageRuntime);
+  } else if (args[0] === 'quota') {
+    const options = parseProbeOptions(args.slice(1), ['--harness']);
+    if (options === null) {
+      fail('invalid quota command; run --help');
+    } else {
+      const { inspectQuota } = await import('../lib/provider-adapters.mjs');
+      const clientRoot = packageRuntime.providerProbeCompatibility.harnesses.includes(options['--harness']) ?
+        await providerClientRoot(packageRuntime) : null;
+      probeOutput(packageRuntime, 'quota', options['--harness'], null,
+        await inspectQuota(options['--harness'], { clientRoot }));
+    }
+  } else if (args[0] === 'capability') {
+    const options = parseProbeOptions(args.slice(1), ['--harness', '--name']);
+    if (options === null) {
+      fail('invalid capability command; run --help');
+    } else {
+      const { inspectCapability } = await import('../lib/provider-adapters.mjs');
+      const knownProbe = packageRuntime.providerProbeCompatibility.harnesses.includes(options['--harness']) &&
+        packageRuntime.providerProbeCompatibility.capabilities.includes(options['--name']);
+      const clientRoot = knownProbe ? await providerClientRoot(packageRuntime) : null;
+      probeOutput(packageRuntime, 'capability', options['--harness'], options['--name'],
+        await inspectCapability(options['--harness'], options['--name'], { clientRoot }));
+    }
   } else {
     fail('unknown command; run --help');
   }
 } catch (error) {
   if (error instanceof RuntimeRootError) failRuntime(error);
-  else if (error?.name === 'FrameworkDataError') failFrameworkData(error);
+  else if (error?.name === 'FrameworkDataError') failFrameworkData(error, frameworkDataErrorPrefix);
   else fail('package runtime is unavailable or invalid');
 }

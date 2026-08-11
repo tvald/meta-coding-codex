@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0032",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Move provider quota and capability checks behind normalized package CLI adapters so shared role prompts invoke concise stable commands without embedding provider telemetry procedures",
   "authority": {
     "reference": "User clarification, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0026"
   ],
@@ -23,12 +23,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Specify the bounded result schema and implement Codex and Claude quota and capability adapters with explicit unknown states, redaction, failure handling, and provider-specific tests",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "11 provider, 27 package, and 60 aggregate tests passed; exact reproducible 57-file package audit and warning-free doctor passed; live Codex quota/capability returned proceed/enabled; live Claude capability returned enabled and quota failed closed; Architect amendments and independent Security, QA, and Reviewer gates passed"
+  }
 }
