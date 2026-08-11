@@ -25,6 +25,20 @@ Each entry has exactly these durable fields, plus tags for search:
 
 ## Entries
 
+### R-2026-08-11-01
+
+- What happened: The product owner reported occasional malformed authority-bearing
+  task rows, such as a missing divider, and the scale review found that a valid escaped
+  pipe already defeats naive delimiter counting.
+- Framework or knowledge gap: Directly edited Markdown is both canonical task state
+  and its query view, with no typed mutation or bounded-query boundary.
+- Change made or follow-up: T-0018 recommends a required, script-mediated structured
+  task store and bounded queries; a separate implementation task must select the
+  runtime, schema, and migration details.
+- Tags: task-catalog, data-integrity, schema, automation, scaling, archives, context
+- Earlier occurrence:
+  [Decision 0008](../decisions/0008-adopt-durable-task-orchestration.md)
+
 ### R-2026-07-30-01
 
 - What happened: A request framed as a small urgent bug ("there is an issue with the
@@ -139,17 +153,4 @@ Each entry has exactly these durable fields, plus tags for search:
   Claude Code adapter pilot, with canonical ownership, least-privilege, packaging, and
   sunset controls in Decision 0005.
 - Tags: portability, instruction-discovery, subagents, codex, claude-code, adapters
-- Earlier occurrence: None
-
-### R-2026-07-10-02
-
-- What happened: Packaging the framework for an existing project would also copy this
-  repository's cursor, decisions, tasks, and review history because reusable policy and
-  project memory shared one directory.
-- Framework or knowledge gap: The framework had no self-contained reusable boundary or
-  state-free bootstrap contract.
-- Change made or follow-up: Moved reusable policy and templates under `readme/meta/`,
-  categorized project documentation separately, and made packaging plus onboarding the
-  clean-start path.
-- Tags: packaging, portability, state, onboarding, documentation-boundary
 - Earlier occurrence: None
