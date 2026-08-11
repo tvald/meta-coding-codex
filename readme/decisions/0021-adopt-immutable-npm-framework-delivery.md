@@ -189,15 +189,15 @@ Neutral or follow-up:
 
 ## Confidence
 
-Confidence: High for the package/client boundary and local invocation; Medium for the
-unpublished registry identity and provider-specific adapters until their fixture matrix
-passes.
+Confidence: High for the package/client boundary, local invocation, and normalized
+provider adapters; Medium for the unpublished registry identity until release evidence
+exists.
 
 Why:
 
-The product owner supplied the complete target contract, current npm documentation confirms local binary,
-pack-inventory, lifecycle, and lockfile behavior, and T-0026 confirms branded roots, manifest compatibility, HTTPS/SRI
-guards, installed-client task mutation, and independent gates while preserving task-store invariants; genuine registry installation remains assigned to T-0031.
+The product owner supplied the target contract; current npm documentation confirms local binary, pack-inventory,
+lifecycle, and lockfile behavior; T-0026 proves guarded package/client roots and installed task mutation; and T-0032
+proves bounded provider probes, secret containment, fail-closed drift, deterministic cleanup, and independent gates. Genuine registry installation remains assigned to T-0031.
 
 ## Review Trigger
 

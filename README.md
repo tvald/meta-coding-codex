@@ -24,10 +24,10 @@ Optional harness integration files are:
 - `CLAUDE.md`, which imports the canonical root instructions for Claude Code;
 - `.codex/agents/`, containing thin Codex custom-agent adapters; and
 - `.claude/agents/`, containing the matching Claude Code subagent adapters; and
-- `.agents/skills/codex-quota-monitor/`, containing the dependency-free Codex App
-  Server telemetry procedure used by the capacity guard; and
-- `.claude/skills/claude-quota-monitor/`, containing the credential-contained Claude
-  Code telemetry procedure; and
+- `.agents/skills/codex-quota-monitor/`, containing a thin Codex link to the
+  package-owned probe used by the capacity guard; and
+- `.claude/skills/claude-quota-monitor/`, containing the matching thin Claude Code link;
+  and
 - `.agents/skills/project-onboarding/`, containing the maintained onboarding procedure
   adapter, plus `.claude/skills/project-onboarding/` as its thin Claude discovery link;
   and

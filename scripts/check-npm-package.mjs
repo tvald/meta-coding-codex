@@ -7,6 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
+import { PROVIDER_PROBE_COMPATIBILITY } from '../lib/provider-contract.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -82,7 +83,25 @@ export function validateManifest(candidate = manifest) {
         JSON.stringify(TASK_COMPATIBILITY.writableStoreSchemaVersions),
     'task CLI compatibility metadata differs from the runtime contract',
   );
+  const providerCompatibility = candidate.metaFramework?.providerProbe;
+  const providerCompatibilityKeys = providerCompatibility !== null &&
+    typeof providerCompatibility === 'object' && !Array.isArray(providerCompatibility) ?
+    Object.keys(providerCompatibility).sort() : [];
+  const expectedProviderCompatibilityKeys = Object.keys(PROVIDER_PROBE_COMPATIBILITY).sort();
+  assert(
+    providerCompatibilityKeys.length === expectedProviderCompatibilityKeys.length &&
+      providerCompatibilityKeys.every((key, index) => key === expectedProviderCompatibilityKeys[index]) &&
+      providerCompatibility.version === PROVIDER_PROBE_COMPATIBILITY.version &&
+      JSON.stringify(providerCompatibility.envelopeVersions) ===
+        JSON.stringify(PROVIDER_PROBE_COMPATIBILITY.envelopeVersions) &&
+      JSON.stringify(providerCompatibility.harnesses) ===
+        JSON.stringify(PROVIDER_PROBE_COMPATIBILITY.harnesses) &&
+      JSON.stringify(providerCompatibility.capabilities) ===
+        JSON.stringify(PROVIDER_PROBE_COMPATIBILITY.capabilities),
+    'provider probe compatibility metadata differs from the runtime contract',
+  );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
+  assert(candidate.scripts?.meta === 'node ./bin/meta-framework.mjs', 'unexpected source meta command');
   assert(candidate.engines?.node === '>=22', 'Node 22+ must be declared');
   assert(
     !candidate.dependencies

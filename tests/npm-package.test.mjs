@@ -68,6 +68,9 @@ test('package policy rejects every automatic lifecycle hook and implicit node-gy
     assert.throws(() => validateManifest(mutated), new RegExp(`forbidden lifecycle script: ${name}`));
   }
   assert.throws(() => validateManifest({ ...manifest, gypfile: true }), /implicit node-gyp installation is forbidden/);
+  const driftedCommand = structuredClone(manifest);
+  driftedCommand.scripts.meta = 'meta-framework';
+  assert.throws(() => validateManifest(driftedCommand), /unexpected source meta command/);
 });
 
 test('package policy rejects missing or drifting task compatibility metadata', () => {
@@ -85,6 +88,24 @@ test('package policy rejects missing or drifting task compatibility metadata', (
     mutate(candidate);
     assert.throws(() => validateManifest(candidate),
       /task CLI compatibility metadata differs from the runtime contract/);
+  }
+});
+
+test('package policy rejects missing or drifting provider probe metadata', () => {
+  const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
+  const mutations = [
+    (candidate) => { delete candidate.metaFramework.providerProbe; },
+    (candidate) => { candidate.metaFramework.providerProbe.version = '2.0.0'; },
+    (candidate) => { candidate.metaFramework.providerProbe.envelopeVersions = [2]; },
+    (candidate) => { candidate.metaFramework.providerProbe.harnesses.reverse(); },
+    (candidate) => { candidate.metaFramework.providerProbe.capabilities = ['unknown']; },
+    (candidate) => { candidate.metaFramework.providerProbe.unreviewed = true; },
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(manifest);
+    mutate(candidate);
+    assert.throws(() => validateManifest(candidate),
+      /provider probe compatibility metadata differs from the runtime contract/);
   }
 });
 

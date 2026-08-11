@@ -1,5 +1,8 @@
 # Threat Model: Claude Quota Monitor Skill
 
+Historical boundary: T-0032 supersedes the embedded credential reader with the
+package-owned child documented in the 2026-08-11 provider-adapter threat model.
+
 ## Scope
 
 - Change: Repo-scoped skill that reads Claude Code usage telemetry from the authenticated

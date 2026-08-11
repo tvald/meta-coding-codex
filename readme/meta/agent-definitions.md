@@ -219,9 +219,9 @@ trigger. Decompose only when it improves speed, quality, or focus:
 ## Usage Capacity Guard
 
 The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
-running, or quota-suspended. Use only the provider's authoritative usage surface, never
-elapsed time or token estimates; on Codex use the `codex-quota-monitor` skill and on
-Claude Code the `claude-quota-monitor` skill for telemetry, not capacity policy.
+running, or quota-suspended. Use package-owned authoritative probes, never estimates: run
+`npm run --silent meta -- quota --harness codex`, or use `claude` for Claude Code. The
+package owns acquisition only; exclusively exit zero plus `disposition: "proceed"` is safe.
 
 - Read every advertised window—five-hour, weekly, each model-scoped window, and monthly
   when present—before each spawn or resume, after a worker result, and at least every five
@@ -295,6 +295,5 @@ Use this format when assigning or returning work:
 - Follow-up:
 ```
 
-Add a durable project-specific role only after repeated use justifies it, and keep its
-purpose, triggers, inputs, boundaries, loop, verification, and output format in the
-project's canonical agent-definition file.
+Add a durable project-specific role only after repeated use justifies it; keep its purpose,
+triggers, inputs, boundaries, loop, verification, and output in the canonical agent file.

@@ -73,10 +73,10 @@ The portable core is complete with this `readme/meta/` tree and the merged root
 loads the same owner. Project files under `.codex/agents/` and `.claude/agents/` may
 expose selected roles through native discovery. Repo skills under
 `.agents/skills/codex-quota-monitor/` and `.claude/skills/claude-quota-monitor/` may
-expose the Codex and Claude Code telemetry procedures required by the portable usage
-capacity guard. The canonical `.agents/skills/project-onboarding/` skill and its thin
-`.claude/skills/project-onboarding/` discovery link may expose onboarding without
-becoming another policy owner. The matching `.agents/skills/task-recovery/` body and
+expose thin links to the package-owned quota and delegation-capability commands required
+by the portable usage capacity guard. The canonical `.agents/skills/project-onboarding/`
+skill and its thin `.claude/skills/project-onboarding/` discovery link may expose
+onboarding without becoming another policy owner. The matching `.agents/skills/task-recovery/` body and
 `.claude/skills/task-recovery/` link may expose targeted interruption recovery while
 leaving resumption, delegation, and capacity policy in their Markdown owners.
 
@@ -90,12 +90,11 @@ These files are optional integration surfaces, not additional policy owners. The
   bypasses, or integration ownership; and
 - can be omitted or removed without changing the core framework workflow.
 
-Each quota-monitor skill contains only its required Markdown telemetry procedure and UI
-metadata and links [agent-definitions.md](agent-definitions.md#usage-capacity-guard) as
-policy owner. The Codex skill reads the already-installed Codex App Server; the Claude
-skill reads the authenticated Claude Code usage surface within a single subprocess and
-never surfaces credentials, tokens, or billing data to the session. Neither is one of the
-three role adapters.
+Each quota-monitor skill is only a compatibility shim to the package command and links
+[agent-definitions.md](agent-definitions.md#usage-capacity-guard) as policy owner.
+Provider protocol and credential mechanics live only in the bounded package adapter and
+never surface credentials, tokens, raw responses, account, or billing data to the
+session. Neither skill is one of the three role adapters.
 
 The project-onboarding skill contains execution order and fail-closed disposition
 handling only. It loads [onboarding.md](onboarding.md) as its policy owner. Its Claude

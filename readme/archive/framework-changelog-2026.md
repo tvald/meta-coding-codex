@@ -175,3 +175,21 @@
   packer, installer, and CI inventories agree.
 - Review or sunset trigger: A packaged tree drifts from the installer inventory or an
   additive install overwrites a host file.
+
+## 2026-07-30: Add A Claude Code Usage Telemetry Skill
+
+- Status: Adopted.
+- Evidence: Product-owner instruction, a live `oauth/usage` read confirming model-scoped
+  windows, an independent Security And Risk Agent review with no Critical or High
+  findings, and T-0012 containment, inventory, and installer checks; see
+  [Decision 0014](../decisions/0014-add-claude-usage-telemetry-skill.md).
+- Change: Added the optional `claude-quota-monitor` skill whose credential-scoped `node`
+  reader parses the authoritative `limits[]` array first, preserves model-scoped windows,
+  and prints only normalized capacity fields while keeping the token inside the
+  subprocess. Shipped it through the additive core installer by packaging `.claude/skills`
+  and pointed the capacity guard at it. This is the framework's first credential-reading
+  surface, bounded by a threat-model card.
+- Success signal: A Claude Code Root Orchestrator obtains current five-hour, weekly,
+  model-scoped, and monthly windows without credential material entering the conversation.
+- Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
+  schema change, or a second copy of the reader.

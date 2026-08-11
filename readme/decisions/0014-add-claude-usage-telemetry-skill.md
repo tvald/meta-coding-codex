@@ -17,7 +17,10 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), implemented for quota
+  acquisition by T-0032, where a package-owned child replaces the copied inline reader.
+  Its credential containment, hardcoded request, complete-window, and fail-unknown
+  requirements remain current.
 
 ## Context
 

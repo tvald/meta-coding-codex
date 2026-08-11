@@ -1,5 +1,8 @@
 # Threat Model: Codex Quota Monitor Skill
 
+Historical boundary: T-0032 supersedes the embedded telemetry procedure with the
+package-owned probe documented in the 2026-08-11 provider-adapter threat model.
+
 ## Scope
 
 - Change: Repo-scoped skill that reads quota telemetry from local Codex App Server.

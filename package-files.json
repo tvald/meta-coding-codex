@@ -19,6 +19,8 @@
     "README.md",
     "bin/meta-framework.mjs",
     "lib/git-environment.mjs",
+    "lib/provider-adapters.mjs",
+    "lib/provider-contract.mjs",
     "lib/runtime-roots.mjs",
     "lib/task-compatibility.mjs",
     "package-files.json",
