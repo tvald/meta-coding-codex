@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0030",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Retire ZIP and curl delivery, vendored framework reconciliation, in-client framework editing, and obsolete update guidance in favor of immutable npm dependency replacement",
+  "authority": {
+    "reference": "User instruction, 2026-08-11 via umbrella T-0023",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0025",
+    "T-0026",
+    "T-0029"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "migration",
+    "documentation",
+    "npm-package"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Remove or supersede obsolete packaging and installer surfaces, reconcile process and decision owners, and document npm installation, startup, issue reporting, and version replacement",
+  "details": [
+    {
+      "label": "Umbrella brief",
+      "path": "readme/tasks/0023-npm-package-delivery-brief.md"
+    }
+  ],
+  "completion": null
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0025",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Create a publishable immutable npm package with a local meta-framework binary, exact content inventory, reproducible packing, and no repository-mutating install lifecycle",
+  "authority": {
+    "reference": "User instruction, 2026-08-11 via umbrella T-0023",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0024"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "npm-package",
+    "distribution"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Implement the package manifest, executable entrypoint, package inventory, version metadata, pack checks, and publication-safe build boundary selected by T-0024",
+  "details": [
+    {
+      "label": "Umbrella brief",
+      "path": "readme/tasks/0023-npm-package-delivery-brief.md"
+    }
+  ],
+  "completion": null
+}
