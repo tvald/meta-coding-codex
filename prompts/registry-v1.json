@@ -44,6 +44,10 @@
       "path": "readme/meta/onboarding.md"
     },
     {
+      "id": "prompt-extensions",
+      "path": "readme/meta/prompt-extensions.md"
+    },
+    {
       "id": "quality-system",
       "path": "readme/meta/quality-system.md"
     },

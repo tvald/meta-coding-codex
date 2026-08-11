@@ -124,6 +124,8 @@ test('all prompt commands report one exact compatibility envelope', () => {
       envelopeVersions: [1],
       promptFormatVersions: [1],
       registrySchemaVersions: [1],
+      extensionManifestVersions: [1],
+      extensionApiVersions: [1],
       profiles: ['implementer', 'qa', 'reviewer', 'root', 'security'],
       harnesses: ['claude', 'codex', 'portable'],
     },
@@ -450,6 +452,16 @@ test('source and packed-installed commands are byte-identical for every declared
       env: { ...process.env, npm_config_cache: cache, npm_config_update_notifier: 'false' },
     });
     assert.equal(installed.status, 0, installed.stderr);
+    const clientManifest = JSON.parse(readFileSync(join(clientRoot, 'package.json'), 'utf8'));
+    clientManifest.dependencies['meta-framework'] = 'npm:@tvald/meta-framework@1.0.0';
+    writeJson(join(clientRoot, 'package.json'), clientManifest);
+    const clientLock = JSON.parse(readFileSync(join(clientRoot, 'package-lock.json'), 'utf8'));
+    clientLock.packages[''].dependencies['meta-framework'] = 'npm:@tvald/meta-framework@1.0.0';
+    clientLock.packages['node_modules/meta-framework'].resolved =
+      'https://registry.npmjs.org/@tvald/meta-framework/-/meta-framework-1.0.0.tgz';
+    writeJson(join(clientRoot, 'package-lock.json'), clientLock);
+    const gitInit = run('git', ['init', '--quiet'], { cwd: clientRoot });
+    assert.equal(gitInit.status, 0, gitInit.stderr);
     const installedBinary = join(clientRoot, 'node_modules', 'meta-framework', 'bin', 'meta-framework.mjs');
     const environment = { ...process.env, DO_NOT_LEAK_ENVIRONMENT: 'hostile-value' };
     const catalog = loadPromptCatalog(sourceRuntime);

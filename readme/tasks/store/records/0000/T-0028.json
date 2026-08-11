@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0028",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Add explicit lockfile-backed framework extensions and reusable skill facets that compose safely into declared agent prompt profiles",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0027"
   ],
@@ -22,12 +22,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Specify and implement the extension manifest, project allowlist, compatibility and path validation, profile targeting, conflict handling, attribution, and negative security tests",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "npm test 74/74; prompt and extension suites 13/13 with 81 hostile mutations; exact package audit 64 files and SHA-256 79ede7579355fd5838de256365c6e286618600069939fdfc243739bcffcb5905; doctor and diff checks passed; independent Architect Ready and Security, QA, Reviewer Pass"
+  }
 }

@@ -13,6 +13,21 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt Locked Data-Only Prompt Extensions
+
+- Status: Adopted.
+- Evidence: T-0028 packed clients, all 15 disabled-extension snapshots, deterministic
+  composition/provenance, 81 hostile mutations, exact package audit, and independent
+  Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added an ordered explicit client allowlist for exact direct dependencies whose
+  lock-bound, bounded, lifecycle-free Markdown skill facets append to declared profiles
+  without scanning, execution, core override, or ambiguous provenance.
+- Success signal: Reviewed extension facets compose equally across harnesses and fail
+  before stdout on identity, lock, schema, filesystem, conflict, or budget drift.
+- Review or sunset trigger: Implicit discovery, extension execution, lock/root bypass,
+  core shadowing, nondeterminism, provenance ambiguity, or output-budget exhaustion.
+
 ## 2026-08-11: Adopt Deterministic Agent Prompt Views
 
 - Status: Adopted.
@@ -141,19 +156,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   here are dispositioned Adopt, Revise, or Reject.
 - Review or sunset trigger: An adopted-directly change here regresses in a way staged
   piloting would have caught, or the owner reinstates piloting.
-
-## 2026-07-30: Adopt Tiered Per-Window Usage Cutoffs
-
-- Status: Adopted.
-- Evidence: Product-owner instruction on quota waste and T-0014 budget, hardcoded-cutoff
-  grep, and link checks; see
-  [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md).
-- Change: Generalized the capacity guard to threshold every advertised window—five-hour,
-  weekly, each model-scoped window, and monthly—and replaced the flat 95% cutoff with
-  tiered 95% five-hour, 98% weekly, and 99% monthly, so long-window quota stays usable
-  while an accidental hard-limit hit that would terminate the orchestrator is still
-  prevented. Aligned the resumption capacity-wait trigger and the task-notes template.
-- Success signal: The guard thresholds the windows its skills report and reserves only a
-  small margin on distant-reset windows.
-- Review or sunset trigger: An accidental hard-limit crossing despite the guard, or a new
-  provider window class the tiers do not cover.

@@ -117,6 +117,10 @@ export function validateManifest(candidate = manifest) {
         JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.promptFormatVersions) &&
       JSON.stringify(promptCompatibility.registrySchemaVersions) ===
         JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.registrySchemaVersions) &&
+      JSON.stringify(promptCompatibility.extensionManifestVersions) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.extensionManifestVersions) &&
+      JSON.stringify(promptCompatibility.extensionApiVersions) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.extensionApiVersions) &&
       JSON.stringify(promptCompatibility.profiles) ===
         JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.profiles) &&
       JSON.stringify(promptCompatibility.harnesses) ===

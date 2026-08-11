@@ -3,6 +3,7 @@
 import {
   readPackageIdentity as readPackageRuntimeIdentity,
   RuntimeRootError,
+  validateClientRuntimeRoots,
   validateTaskRuntimeRoots,
 } from '../lib/runtime-roots.mjs';
 import {
@@ -95,6 +96,11 @@ function parsePromptOptions(tokens) {
   return Object.hasOwn(values, '--profile') ? values : null;
 }
 
+function extensionFacetRequest(value) {
+  return typeof value === 'string' && value.startsWith('extension.') &&
+    Buffer.byteLength(value, 'utf8') <= 139 && /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(value);
+}
+
 function probeVersion(packageRuntime) {
   const compatibility = packageRuntime.providerProbeCompatibility;
   process.stdout.write(`${JSON.stringify({
@@ -141,6 +147,14 @@ async function providerClientRoot(packageRuntime) {
   const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
   const context = await repositoryContext();
   return validateTaskRuntimeRoots({ packageRuntime, context }).clientRoot;
+}
+
+async function promptExtensions(packageRuntime) {
+  const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+  const context = await repositoryContext();
+  const clientRuntime = validateClientRuntimeRoots({ packageRuntime, context });
+  const { resolveLockedPromptExtensions } = await import('../lib/extension-loader.mjs');
+  return resolveLockedPromptExtensions(clientRuntime);
 }
 
 let frameworkDataErrorPrefix = 'meta-framework';
@@ -198,10 +212,13 @@ try {
       fail('invalid agent-prompt command; run --help');
     } else {
       const { compileAgentPrompt } = await import('../lib/prompt-compiler.mjs');
+      const knownPrompt = packageRuntime.promptCompilerCompatibility.profiles.includes(options['--profile']) &&
+        packageRuntime.promptCompilerCompatibility.harnesses.includes(options['--harness'] ?? 'portable');
       process.stdout.write(compileAgentPrompt(
         packageRuntime,
         options['--profile'],
         options['--harness'] ?? 'portable',
+        knownPrompt ? await promptExtensions(packageRuntime) : null,
       ));
     }
   } else if (['docs', 'explain'].includes(args[0])) {
@@ -209,9 +226,12 @@ try {
       fail(`invalid ${args[0]} command; run --help`);
     } else {
       const compiler = await import('../lib/prompt-compiler.mjs');
-      process.stdout.write(args[0] === 'docs' ?
-        compiler.retrieveDocument(packageRuntime, args[1]) :
-        compiler.explainFacet(packageRuntime, args[1]));
+      if (args[0] === 'docs') {
+        process.stdout.write(compiler.retrieveDocument(packageRuntime, args[1]));
+      } else {
+        const extensions = extensionFacetRequest(args[1]) ? await promptExtensions(packageRuntime) : null;
+        process.stdout.write(compiler.explainFacet(packageRuntime, args[1], extensions));
+      }
     }
   } else if (['quota', 'capability'].includes(args[0]) && args.length === 2 && args[1] === '--version') {
     probeVersion(packageRuntime);
@@ -245,5 +265,6 @@ try {
   if (error instanceof RuntimeRootError) failRuntime(error);
   else if (error?.name === 'FrameworkDataError') failFrameworkData(error, frameworkDataErrorPrefix);
   else if (error?.name === 'PromptCompilerError') failPromptCompiler(error, frameworkDataErrorPrefix);
+  else if (error?.name === 'ExtensionError') failPromptCompiler(error, frameworkDataErrorPrefix);
   else failUnexpected(frameworkDataErrorPrefix);
 }

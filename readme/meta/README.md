@@ -150,6 +150,8 @@ Agent—are adopted optional integrations that host projects may omit entirely.
   capacity, integration, and shared-work safety.
 - [harness-facets.md](../../prompts/harness-facets.md): the sole owner for narrow,
   rendered native-delegation mechanics.
+- [prompt-extensions.md](prompt-extensions.md): the closed data-only extension package,
+  lock, composition, limits, and provenance contract.
 - [development-standards.md](development-standards.md): default engineering standards.
 - [quality-system.md](quality-system.md): risk gates, verification, review, security, and
   completion statuses.
