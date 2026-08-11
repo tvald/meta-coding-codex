@@ -76,7 +76,7 @@ name remains `meta-framework`.
 - Publish the reusable framework as one immutable npm package. Clients declare the exact
   alias `"meta-framework": "npm:@tvald/meta-framework@<version>"`, commit
   `package-lock.json`, and set `"meta": "node ./node_modules/meta-framework/bin/meta-framework.mjs"`.
-  Routine use is `npm run --silent meta -- ...`; the explicit local path must fail before
+  Routine use is `npm run --ignore-scripts --silent meta -- ...`; the explicit local path must fail before
   inherited `PATH` lookup when absent. Never use a global or fetch-on-demand fallback.
 - Use `@tvald/meta-framework` as the implementation-time package name because the
   agreed unscoped name is unavailable. Registry-scope ownership is a release
@@ -87,9 +87,9 @@ name remains `meta-framework`.
   role/profile manifests, reusable procedure content, and immutable version metadata.
   Its `files` allowlist and pack audit exclude source-project tasks, decisions, quality
   records, credentials, caches, release residue, and all client state.
-- Define no installation lifecycle mutation. The supported framework/extension install is `npm ci --ignore-scripts` or an equivalently reviewed project script allowlist.
-  Framework and prompt extensions are lifecycle-free; prompt extensions have no dependencies. A client that enables unrelated dependency scripts owns that separate trust decision.
-  A separately invoked initializer may create client state only after physical-root checks; it preserves existing bootstraps/state and uses collision-, symlink-, and interruption-safe staging/rollback. It never copies reusable policy.
+- Define no installation lifecycle mutation. Framework and dependency-free extensions are lifecycle-free;
+  use `npm ci --ignore-scripts` or a reviewed allowlist. Read-only `project preflight` gates `project init`,
+  which preserves recognized files, copies no policy, creates only the five-path footprint, and refuses source, legacy, partial, prepared, collision, malformed, or busy state.
 - Treat the package root and client project root as separate mandatory runtime inputs.
   Resolve and physically validate the package root from the executing module URL.
   Resolve the client root once as the physical Git top level containing the invoking
@@ -115,9 +115,9 @@ name remains `meta-framework`.
 - Define provider-neutral root, implementer, reviewer, QA, and security profiles.
   Provider adaptations may add only mechanics that cannot be expressed portably, such
   as native delegation or capability invocation; they cannot fork semantic role policy.
-  Thin `AGENTS.md`/`CLAUDE.md` bootstraps invoke and follow the explicit profile. Root then
-  runs `tasks doctor` and bounded `tasks startup`; delegation names and loads only the
-  assigned role profile. Prompt and bootstrap text do not explain provider discovery.
+  Independent `AGENTS.md` and `CLAUDE.md` blocks select Codex and Claude root profiles through the local
+  npm command; neither imports the other. Root runs task startup; each delegation names one non-root
+  profile and harness, and its worker loads only that profile. Bootstraps omit provider-discovery detail.
 - Put quota and capability probes behind normalized package commands. Provider adapters
   may observe provider-specific surfaces, but emit only the bounded disposition and
   fields needed by framework policy. Unavailable, unsupported, malformed, unauthorized,

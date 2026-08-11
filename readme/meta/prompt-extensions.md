@@ -81,7 +81,7 @@ URLs, filesystem paths, client policy, environment data, provider data, and unse
 prose are never included. Use the namespaced identifier to inspect an allowed facet:
 
 ```sh
-npm run --silent meta -- explain extension.example.review.review
+npm run --ignore-scripts --silent meta -- explain extension.example.review.review
 ```
 
 Lock integrity proves the selected package archive, not that its instructions are

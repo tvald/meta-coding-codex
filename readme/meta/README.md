@@ -22,30 +22,28 @@ After loading this profile, do not locate or read package-internal policy files.
 
 1. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
 2. Read the static `readme/tasks/README.md` entrypoint, then run
-   `npm run --silent meta -- tasks doctor` and the bounded
-   `npm run --silent meta -- tasks startup` query.
+   `npm run --ignore-scripts --silent meta -- tasks doctor` and the bounded
+   `npm run --ignore-scripts --silent meta -- tasks startup` query.
 3. Read only the returned primary task details and process/project documents relevant
    to the assignment.
 
 If `readme/README.md` is missing or does not begin with `# Project State`,
 `readme/tasks/README.md` is missing or does not begin with `# Task Store`, or
 `readme/tasks/store/` is absent, the project is not fully onboarded. A primary session
-loads `npm run --silent meta -- docs onboarding` and preserves collisions while
+loads `npm run --ignore-scripts --silent meta -- docs onboarding` and preserves collisions while
 distinguishing fresh initialization from explicit legacy migration. A delegated agent
 does not initialize shared state unless the orchestrator assigned that ownership.
 <!-- meta-framework-facet:v1:end tasks.startup -->
 ## Directory Contract
 
-`readme/meta/` contains reusable framework policy, references, blank templates, and a
-blank [framework changelog](framework-changelog.md) seed. After installation, that log
-is the one intentional host-state exception under `readme/meta/`: it records only local
-edits to the installed framework so useful evidence can accompany a later upstream
-proposal. Its preamble ships in a clean package; entries from one host never do. All
-other project facts, decisions, commands, active work, reviews, learning, and archives
-remain in the project-side paths below and never become part of the reusable package.
-When the project being developed is the framework itself, its framework-development
-tasks and state are ordinary project state and remain in those project-side paths; an
-explicit source-project policy may therefore keep the distributable seed blank.
+`readme/meta/` contains reusable framework policy, references, and blank schemas owned
+by the immutable package. An installed client reads that material only through bounded
+`npm run --ignore-scripts --silent meta -- docs TOPIC` and compiled-profile commands; it does not copy,
+patch, or place mutable state under the package tree. All project facts, decisions,
+commands, active work, reviews, learning, and archives remain in the project-side paths
+below and never become part of the reusable package. When the project being developed
+is the framework itself, its framework-development tasks and state are ordinary
+project state and remain in those project-side paths.
 
 The host project's agent-maintained documentation uses these mutable paths:
 
@@ -66,56 +64,31 @@ onboarding. Create other optional files and directories only when useful.
 Established host documentation may remain at its required conventional location; link
 to its canonical owner instead of copying facts into framework-managed records.
 
-## Required Data Boundary And Optional Harness Integrations
+## Required Data Boundary And Harness Surfaces
 
-`framework-data/` is required core runtime, not an optional integration. It owns task
+`framework-data/` is required package runtime, not an optional integration. It owns task
 shape, deterministic serialization, bounded queries, mechanical transitions, and the
 Format 1 importer. Markdown process documents retain policy and judgment. The CLI never
 authenticates an agent role or establishes authority, approval truth, priority, risk, or
 semantic completion.
 
-The portable core is complete with this `readme/meta/` tree and the merged root
-`AGENTS.md` startup instruction. A root `CLAUDE.md` may import `AGENTS.md` so Claude Code
-loads the same owner. Project files under `.codex/agents/` and `.claude/agents/` may
-expose selected roles through native discovery. Repo skills under
-`.agents/skills/codex-quota-monitor/` and `.claude/skills/claude-quota-monitor/` may
-expose thin links to the package-owned quota and delegation-capability commands required
-by the portable usage capacity guard. The canonical `.agents/skills/project-onboarding/`
-skill and its thin `.claude/skills/project-onboarding/` discovery link may expose
-onboarding without becoming another policy owner. The matching `.agents/skills/task-recovery/` body and
-`.claude/skills/task-recovery/` link may expose targeted interruption recovery while
-leaving resumption, delegation, and capacity policy in their Markdown owners.
+Provider-neutral profiles and narrow provider mechanics remain package-owned. Clients
+select them explicitly with
+`npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness HARNESS`; no client
+copy of `.codex/agents/`, `.claude/agents/`, framework skills, prompts, roles, or policy
+is part of the installed contract. The only generated harness surfaces are root
+`AGENTS.md` and `CLAUDE.md` bootstrap blocks. Each selects the matching harness and the
+`root` profile for a primary session. A delegated assignment names exactly one of
+`implementer`, `reviewer`, `qa`, or `security` and loads that non-root profile; a worker
+does not infer its role or inherit root authority.
 
-These files are optional integration surfaces, not additional policy owners. They:
-
-- point to [agent-definitions.md](agent-definitions.md) and other canonical process
-  owners instead of copying their rules;
-- keep agent adapters limited to vendor-required discovery metadata and least-privilege
-  capability settings, and skills limited to bounded procedures and UI metadata;
-- do not add executable code, dependencies, model pins, MCP servers, hooks, permission
-  bypasses, or integration ownership; and
-- can be omitted or removed without changing the core framework workflow.
-
-Each quota-monitor skill is only a compatibility shim to the package command and links
-[agent-definitions.md](agent-definitions.md#usage-capacity-guard) as policy owner.
-Provider protocol and credential mechanics live only in the bounded package adapter and
-never surface credentials, tokens, raw responses, account, or billing data to the
-session. Neither skill is one of the three role adapters.
-
-The project-onboarding skill contains execution order and fail-closed disposition
-handling only. It loads [onboarding.md](onboarding.md) as its policy owner. Its Claude
-surface links the maintained `.agents` body instead of copying the workflow. A same-name
-skill directory at either provider path is one installer collision domain: preserve the
-whole bundle for deliberate reconciliation rather than mixing host and framework files.
-
-The task-recovery skill contains bounded reconciliation order, safe-stop dispositions,
-and a recovery result contract. It loads [resumption-protocol.md](resumption-protocol.md)
-and only the relevant worker, approval, or usage-capacity owner when that recovery path
-applies. Its Claude surface is another thin link to the maintained `.agents` body and
-uses the same cross-harness collision boundary.
-
-The three role adapters—Reviewer, QA And Verification Agent, and Security And Risk
-Agent—are adopted optional integrations that host projects may omit entirely.
+Quota and capability inspection run through normalized package commands governed by
+[agent-definitions.md](agent-definitions.md#usage-capacity-guard). Provider protocol and
+credential mechanics remain behind the package adapter and never surface credentials,
+tokens, raw responses, account identity, or unrelated billing data to the session.
+Onboarding and recovery are retrieved as bounded package documents whose policy owners
+remain [onboarding.md](onboarding.md) and
+[resumption-protocol.md](resumption-protocol.md).
 
 ## Principles
 
@@ -187,37 +160,54 @@ Agent—are adopted optional integrations that host projects may omit entirely.
 
 Blank templates are schemas, not additional homes for project facts. The glossary and
 source-map schemas live in [knowledge-management.md](knowledge-management.md); create
-every project artifact only after it has useful content.
+every project artifact only after it has useful content. The guarded initializer writes
+only its versioned minimal cursor and task-entrypoint seeds; it does not materialize this
+catalog or copy package policy.
 
-## Package And Bootstrap
+## Package And Client Bootstrap
 
-A clean core package contains this `readme/meta/` tree, including the pinned
-`framework-data/` runtime, schemas, and blank framework changelog seed, plus a merged
-root AGENTS startup instruction. It may also carry the matching `.codex/agents/`,
-`.claude/agents/`, quota-monitor skills, and the project-onboarding and task-recovery
-discovery bundles as optional integrations.
-Never overwrite an established instruction, same-name agent, or same-name skill. The
-package excludes local changelog entries, `readme/README.md`, `readme/tasks/store/`, and
-every mutable project-documentation sibling.
-Packaging is the supported reset path; do not delete an existing project's documentation
-to simulate a reset.
+Clients declare the exact alias
+`"meta-framework": "npm:@tvald/meta-framework@<version>"`, commit their lockfile, and
+define exactly
+`"meta": "node ./node_modules/meta-framework/bin/meta-framework.mjs"`. Use
+`npm run --ignore-scripts --silent meta -- ...` for every framework command so client
+`pre*` and `post*` hooks cannot wrap it; never fall back to a global binary, `npx`, a
+network fetch, or an inherited executable. Install with lifecycle scripts disabled or
+with an equivalently reviewed project allowlist.
 
-On first use:
+The v1 initializer supports local Linux filesystems only and requires usable
+`/proc/self/fd` descriptor paths for anchored transaction mutations. Other platforms,
+network filesystems, or an unavailable descriptor surface fail closed before a write.
 
-1. The primary session reads root instructions and this file.
-2. It runs [onboarding.md](onboarding.md) because the cursor, task entrypoint, or store
-   is absent, or recognizes and safely resolves unrelated or legacy state.
-3. It instantiates the project cursor and static task entrypoint from
-   [project-state.md](templates/project-state.md) and
-   [task-catalog.md](templates/task-catalog.md), then runs
-   `node readme/meta/framework-data/cli.mjs init`; legacy
-   Format 1 state uses explicit dry-run/hash/apply migration instead.
-4. It derives commands from manifests and CI, executes safe candidates, and records
-   only observed successes in `readme/project/standards.md`.
-5. It creates project knowledge categories only when inventory produces real content.
-6. It proves a new agent can recover the outcome, primary and eligible tasks, next
-   action, commands, constraints, and approvals from bounded repository queries.
+The project-initializer contract is versioned independently. From the physical client
+Git root, run these argument-free v1 commands in order:
 
-For greenfield work, record product and technology choices as decisions rather than
-pretending to derive them. For an established project, preserve existing instruction
-and documentation owners and link them from the appropriate project records.
+```sh
+npm run --ignore-scripts --silent meta -- project --version
+npm run --ignore-scripts --silent meta -- project preflight
+npm run --ignore-scripts --silent meta -- project init
+```
+
+`preflight` is read-only and distinguishes `fresh`, `ready_to_initialize`,
+`ready_to_add_bootstraps`, `valid_current_project`, legacy, partial, prepared, collision,
+busy, malformed, and source-repository states. `init` mutates only the first three safe
+dispositions and is an idempotent success for a valid current project. Every other
+disposition stops without auto-merging instructions, repairing partial state, or
+migrating legacy data. The framework source repository is not a client and is always
+refused by this initializer.
+
+A clean initialization creates only `AGENTS.md`, `CLAUDE.md`, `readme/README.md`,
+`readme/tasks/README.md`, and an empty version-1 `readme/tasks/store/`. It creates no
+provider directories and copies no package policy, prompts, roles, templates, adapters,
+skills, decisions, quality records, source-project facts, settings, or caches. The two
+instruction files contain one bounded harness-specific bootstrap each. Existing exact
+blocks and recognized client state are preserved byte for byte; any noncanonical,
+malformed, duplicate, or wrong-harness marker at an existing instruction path is a
+collision, not an invitation to rewrite or create a companion file.
+
+After initialization, follow [onboarding.md](onboarding.md): load the root profile,
+create an onboarding task through the package task CLI, inventory the repository, and
+record only useful client-owned knowledge. For greenfield work, record product and
+technology choices as decisions rather than pretending to derive them. For an
+established project, preserve existing instruction and documentation owners and resolve
+reported collisions deliberately.

@@ -20,6 +20,9 @@ Usage:
   meta-framework version [--json]
   meta-framework tasks --version
   meta-framework tasks COMMAND [OPTIONS]
+  meta-framework project --version
+  meta-framework project preflight
+  meta-framework project init
   meta-framework agent-prompt --version
   meta-framework agent-prompt --profile PROFILE [--harness HARNESS]
   meta-framework docs --version
@@ -38,9 +41,9 @@ function fail(message) {
   process.exitCode = 2;
 }
 
-function failRuntime(error) {
-  process.stderr.write(`meta-framework: ${error.code}: ${error.message}\n`);
-  process.exitCode = 1;
+function failRuntime(error, prefix = 'meta-framework', exitCode = 1) {
+  process.stderr.write(`${prefix}: ${error.code}: ${error.message}\n`);
+  process.exitCode = exitCode;
 }
 
 function failUnexpected(prefix = 'meta-framework') {
@@ -67,6 +70,17 @@ function failPromptCompiler(error, prefix) {
     error.message : 'prompt compiler failed';
   process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
   process.exitCode = error?.exitCode === 2 ? 2 : 1;
+}
+
+function failProjectInitializer(error, prefix) {
+  const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
+    error.code : 'INTERNAL_ERROR';
+  const safeMessage = typeof error?.message === 'string' && error.message.length <= 512 &&
+    !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069\ufeff]/u.test(error.message) ?
+    error.message : 'project initializer failed';
+  process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
+  process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 5 ?
+    error.exitCode : 1;
 }
 
 function parseProbeOptions(tokens, names) {
@@ -111,6 +125,20 @@ function probeVersion(packageRuntime) {
       envelopeVersions: [...compatibility.envelopeVersions],
       harnesses: [...compatibility.harnesses],
       capabilities: [...compatibility.capabilities],
+    },
+  })}\n`);
+}
+
+function projectVersion(packageRuntime) {
+  const compatibility = packageRuntime.projectInitCompatibility;
+  process.stdout.write(`${JSON.stringify({
+    schemaVersion: compatibility.envelopeVersions[0],
+    package: packageRuntime.identity,
+    projectInit: {
+      version: compatibility.version,
+      envelopeVersions: [...compatibility.envelopeVersions],
+      bootstrapVersions: [...compatibility.bootstrapVersions],
+      stateTemplateVersions: [...compatibility.stateTemplateVersions],
     },
   })}\n`);
 }
@@ -164,6 +192,7 @@ try {
   const taskCompatibility = packageRuntime.taskCompatibility;
   const args = process.argv.slice(2);
   if (args[0] === 'tasks') frameworkDataErrorPrefix = 'meta-framework tasks';
+  else if (args[0] === 'project') frameworkDataErrorPrefix = 'meta-framework project';
   else if (['agent-prompt', 'docs', 'explain'].includes(args[0])) {
     frameworkDataErrorPrefix = `meta-framework ${args[0]}`;
   }
@@ -187,6 +216,19 @@ try {
         writableStoreSchemaVersions: [...taskCompatibility.writableStoreSchemaVersions],
       },
     })}\n`);
+  } else if (args[0] === 'project' && args.length === 2 && args[1] === '--version') {
+    projectVersion(packageRuntime);
+  } else if (args[0] === 'project' && args.length === 2 && ['preflight', 'init'].includes(args[1])) {
+    const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+    const context = await repositoryContext();
+    const runtime = validateClientRuntimeRoots({ packageRuntime, context });
+    const initializer = await import('../lib/project-initializer.mjs');
+    const result = args[1] === 'preflight' ?
+      await initializer.preflightProject(runtime) : await initializer.initializeProject(runtime);
+    process.stdout.write(`${JSON.stringify(result)}\n`);
+  } else if (args[0] === 'project') {
+    process.stderr.write('meta-framework project: ARGUMENT_INVALID: invalid project command; run --help\n');
+    process.exitCode = 2;
   } else if (args[0] === 'tasks' && (args.length === 1 || args.slice(1).includes('--help'))) {
     const { runRootlessFrameworkDataCli } = await import('../readme/meta/framework-data/cli.mjs');
     await runRootlessFrameworkDataCli(args.length === 1 ? ['--help'] : args.slice(1), {
@@ -262,9 +304,13 @@ try {
     fail('unknown command; run --help');
   }
 } catch (error) {
-  if (error instanceof RuntimeRootError) failRuntime(error);
+  if (error instanceof RuntimeRootError) {
+    const projectRuntime = frameworkDataErrorPrefix === 'meta-framework project';
+    failRuntime(error, projectRuntime ? frameworkDataErrorPrefix : 'meta-framework', projectRuntime ? 4 : 1);
+  }
   else if (error?.name === 'FrameworkDataError') failFrameworkData(error, frameworkDataErrorPrefix);
   else if (error?.name === 'PromptCompilerError') failPromptCompiler(error, frameworkDataErrorPrefix);
   else if (error?.name === 'ExtensionError') failPromptCompiler(error, frameworkDataErrorPrefix);
+  else if (error?.name === 'ProjectInitializerError') failProjectInitializer(error, frameworkDataErrorPrefix);
   else failUnexpected(frameworkDataErrorPrefix);
 }

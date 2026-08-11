@@ -7,19 +7,22 @@ long-form framework owners selected by the profile.
 <!-- meta-framework-facet:v1:start harness.delegation -->
 ## Native Delegation Mechanics
 
-For the selected `{{HARNESS}}` harness, use only `{{NATIVE_SURFACE}}` for child-agent
-work. Before every spawn or resume, run both package-owned probes:
+Use only `{{NATIVE_SURFACE}}` for the selected `{{HARNESS}}` harness. Before each spawn
+or resume, run both probes:
 
 ```sh
-npm run --silent meta -- capability --harness {{HARNESS}} --name delegation
-npm run --silent meta -- quota --harness {{HARNESS}}
+npm run --ignore-scripts --silent meta -- capability --harness {{HARNESS}} --name delegation
+npm run --ignore-scripts --silent meta -- quota --harness {{HARNESS}}
 ```
 
-Treat only exit zero with capability `disposition: "enabled"` and quota `disposition:
-"proceed"` as permission to use the native surface. Any other result fails closed: do
-not start or resume a child, and follow the selected capacity and recovery facets. Use
-the native surface only for the bounded assignments authorized by the root profile;
-never invoke an alternate delegation mechanism.
+Only exit zero with capability `disposition: "enabled"` and quota `disposition:
+"proceed"` permits delegation. Otherwise follow the capacity and recovery facets. Use
+the native surface only for root-authorized bounded assignments; never use another
+delegation mechanism. Each assignment must name one of
+`implementer`, `reviewer`, `qa`, or `security` and require the child to load it with
+`npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness {{HARNESS}}`.
+Never infer a profile, inherit `root`, broaden it, or use global, `npx`, network, or
+package-path fallback.
 <!-- meta-framework-facet:v1:end harness.delegation -->
 
 The placeholders above are compiler-controlled values from the closed harness registry;

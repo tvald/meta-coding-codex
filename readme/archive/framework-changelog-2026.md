@@ -16,6 +16,21 @@
 - Review or sunset trigger: An accidental hard-limit crossing despite the guard, or a new
   provider window class the tiers do not cover.
 
+## 2026-07-30: Adopt The Agent Adapters And Skip The Pilot Disposition
+
+- Status: Adopted.
+- Evidence: Direct product-owner instruction and T-0015 grep, link, and budget checks; see
+  [Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md).
+- Change: Promoted the three role adapters from Pilot to Adopted and reframed the shipped
+  meta wording accordingly, so a fresh install no longer inherits a "current pilot" it
+  cannot inspect. Established a repository-local policy to skip the Pilot disposition and
+  adopt framework changes directly, recorded in the operating contract and project state;
+  the reusable Pilot mechanism is unchanged for other adopters.
+- Success signal: No shipped file advertises a live adapter pilot, and framework changes
+  here are dispositioned Adopt, Revise, or Reject.
+- Review or sunset trigger: An adopted-directly change here regresses in a way staged
+  piloting would have caught, or the owner reinstates piloting.
+
 ## 2026-07-10: Address External Framework Critique
 
 - Status: Adopted, with modified adoption for routing risk, approval authority, and

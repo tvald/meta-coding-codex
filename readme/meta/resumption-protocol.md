@@ -34,7 +34,7 @@ It links the structured record instead of copying current task fields.
 
 1. Reload the same package-owned role profile and harness selection, then read
    `readme/README.md` and the static task entrypoint. Run
-   `npm run --silent meta -- tasks doctor`, bounded `tasks startup`, and targeted
+   `npm run --ignore-scripts --silent meta -- tasks doctor`, bounded `tasks startup`, and targeted
    `tasks task context` for the returned primary task, then read any newly delivered
    message.
 2. Inspect `git status`, recent commits, relevant diffs, running tools, worktrees, and

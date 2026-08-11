@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt Thin Harness Bootstraps And Guarded Client Initialization
+
+- Status: Adopted.
+- Evidence: T-0029 packed clean clients, exact bootstrap/state snapshots, populated-store
+  and restrictive-umask fixtures, 88-test regression suite, reproducible package audit,
+  and independent Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added exact thin Codex/Claude discovery files and a Linux descriptor-anchored,
+  lock/journal-backed initializer for minimum client-owned cursor and task state.
+- Success signal: Installed clients initialize or resume without copied framework policy,
+  package mutation, lifecycle hooks, wrong-root writes, or preserved-state drift.
+- Review or sunset trigger: Bootstrap/profile drift, overwrite, escaped or partial write,
+  metadata/store race, recovery ambiguity, provider-discovery change, or platform demand.
+
 ## 2026-08-11: Adopt Locked Data-Only Prompt Extensions
 
 - Status: Adopted.
@@ -141,18 +155,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 - Review or sunset trigger: A populated seed ships or installs, producer/consumer
   inventory diverges, the source-versus-consumer state boundary confuses an adopter, or
   the 20-row catalog trigger overwrites or obscures archived task history.
-
-## 2026-07-30: Adopt The Agent Adapters And Skip The Pilot Disposition
-
-- Status: Adopted.
-- Evidence: Direct product-owner instruction and T-0015 grep, link, and budget checks; see
-  [Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md).
-- Change: Promoted the three role adapters from Pilot to Adopted and reframed the shipped
-  meta wording accordingly, so a fresh install no longer inherits a "current pilot" it
-  cannot inspect. Established a repository-local policy to skip the Pilot disposition and
-  adopt framework changes directly, recorded in the operating contract and project state;
-  the reusable Pilot mechanism is unchanged for other adopters.
-- Success signal: No shipped file advertises a live adapter pilot, and framework changes
-  here are dispositioned Adopt, Revise, or Reject.
-- Review or sunset trigger: An adopted-directly change here regresses in a way staged
-  piloting would have caught, or the owner reinstates piloting.

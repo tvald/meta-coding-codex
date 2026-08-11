@@ -527,6 +527,20 @@ function maintenanceSection(cursor) {
 
 function parseMaintenance(cursor, tasks, today) {
   const section = maintenanceSection(cursor);
+  if (/^- Last maintenance pass: Not yet run$/mu.test(section) &&
+      /^- Next trigger: First onboarding completion$/mu.test(section)) {
+    return {
+      lastPass: null,
+      nextDate: null,
+      legacyBaseline: 0,
+      legacyBaselineDeclared: false,
+      structuredRepositoryChanges: 0,
+      completionCount: 0,
+      completionThreshold: MAINTENANCE_COMPLETION_THRESHOLD,
+      due: true,
+      reasons: ["onboarding_baseline_uninitialized"],
+    };
+  }
   if (/^- Last maintenance pass: YYYY-MM-DD$/mu.test(section) &&
       /^- Next trigger: YYYY-MM-DD or 10 repository-changing completions$/mu.test(section) &&
       /^- Legacy repository-changing completion baseline: 0$/mu.test(section)) {

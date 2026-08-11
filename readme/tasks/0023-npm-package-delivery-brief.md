@@ -6,12 +6,14 @@
 - Accepted source: user direction on 2026-08-11 after evaluating npm delivery,
   locally installed CLI execution, package-owned process guidance, and harness loading
 - Subtasks: T-0024 through T-0032
-- Accepted task revision: 5
-- Safety amendment: npm scripts preserve inherited `PATH`, so revision 5 replaces the
-  bare binary script with an explicit local dependency-alias path. The public
-  `npm run --silent meta -- ...` interface is unchanged and the local-only failure
-  guarantee is stronger. [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md)
-  owns the architecture and evidence.
+- Accepted task revision: 6
+- Safety amendments: npm scripts preserve inherited `PATH`, so revision 5 replaces the
+  bare binary script with an explicit local dependency-alias path. Client lifecycle hooks
+  remain eligible during `npm run`, so revision 6 makes
+  `npm run --ignore-scripts --silent meta -- ...` the supported public interface. Together
+  they strengthen the local-only and no-hook guarantees.
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md) owns the
+  architecture and evidence.
 
 ## Goal
 
@@ -37,7 +39,7 @@ without copying or editing the framework source inside the client repository.
   }
   ```
 
-- Routine commands use `npm run --silent meta -- ...`. The explicit dependency-alias
+- Routine commands use `npm run --ignore-scripts --silent meta -- ...`. The explicit dependency-alias
   path fails when it is unavailable and cannot fall through to an inherited `PATH`
   executable or fetch a package on demand.
 - Dependency installation is a documented environmental prerequisite. The framework
@@ -80,9 +82,9 @@ without copying or editing the framework source inside the client repository.
   a facet without requiring agents to navigate physical `node_modules` paths:
 
   ```sh
-  npm run --silent meta -- docs root-loop
-  npm run --silent meta -- docs quality-system
-  npm run --silent meta -- explain tasks.selection
+  npm run --ignore-scripts --silent meta -- docs root-loop
+  npm run --ignore-scripts --silent meta -- docs quality-system
+  npm run --ignore-scripts --silent meta -- explain tasks.selection
   ```
 
 - Documentation lookup accepts only declared topic or facet identifiers, emits bounded
@@ -96,7 +98,7 @@ without copying or editing the framework source inside the client repository.
 - A primary example is:
 
   ```sh
-  npm run --silent meta -- agent-prompt --profile root
+  npm run --ignore-scripts --silent meta -- agent-prompt --profile root
   ```
 
 - Profiles describe framework roles rather than providers. Initial shared profiles cover
@@ -125,8 +127,8 @@ without copying or editing the framework source inside the client repository.
   example:
 
   ```sh
-  npm run --silent meta -- tasks doctor
-  npm run --silent meta -- tasks startup
+  npm run --ignore-scripts --silent meta -- tasks doctor
+  npm run --ignore-scripts --silent meta -- tasks startup
   ```
 
 - Runtime code distinguishes the immutable package root from the current client project
@@ -144,7 +146,7 @@ without copying or editing the framework source inside the client repository.
 - A representative invocation is:
 
   ```sh
-  npm run --silent meta -- quota --harness codex
+  npm run --ignore-scripts --silent meta -- quota --harness codex
   ```
 
 - Shared role instructions state when to run the command and how to act on its normalized

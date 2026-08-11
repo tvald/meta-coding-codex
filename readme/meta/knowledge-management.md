@@ -52,8 +52,8 @@ divergent copies.
 The task store owns task facts. A brief expands scope and acceptance; a task note owns
 execution checkpoints and evidence. Neither narrative duplicates current status,
 dependency, gate, next action, or result merely for convenience. Use
-`npm run --silent meta -- tasks task get` or
-`npm run --silent meta -- tasks task context` to join bounded state with linked
+`npm run --ignore-scripts --silent meta -- tasks task get` or
+`npm run --ignore-scripts --silent meta -- tasks task context` to join bounded state with linked
 narratives.
 
 Task gates are discriminated structured data. An approval must include ID, status,

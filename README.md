@@ -1,145 +1,147 @@
 # AI-Assisted Development Framework
 
-This repository contains a portable core for AI-assisted software development plus
-optional Codex and Claude Code harness integrations. Policy is Markdown; a
-dependency-free Node.js CLI provides the required structured task boundary. It is
-designed to be added to an existing project without bringing along the decisions, task
-history, or documentation state of the framework repository itself.
+`@tvald/meta-framework` is an immutable npm package for repository-backed AI-assisted
+development. It supplies bounded agent profiles, long-form operating guidance, a
+structured task CLI, provider probes, and guarded prompt extensions without copying its
+reusable policy into the client repository.
 
-The canonical framework introduction and complete file map are in
-[`readme/meta/README.md`](readme/meta/README.md). Root [`AGENTS.md`](AGENTS.md) is the
-canonical agent launcher; [`CLAUDE.md`](CLAUDE.md) imports it for Claude Code.
+The package requires Node.js 22 or newer and npm 10 or newer. Its canonical process
+index is [`readme/meta/README.md`](readme/meta/README.md). The accepted package boundary
+and upgrade model are recorded in
+[`Decision 0021`](readme/decisions/0021-adopt-immutable-npm-framework-delivery.md).
 
-## Package Boundary
+Project initialization currently requires a local Linux filesystem with usable
+`/proc/self/fd` descriptor paths. Other platforms fail closed before initialization;
+native Windows and network filesystems remain unsupported.
 
-The reusable add-on consists of:
+## Install In A Client Repository
 
-- `readme/meta/`, containing the framework entrypoint, process guidance, references,
-  templates, pinned task CLI, and schemas; and
-- the root AGENTS entry instruction, merged into rather than blindly replacing a
-  destination project's existing instructions.
+Declare an exact aliased dependency and the exact local script below, then commit both
+the manifest and generated lockfile:
 
-Optional harness integration files are:
-
-- `CLAUDE.md`, which imports the canonical root instructions for Claude Code;
-- `.codex/agents/`, containing thin Codex custom-agent adapters; and
-- `.claude/agents/`, containing the matching Claude Code subagent adapters; and
-- `.agents/skills/codex-quota-monitor/`, containing a thin Codex link to the
-  package-owned probe used by the capacity guard; and
-- `.claude/skills/claude-quota-monitor/`, containing the matching thin Claude Code link;
-  and
-- `.agents/skills/project-onboarding/`, containing the maintained onboarding procedure
-  adapter, plus `.claude/skills/project-onboarding/` as its thin Claude discovery link;
-  and
-- `.agents/skills/task-recovery/`, containing the maintained interruption-recovery
-  procedure adapter, plus `.claude/skills/task-recovery/` as its thin Claude link.
-
-These adopted adapters expose only Reviewer, Verifier, and Security Reviewer.
-They do not own process semantics, add executable code or dependencies, pin models, add
-MCP servers, or expand parent permissions. Omit them when the destination does not use
-the corresponding harness. The quota-monitor skills own no threshold policy and can be
-omitted when the destination does not use that harness for delegated work. The
-project-onboarding and task-recovery skills own no policy; they load their canonical
-meta procedures. The release archive carries these optional files so the installer can
-add them without a second download; their presence does not make their use mandatory.
-
-Everything else under `readme/` is mutable documentation for this repository as a
-project. It is useful here but is intentionally excluded from a clean add-on package.
-
-## Install The Latest Core
-
-From the root of the project that will receive the framework, run:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/tvald/meta-coding-codex/main/scripts/install-core.sh | bash
+```json
+{
+  "dependencies": {
+    "meta-framework": "npm:@tvald/meta-framework@<exact-version>"
+  },
+  "scripts": {
+    "meta": "node ./node_modules/meta-framework/bin/meta-framework.mjs"
+  }
+}
 ```
 
-This requires Git, Node.js 22 or newer, Bash, `curl`, Info-ZIP `unzip`, `mktemp`, and
-common POSIX file tools. Run it from the root of an initialized Git repository.
+The package has no lifecycle scripts. Install the committed dependency tree with
+`npm ci --ignore-scripts`, or use an equivalently reviewed project script allowlist.
+Do not substitute a global binary, `npx`, a network fetch, or inherited `PATH` lookup
+when the checked-in local command is unavailable. Keep `--ignore-scripts` on every
+invocation so client-defined `pre*` or `post*` lifecycle hooks cannot wrap the package
+binary.
 
-The [installer script](scripts/install-core.sh) validates and stages the latest release
-before changing the project. If the project already has `AGENTS.md`, it preserves it
-and writes the packaged startup instruction to `AGENTS.framework.md`. Merge that
-instruction into the existing file, then delete `AGENTS.framework.md`; do not replace
-project-specific agent guidance.
-The installer refuses an existing `AGENTS.framework.md` or `readme/meta` instead of
-overwriting or mixing an installation. Its lock serializes installer runs only; run it
-while no other local process is renaming or replacing the destination paths.
-
-The installer is fresh-only. To update an existing framework installation, stage the
-new core outside the target repository, review and deliberately reconcile its files
-while preserving local `readme/meta/framework-changelog.md` entries, then run the pinned
-Format 1 migration dry-run/hash/apply path. Rehearse a Git revert before any
-post-cutover structured task mutation; after new records exist, use forward
-reconciliation rather than a revert that could discard them.
-
-This convenience command executes the current installer from this repository with your
-user's permissions. Inspect or download the linked script before running it when you
-need to review or pin the exact code first. Once its guard has loaded, the script rejects
-an incomplete stream before installation. Like other direct curl-to-shell commands, the
-pipeline reports Bash's status rather than curl's independent status; curl still prints
-its own failure. Confirm the installer's success message or download first when strict
-fetch-status handling is required.
-
-## Build The Core Archive
-
-With Info-ZIP `zip` and `unzip` installed, run:
+From the physical Git root, inspect compatibility and initialization readiness before
+allowing any client-state write:
 
 ```sh
-./scripts/package-core.sh
+npm run --ignore-scripts --silent meta -- project --version
+npm run --ignore-scripts --silent meta -- project preflight
+npm run --ignore-scripts --silent meta -- project init
 ```
 
-The default output is `dist/ai-coding-meta-framework-core.zip`. Pass one `.zip` path to
-write elsewhere; paths containing a `..` segment are rejected:
+These v1 project commands accept no additional flags or positional arguments and emit
+one bounded JSON object on success. `preflight` is read-only. `init` may proceed only for
+`fresh`, `ready_to_initialize`, or `ready_to_add_bootstraps`; it is an idempotent success
+for `valid_current_project`. It refuses source-package repositories, legacy stores,
+partial or prepared state, malformed state, unsafe paths, active locks, and bootstrap or
+documentation collisions instead of merging, migrating, or repairing them implicitly.
+
+Syntax errors exit 2, refused or unsafe initialization exits 4, an active cooperative
+lock exits 5, and other runtime failures exit 1. A failed command writes no success
+envelope. Resolve a reported legacy, partial, prepared, or collision disposition through
+the package-owned onboarding guidance before retrying:
 
 ```sh
-./scripts/package-core.sh /tmp/ai-coding-meta-framework-core.zip
+npm run --ignore-scripts --silent meta -- docs onboarding
 ```
 
-The archive contains the complete `readme/meta/` tree—including the pinned data CLI,
-schemas, and blank framework changelog seed—the portable startup portion of `AGENTS.md`,
-and the optional adapter and skill trees above. It excludes local
-changelog entries, structured host task records, project state, the root `CLAUDE.md`
-bridge, and this repository's standing delegation request.
-Generated archives under `dist/` are ignored by Git. Packaged timestamps, modes, entry
-order, and extra metadata are normalized so unchanged content produces a byte-identical
-archive with the supported Info-ZIP tools.
+## Minimal Client Footprint
 
-## Add It To A Project
+A successful clean initialization creates only:
 
-1. Copy `readme/meta/` into the destination Git repository and verify supported Node.
-2. Merge the startup requirement from this repository's `AGENTS.md` into the
-   destination's applicable agent instructions. Do not copy project-local operating
-   choices such as the standing delegation request unless the destination owner adopts
-   them explicitly.
-3. For Claude Code, merge the `@AGENTS.md` import into an existing `CLAUDE.md`, or copy
-   this bridge when no project file exists. Never replace established Claude guidance.
-4. Optionally merge the files from `.codex/agents/`, `.claude/agents/`,
-   `.agents/skills/codex-quota-monitor/`, `.claude/skills/claude-quota-monitor/`, and the
-   `project-onboarding` and `task-recovery` discovery paths for the harnesses the
-   destination uses.
-   Resolve same-name agents or skills deliberately; never overwrite an existing
-   definition blindly. Treat all files for one same-name cross-harness skill as one
-   collision bundle.
-5. Do not copy `readme/README.md`, `readme/tasks/store/`, or other project-state
-   siblings.
-6. Start a primary agent session. It reads the meta README and follows onboarding to
-   initialize useful project documentation. If `readme/README.md` already contains
-   non-framework documentation, onboarding preserves and resolves that collision rather
-   than overwriting it.
+- `AGENTS.md`, a Codex bootstrap;
+- `CLAUDE.md`, a Claude Code bootstrap;
+- `readme/README.md`, the bounded client-owned project cursor;
+- `readme/tasks/README.md`, the static client-owned task entrypoint; and
+- `readme/tasks/store/`, an empty version-1 structured task store.
 
-This packaging workflow is the supported clean-start mechanism. The framework does not
-prescribe an in-place command that deletes an existing project's documentation.
+The initializer never copies `readme/meta/`, prompts, roles, templates, adapters,
+skills, decisions, quality evidence, framework changelogs, provider settings, caches, or
+source-project facts. It does not create `.codex/` or `.claude/`. Package policy remains
+inside the immutable dependency; mutable project facts remain in the client repository.
 
-## What It Provides
+Existing canonical bootstraps and valid state documents are preserved byte for byte.
+An existing instruction file without its one exact, harness-specific bootstrap block—or
+with malformed, duplicate, or wrong-harness markers—is a collision. The initializer
+does not overwrite it, append a companion file, or guess how established instructions
+should be merged.
 
-The framework supplies a context-first operating loop, risk-scaled verification,
-explicit autonomy boundaries, durable project knowledge, interruption recovery, and an
-evidence-based improvement process. It requires Node.js 22+, Git, and tested local Linux
-filesystem semantics for task state; macOS and WSL remain unverified design targets,
-while native Windows and network filesystems are unsupported. Project implementation
-remains language-agnostic.
-Optional harness adapters are removable without changing core behavior.
+## Start An Agent
 
-For behavior, startup order, state categories, templates, and bootstrap details, use
-the [meta framework entrypoint](readme/meta/README.md) as the canonical source.
+The generated `AGENTS.md` selects the Codex root profile and `CLAUDE.md` selects the
+Claude root profile through the checked-in local npm command. A primary session follows
+the complete emitted instructions, reads the client cursor and task entrypoint, then
+runs:
+
+```sh
+npm run --ignore-scripts --silent meta -- tasks doctor
+npm run --ignore-scripts --silent meta -- tasks startup
+```
+
+A delegated assignment must name exactly one non-root profile and the applicable
+harness. The worker loads only that profile:
+
+```sh
+npm run --ignore-scripts --silent meta -- agent-prompt --profile implementer --harness codex
+npm run --ignore-scripts --silent meta -- agent-prompt --profile reviewer --harness claude
+npm run --ignore-scripts --silent meta -- agent-prompt --profile qa --harness codex
+npm run --ignore-scripts --silent meta -- agent-prompt --profile security --harness claude
+```
+
+Do not let a delegated worker infer its profile or inherit the primary `root` profile.
+Supported profiles are `root`, `implementer`, `reviewer`, `qa`, and `security`; supported
+harnesses are `codex`, `claude`, and `portable`.
+
+Use the same local command for task queries, bounded documentation, facet explanations,
+and normalized provider probes:
+
+```sh
+npm run --ignore-scripts --silent meta -- tasks --help
+npm run --ignore-scripts --silent meta -- docs TOPIC
+npm run --ignore-scripts --silent meta -- explain FACET
+npm run --ignore-scripts --silent meta -- quota --harness codex
+npm run --ignore-scripts --silent meta -- capability --harness claude --name delegation
+```
+
+## Upgrade And Rollback
+
+Upgrade by changing the exact dependency and lockfile together, reinstalling with
+scripts disabled, and rerunning package and client checks. The dependency is replaced as
+one unit; there is no supported command that patches package-owned files in place.
+Compatible client state stays client-owned. An incompatible data change requires a
+separately named guarded migration.
+
+Roll back package code by restoring the prior manifest and lockfile and reinstalling
+with the same lifecycle policy. After a data migration or mutation unsupported by the
+older package, use an explicit reverse migration when one exists or repair forward.
+
+## Develop This Package
+
+This repository is the framework source project, so `meta-framework project init`
+refuses to treat it as an installed client. Source sessions follow root
+[`AGENTS.md`](AGENTS.md) and the repository cursor. The principal local checks are:
+
+```sh
+npm run package:check
+npm test
+```
+
+The package is assembled from the exact allowlist in `package-files.json`. Publication,
+registry credentials, and release creation require separate authorization.

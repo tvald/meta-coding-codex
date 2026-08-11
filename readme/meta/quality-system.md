@@ -61,7 +61,7 @@ For each task, decide which checks apply:
 - Security check.
 - Performance smoke test.
 - Documentation link or command validation.
-- `npm run --silent meta -- tasks doctor` for any task-state, process, package,
+- `npm run --ignore-scripts --silent meta -- tasks doctor` for any task-state, process, package,
   installer, or migration change.
 - Manual inspection for UI or workflow changes.
 

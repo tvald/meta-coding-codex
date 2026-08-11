@@ -58,6 +58,18 @@
         "codex",
         "portable"
       ]
+    },
+    "projectInit": {
+      "version": "1.0.0",
+      "envelopeVersions": [
+        1
+      ],
+      "bootstrapVersions": [
+        1
+      ],
+      "stateTemplateVersions": [
+        1
+      ]
     }
   },
   "bin": {
@@ -78,7 +90,7 @@
     "meta": "node ./bin/meta-framework.mjs",
     "package:check": "node scripts/check-npm-package.mjs",
     "test": "node --test tests/*.test.mjs",
-    "test:package": "node --test tests/npm-package.test.mjs tests/package-task-cli.test.mjs tests/prompt-compiler.test.mjs tests/prompt-extensions.test.mjs tests/provider-adapters.test.mjs",
+    "test:package": "node --test tests/npm-package.test.mjs tests/package-task-cli.test.mjs tests/project-initializer.test.mjs tests/prompt-compiler.test.mjs tests/prompt-extensions.test.mjs tests/provider-adapters.test.mjs",
     "test:prompt": "node --test tests/prompt-compiler.test.mjs",
     "test:provider": "node --test tests/provider-adapters.test.mjs",
     "test:tasks": "node --test tests/package-task-cli.test.mjs"

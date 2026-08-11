@@ -8,7 +8,7 @@ description: Invoke the package-owned Claude quota probe and apply the canonical
 Use the immutable package command as the sole Claude Code telemetry adapter:
 
 ```sh
-npm run --silent meta -- quota --harness claude
+npm run --ignore-scripts --silent meta -- quota --harness claude
 ```
 
 The command owns credential containment, the single bounded HTTPS usage read,
@@ -25,7 +25,7 @@ resumption only through the canonical
 For native delegation availability, use the separate bounded probe:
 
 ```sh
-npm run --silent meta -- capability --harness claude --name delegation
+npm run --ignore-scripts --silent meta -- capability --harness claude --name delegation
 ```
 
 An enabled provider surface does not grant project authority, prove safe quota, expand

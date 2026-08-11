@@ -21,6 +21,8 @@
     "lib/extension-contract.mjs",
     "lib/extension-loader.mjs",
     "lib/git-environment.mjs",
+    "lib/project-contract.mjs",
+    "lib/project-initializer.mjs",
     "lib/prompt-compiler.mjs",
     "lib/prompt-contract.mjs",
     "lib/provider-adapters.mjs",
