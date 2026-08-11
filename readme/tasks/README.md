@@ -4,7 +4,7 @@ This is the canonical discovery and lifecycle record for every accepted task. Ph
 row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 
 - Format: 1
-- Next task ID: T-0017
+- Next task ID: T-0018
 - Primary task: None
 - Scheduling: Idle
 - Global pause source or reason: None
@@ -30,6 +30,7 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0014 | Adopt tiered per-window usage capacity cutoffs in the guard | User instruction, 2026-07-30 / r1 | Done | T-0012 | Initiative / High | None | None | [Brief](0014-tiered-usage-cutoffs-brief.md), [notes](0014-tiered-usage-cutoffs-notes.md) | [Decision 0015](../decisions/0015-tiered-usage-capacity-cutoffs.md) |
 | T-0015 | Adopt the role adapters and set a repo-wide skip-Pilot disposition policy | User instruction, 2026-07-30 / r1 | Done | T-0003 | Initiative / Medium | None | None | [Brief](0015-adopt-adapters-skip-pilot-brief.md), [notes](0015-adopt-adapters-skip-pilot-notes.md) | [Decision 0016](../decisions/0016-adopt-adapters-and-skip-pilot-disposition.md) |
 | T-0016 | Reconcile imported meta-framework changes and establish the framework-changelog stub and boundary | User instructions, 2026-08-05 / r2 | Done | None | Initiative / High | None | None | [Brief](0016-imported-framework-reconciliation-brief.md), [notes](0016-imported-framework-reconciliation-notes.md) | [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md), [quality](../quality/2026-08-05-imported-framework-reconciliation.md) |
+| T-0017 | Evaluate which meta-framework processes should be codified as skills or scripts | User instruction, 2026-08-11 / r1 | Done | None | Discover / Low | None | None | [Notes](0017-process-codification-evaluation-notes.md) | [Assessment](0017-process-codification-evaluation-notes.md#findings) |
 
 ## Operating Contract
 

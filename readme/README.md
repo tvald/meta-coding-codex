@@ -48,11 +48,11 @@ Keep at most five entries.
 
 | Date | Outcome | Durable Record |
 | --- | --- | --- |
+| 2026-08-11 | Evaluated process codification and recommended a small skill set plus one read-only validator | [T-0017 assessment](tasks/0017-process-codification-evaluation-notes.md#findings) |
 | 2026-08-05 | Reconciled downstream framework changes and shipped a guarded blank changelog seed | [T-0016 quality record](quality/2026-08-05-imported-framework-reconciliation.md) |
 | 2026-07-30 | Adopted the three role adapters and set a repo-wide skip-Pilot policy | [Decision 0016](decisions/0016-adopt-adapters-and-skip-pilot-disposition.md) |
 | 2026-07-30 | Adopted tiered per-window usage cutoffs (95/98/99) in the capacity guard | [Decision 0015](decisions/0015-tiered-usage-capacity-cutoffs.md) |
 | 2026-07-30 | Added a credential-safe Claude Code usage-telemetry skill shipped through the core installer | [Decision 0014](decisions/0014-add-claude-usage-telemetry-skill.md) |
-| 2026-07-30 | Packed harness adapters and skills into the core packager and installer | [T-0013 quality record](quality/2026-07-30-installer-adapter-packing.md) |
 
 ## Documentation Map
 
@@ -70,5 +70,5 @@ Keep at most five entries.
 ## Hygiene
 
 - Last consistency and pruning pass: 2026-07-30
-- Completed repository-changing tasks since that pass: 3
+- Completed repository-changing tasks since that pass: 4
 - Next pass due: 2026-08-29 or after 10 completed repository-changing tasks, whichever comes first
