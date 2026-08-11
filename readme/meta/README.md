@@ -6,28 +6,34 @@ gates, and explicit autonomy boundaries. Policy remains Markdown; the required
 repository-pinned task data boundary uses dependency-free Node.js 22+ and Git. Optional
 declarative harness adapters may expose selected roles without becoming framework policy.
 
-Every primary harness session and every delegated agent must read this file before task
-work. This file explains what is reusable, what belongs to the host project, and which
-process owner to load next.
-
+Every primary harness session and every delegated agent reads this file before task
+work in source mode. An installed client instead loads the applicable compiled agent
+profile, which contains the bounded operational projection below without requiring a
+package-internal path.
 ## Startup Order
 
 1. Read the applicable root `AGENTS.md` instructions.
 2. Read this meta README in full.
-3. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
-4. Read the static `readme/tasks/README.md` entrypoint, then run
-   `node readme/meta/framework-data/cli.mjs doctor` and the bounded
-   `node readme/meta/framework-data/cli.mjs startup` query.
-5. Read only the returned primary task details and process/project documents relevant
+
+<!-- meta-framework-facet:v1:start tasks.startup -->
+## Project Startup After Profile Load
+
+After loading this profile, do not locate or read package-internal policy files.
+
+1. Read `readme/README.md` when it exists; it is the bounded current-project cursor.
+2. Read the static `readme/tasks/README.md` entrypoint, then run
+   `npm run --silent meta -- tasks doctor` and the bounded
+   `npm run --silent meta -- tasks startup` query.
+3. Read only the returned primary task details and process/project documents relevant
    to the assignment.
 
 If `readme/README.md` is missing or does not begin with `# Project State`,
 `readme/tasks/README.md` is missing or does not begin with `# Task Store`, or
-`readme/tasks/store/` is absent, the add-on is not fully onboarded. A primary session
-follows [onboarding.md](onboarding.md), preserving collisions and distinguishing a fresh
-store from explicit legacy migration. A delegated agent does not initialize shared
-state unless the orchestrator assigned that ownership.
-
+`readme/tasks/store/` is absent, the project is not fully onboarded. A primary session
+loads `npm run --silent meta -- docs onboarding` and preserves collisions while
+distinguishing fresh initialization from explicit legacy migration. A delegated agent
+does not initialize shared state unless the orchestrator assigned that ownership.
+<!-- meta-framework-facet:v1:end tasks.startup -->
 ## Directory Contract
 
 `readme/meta/` contains reusable framework policy, references, blank templates, and a
@@ -142,6 +148,8 @@ Agent—are adopted optional integrations that host projects may omit entirely.
   worker recovery.
 - [agent-definitions.md](agent-definitions.md): optional roles, decomposition, usage
   capacity, integration, and shared-work safety.
+- [harness-facets.md](../../prompts/harness-facets.md): the sole owner for narrow,
+  rendered native-delegation mechanics.
 - [development-standards.md](development-standards.md): default engineering standards.
 - [quality-system.md](quality-system.md): risk gates, verification, review, security, and
   completion statuses.

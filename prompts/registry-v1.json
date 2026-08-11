@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "promptFormatVersion": 1,
+  "contentEnvelopeVersion": 1,
+  "documents": [
+    {
+      "id": "agent-definitions",
+      "path": "readme/meta/agent-definitions.md"
+    },
+    {
+      "id": "automation-policy",
+      "path": "readme/meta/automation-policy.md"
+    },
+    {
+      "id": "development-standards",
+      "path": "readme/meta/development-standards.md"
+    },
+    {
+      "id": "framework-changelog",
+      "path": "readme/meta/framework-changelog.md"
+    },
+    {
+      "id": "framework-improvement",
+      "path": "readme/meta/framework-improvement.md"
+    },
+    {
+      "id": "harness-facets",
+      "path": "prompts/harness-facets.md"
+    },
+    {
+      "id": "knowledge-ingestion",
+      "path": "readme/meta/knowledge-ingestion.md"
+    },
+    {
+      "id": "knowledge-management",
+      "path": "readme/meta/knowledge-management.md"
+    },
+    {
+      "id": "meta-readme",
+      "path": "readme/meta/README.md"
+    },
+    {
+      "id": "onboarding",
+      "path": "readme/meta/onboarding.md"
+    },
+    {
+      "id": "quality-system",
+      "path": "readme/meta/quality-system.md"
+    },
+    {
+      "id": "references",
+      "path": "readme/meta/references.md"
+    },
+    {
+      "id": "resumption-protocol",
+      "path": "readme/meta/resumption-protocol.md"
+    },
+    {
+      "id": "root-loop",
+      "path": "readme/meta/root-loop.md"
+    },
+    {
+      "id": "workflow-routing",
+      "path": "readme/meta/workflow-routing.md"
+    }
+  ],
+  "facets": [
+    {
+      "id": "agents.shared",
+      "slot": "shared",
+      "ownerTopic": "agent-definitions",
+      "order": 10,
+      "templateVariables": []
+    },
+    {
+      "id": "authority.boundaries",
+      "slot": "authority",
+      "ownerTopic": "automation-policy",
+      "order": 20,
+      "templateVariables": []
+    },
+    {
+      "id": "sources.trust",
+      "slot": "sources",
+      "ownerTopic": "knowledge-ingestion",
+      "order": 30,
+      "templateVariables": []
+    },
+    {
+      "id": "changes.integrity",
+      "slot": "change-integrity",
+      "ownerTopic": "development-standards",
+      "order": 40,
+      "templateVariables": []
+    },
+    {
+      "id": "quality.completion",
+      "slot": "completion",
+      "ownerTopic": "quality-system",
+      "order": 50,
+      "templateVariables": []
+    },
+    {
+      "id": "handoff.result",
+      "slot": "handoff",
+      "ownerTopic": "agent-definitions",
+      "order": 60,
+      "templateVariables": []
+    },
+    {
+      "id": "roles.root",
+      "slot": "role",
+      "ownerTopic": "agent-definitions",
+      "order": 70,
+      "templateVariables": []
+    },
+    {
+      "id": "roles.implementer",
+      "slot": "role",
+      "ownerTopic": "agent-definitions",
+      "order": 71,
+      "templateVariables": []
+    },
+    {
+      "id": "roles.reviewer",
+      "slot": "role",
+      "ownerTopic": "agent-definitions",
+      "order": 72,
+      "templateVariables": []
+    },
+    {
+      "id": "roles.qa",
+      "slot": "role",
+      "ownerTopic": "agent-definitions",
+      "order": 73,
+      "templateVariables": []
+    },
+    {
+      "id": "roles.security",
+      "slot": "role",
+      "ownerTopic": "agent-definitions",
+      "order": 74,
+      "templateVariables": []
+    },
+    {
+      "id": "tasks.startup",
+      "slot": "startup",
+      "ownerTopic": "meta-readme",
+      "order": 80,
+      "templateVariables": []
+    },
+    {
+      "id": "tasks.intake",
+      "slot": "intake",
+      "ownerTopic": "root-loop",
+      "order": 90,
+      "templateVariables": []
+    },
+    {
+      "id": "tasks.selection",
+      "slot": "selection",
+      "ownerTopic": "root-loop",
+      "order": 100,
+      "templateVariables": []
+    },
+    {
+      "id": "workflow.delivery",
+      "slot": "workflow",
+      "ownerTopic": "root-loop",
+      "order": 110,
+      "templateVariables": []
+    },
+    {
+      "id": "delegation.control",
+      "slot": "delegation",
+      "ownerTopic": "agent-definitions",
+      "order": 120,
+      "templateVariables": []
+    },
+    {
+      "id": "recovery.resume",
+      "slot": "recovery",
+      "ownerTopic": "resumption-protocol",
+      "order": 130,
+      "templateVariables": []
+    },
+    {
+      "id": "knowledge.ownership",
+      "slot": "knowledge",
+      "ownerTopic": "knowledge-management",
+      "order": 140,
+      "templateVariables": []
+    },
+    {
+      "id": "engineering.change",
+      "slot": "engineering",
+      "ownerTopic": "development-standards",
+      "order": 150,
+      "templateVariables": []
+    },
+    {
+      "id": "testing.behavior",
+      "slot": "testing",
+      "ownerTopic": "development-standards",
+      "order": 160,
+      "templateVariables": []
+    },
+    {
+      "id": "verification.matrix",
+      "slot": "verification-plan",
+      "ownerTopic": "quality-system",
+      "order": 170,
+      "templateVariables": []
+    },
+    {
+      "id": "verification.integrity",
+      "slot": "verification-integrity",
+      "ownerTopic": "quality-system",
+      "order": 180,
+      "templateVariables": []
+    },
+    {
+      "id": "security.baseline",
+      "slot": "security-baseline",
+      "ownerTopic": "development-standards",
+      "order": 190,
+      "templateVariables": []
+    },
+    {
+      "id": "security.agentic",
+      "slot": "security-agentic",
+      "ownerTopic": "development-standards",
+      "order": 200,
+      "templateVariables": []
+    },
+    {
+      "id": "threat.model",
+      "slot": "threat-model",
+      "ownerTopic": "quality-system",
+      "order": 210,
+      "templateVariables": []
+    },
+    {
+      "id": "review.rubric",
+      "slot": "review",
+      "ownerTopic": "quality-system",
+      "order": 220,
+      "templateVariables": []
+    },
+    {
+      "id": "documentation.sync",
+      "slot": "documentation",
+      "ownerTopic": "development-standards",
+      "order": 230,
+      "templateVariables": []
+    },
+    {
+      "id": "changes.commit",
+      "slot": "commit",
+      "ownerTopic": "automation-policy",
+      "order": 240,
+      "templateVariables": []
+    },
+    {
+      "id": "harness.delegation",
+      "slot": "harness",
+      "ownerTopic": "harness-facets",
+      "order": 250,
+      "templateVariables": [
+        "HARNESS",
+        "NATIVE_SURFACE"
+      ]
+    },
+    {
+      "id": "capacity.guard",
+      "slot": "capacity",
+      "ownerTopic": "agent-definitions",
+      "order": 260,
+      "templateVariables": []
+    }
+  ],
+  "profiles": [
+    {
+      "id": "implementer",
+      "facets": [
+        "agents.shared",
+        "authority.boundaries",
+        "sources.trust",
+        "changes.integrity",
+        "quality.completion",
+        "handoff.result",
+        "roles.implementer",
+        "engineering.change",
+        "testing.behavior",
+        "verification.integrity",
+        "security.baseline",
+        "documentation.sync"
+      ]
+    },
+    {
+      "id": "qa",
+      "facets": [
+        "agents.shared",
+        "authority.boundaries",
+        "sources.trust",
+        "changes.integrity",
+        "quality.completion",
+        "handoff.result",
+        "roles.qa",
+        "verification.matrix",
+        "verification.integrity",
+        "security.baseline"
+      ]
+    },
+    {
+      "id": "reviewer",
+      "facets": [
+        "agents.shared",
+        "authority.boundaries",
+        "sources.trust",
+        "changes.integrity",
+        "quality.completion",
+        "handoff.result",
+        "roles.reviewer",
+        "verification.integrity",
+        "security.baseline",
+        "review.rubric"
+      ]
+    },
+    {
+      "id": "root",
+      "facets": [
+        "agents.shared",
+        "authority.boundaries",
+        "sources.trust",
+        "changes.integrity",
+        "quality.completion",
+        "handoff.result",
+        "roles.root",
+        "tasks.startup",
+        "tasks.intake",
+        "tasks.selection",
+        "workflow.delivery",
+        "delegation.control",
+        "recovery.resume",
+        "knowledge.ownership",
+        "engineering.change",
+        "testing.behavior",
+        "verification.integrity",
+        "security.baseline",
+        "documentation.sync",
+        "changes.commit"
+      ]
+    },
+    {
+      "id": "security",
+      "facets": [
+        "agents.shared",
+        "authority.boundaries",
+        "sources.trust",
+        "changes.integrity",
+        "quality.completion",
+        "handoff.result",
+        "roles.security",
+        "security.baseline",
+        "security.agentic",
+        "threat.model",
+        "review.rubric"
+      ]
+    }
+  ],
+  "harnesses": [
+    {
+      "id": "claude",
+      "nativeSurface": "Claude Code agents",
+      "rootFacets": [
+        "harness.delegation",
+        "capacity.guard"
+      ],
+      "templateVariables": {
+        "HARNESS": "claude",
+        "NATIVE_SURFACE": "Claude Code agents"
+      }
+    },
+    {
+      "id": "codex",
+      "nativeSurface": "Codex subagents",
+      "rootFacets": [
+        "harness.delegation",
+        "capacity.guard"
+      ],
+      "templateVariables": {
+        "HARNESS": "codex",
+        "NATIVE_SURFACE": "Codex subagents"
+      }
+    },
+    {
+      "id": "portable",
+      "nativeSurface": null,
+      "rootFacets": [],
+      "templateVariables": {}
+    }
+  ]
+}

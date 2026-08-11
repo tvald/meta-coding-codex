@@ -8,6 +8,10 @@ projection or history log.
 
 - Task entrypoint: [Task store](tasks/README.md)
 - Startup query: `node readme/meta/framework-data/cli.mjs startup`
+- Package prompt and bounded reference views:
+  `npm run --silent meta -- agent-prompt --profile PROFILE`,
+  `npm run --silent meta -- docs TOPIC`, and
+  `npm run --silent meta -- explain FACET`
 
 Task identity, authority, lifecycle, dependencies, gates, next actions, details, and
 results live only in the structured task store.

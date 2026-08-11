@@ -41,7 +41,7 @@ to its canonical repository owner and stop relying on the external copy.
 
 The cursor, task entrypoint, and structured store are mandatory after onboarding. Create
 other project artifacts only when they have real content.
-
+<!-- meta-framework-facet:v1:start knowledge.ownership -->
 ## One Home Per Fact
 
 Give each durable fact, rule, decision, or command one canonical home. Other artifacts
@@ -52,15 +52,15 @@ divergent copies.
 The task store owns task facts. A brief expands scope and acceptance; a task note owns
 execution checkpoints and evidence. Neither narrative duplicates current status,
 dependency, gate, next action, or result merely for convenience. Use
-`node readme/meta/framework-data/cli.mjs task get` or
-`node readme/meta/framework-data/cli.mjs task context` to join bounded state with linked
+`npm run --silent meta -- tasks task get` or
+`npm run --silent meta -- tasks task context` to join bounded state with linked
 narratives.
 
 Task gates are discriminated structured data. An approval must include ID, status,
 source, action, boundary, bound `taskRevision`, and detail reference before it can make a
 task mechanically eligible. CLI validity does not establish that the source is genuine
 or that approval meaning is sufficient; the Root Orchestrator judges both.
-
+<!-- meta-framework-facet:v1:end knowledge.ownership -->
 ## Task Lifecycle And Selection
 
 Every accepted independent instruction receives the next stable task ID, semantic

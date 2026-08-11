@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0027",
-  "recordVersion": 4,
+  "recordVersion": 7,
   "taskRevision": 4,
   "outcome": "Implement a deterministic bounded agent-prompt compiler with shared role profiles, canonical documentation provenance, progressive disclosure, narrow native harness adapters, and validated policy facets",
   "authority": {
     "reference": "User instructions and prompt-profile clarifications, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0026",
     "T-0032"
@@ -23,12 +23,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Define one-owner facet and documentation mappings plus shared role profiles, implement deterministic composition and bounded docs/explain retrieval with provenance, and add budget, conflict, completeness, equivalence, path-safety, and snapshot tests",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "Deterministic prompt compiler, 30 one-owner facets, five profiles, three harnesses, bounded docs/explain, 15-way snapshots and packed parity passed; full suite 69/69, reproducible 61-file package SHA-256 77cd7425dcdb1a8a868566737a07ce85112f5819902081e911e5ed7a0566f0ef, doctor clean, Architect/Security/QA/Reviewer gates passed"
+  }
 }

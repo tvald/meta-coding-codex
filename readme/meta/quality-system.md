@@ -44,7 +44,7 @@ Large-diff split triggers: split a change before review or commit when any trigg
 
 If a split trigger is intentionally ignored, record the reason in the quality record or
 final response.
-
+<!-- meta-framework-facet:v1:start verification.matrix -->
 ## Standard Verification Matrix
 
 For each task, decide which checks apply:
@@ -61,14 +61,14 @@ For each task, decide which checks apply:
 - Security check.
 - Performance smoke test.
 - Documentation link or command validation.
-- `node readme/meta/framework-data/cli.mjs doctor` for any task-state, process, package,
+- `npm run --silent meta -- tasks doctor` for any task-state, process, package,
   installer, or migration change.
 - Manual inspection for UI or workflow changes.
 
 Declare which checks are required for the task before material implementation when
 practical. Run the smallest required set that gives credible confidence. Mark unrelated
 checks Not applicable; do not call a required check optional after seeing its result.
-
+<!-- meta-framework-facet:v1:end verification.matrix -->
 ## Task Isolation
 
 Each selected task has its own route, risk gate, acceptance criteria, verification
@@ -85,7 +85,7 @@ aggregate completion claim.
 `Done`, `Needs verification`, `Blocked`, `Cancelled`, and `Superseded` are task-scoped.
 The presence of one `Done` task does not make pending task-store work complete, and the
 presence of one blocked task does not stall unrelated safe work.
-
+<!-- meta-framework-facet:v1:start quality.completion -->
 ## Verification Outcomes
 
 - **Pass:** the check ran and its observed result met the criterion.
@@ -100,7 +100,8 @@ what passing checks do not establish; it cannot replace a result. A genuinely im
 required check produces an explicit **Needs verification** handoff, not Done. An
 established approval path may change which risk is accepted, but must not relabel an
 unexecuted required check as passing.
-
+<!-- meta-framework-facet:v1:end quality.completion -->
+<!-- meta-framework-facet:v1:start verification.integrity -->
 ## Verification Integrity
 
 For medium-, high-, or critical-risk behavior changes, and whenever verification could
@@ -120,7 +121,7 @@ be tailored to an already-known implementation, protect the integrity of the evi
 - A check that fails and then passes on unchanged code is evidence of a flake, not a
   clean pass. Investigate and record it. Quarantine only with a named owner or follow-up,
   bounded impact, and explicit residual risk; do not silently rerun until green.
-
+<!-- meta-framework-facet:v1:end verification.integrity -->
 ## Quality Record
 
 Use [templates/quality-record.md](templates/quality-record.md) when a change is high or
@@ -144,7 +145,7 @@ The gate checks whether product outcome, scope, acceptance criteria, architectur
 
 Skip the gate for Quick change work unless review, testing, or user feedback shows the
 plan is under-specified.
-
+<!-- meta-framework-facet:v1:start review.rubric -->
 ## Review Rubric
 
 Review changes in this order:
@@ -164,7 +165,7 @@ Read the request, task brief, acceptance criteria, and applicable decisions befo
 implementation diff when practical. This reduces anchoring on the builder's chosen
 solution. Review verification amendments and counterfactual evidence as part of the
 Tests item above.
-
+<!-- meta-framework-facet:v1:end review.rubric -->
 ## Structured Second Pass
 
 For high-stakes product, architecture, readiness, or review artifacts, run one focused second pass instead of a vague "improve this" retry. Pick a lens that matches the risk:
@@ -192,7 +193,7 @@ Run for security-sensitive changes:
 - Errors do not expose stack traces, system details, or sensitive records.
 - Dependencies and transitive risks are acceptable.
 - AI tools cannot perform high-impact actions without appropriate guardrails.
-
+<!-- meta-framework-facet:v1:start threat.model -->
 ## Threat Model Card Trigger
 
 Use [templates/threat-model-card.md](templates/threat-model-card.md) before implementation or release when a change touches:
@@ -205,7 +206,7 @@ Use [templates/threat-model-card.md](templates/threat-model-card.md) before impl
 Keep the card lightweight: identify what is being built, what can go wrong, what will be
 done about it, and how the team knows the mitigations are enough. Use the quality record
 when the risk is high or critical.
-
+<!-- meta-framework-facet:v1:end threat.model -->
 ## Operational Readiness Mini-Gate
 
 For production-impacting changes, verify before release:

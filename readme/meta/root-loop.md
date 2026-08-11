@@ -4,8 +4,11 @@ The root loop coordinates each durable task while keeping the task store, reposi
 verification, documentation, and decisions consistent. Task intake and selection wrap
 the existing item-scoped delivery loop; the CLI enforces mechanics but is not a FIFO
 scheduler or semantic authority.
-
+<!-- meta-framework-facet:v1:start workflow.delivery -->
 ## Loop Summary
+
+Run these stages in order for the selected task, and re-route when new evidence changes
+the work or its risk:
 
 0. Intake and resume
 1. Select
@@ -18,7 +21,7 @@ scheduler or semantic authority.
 8. Record
 9. Improve
 10. Commit and continue
-
+<!-- meta-framework-facet:v1:end workflow.delivery -->
 ## 0. Intake And Resume
 
 Read `readme/README.md` at every session start after the meta README, then the static
@@ -27,6 +30,8 @@ task entrypoint. Run `node readme/meta/framework-data/cli.mjs doctor` and
 primary task details, repository status, and recent commits. Follow
 [resumption-protocol.md](resumption-protocol.md) after an
 interruption, approval wait, redirect, user stop, or worker loss.
+<!-- meta-framework-facet:v1:start tasks.intake -->
+### Durable Intake
 
 At each delivered user-message boundary, classify the message before continuing:
 
@@ -52,7 +57,8 @@ evidence. Acknowledge task ID, revision, and disposition in commentary.
 
 The portable framework can preserve only messages delivered to the primary session; it
 does not provide server-side delivery or exactly-once guarantees.
-
+<!-- meta-framework-facet:v1:end tasks.intake -->
+<!-- meta-framework-facet:v1:start tasks.selection -->
 ## 1. Select
 
 If the startup query reports scheduling `Paused`, checkpoint and select nothing until
@@ -69,11 +75,11 @@ candidates and judge readiness:
 Mark a task `Ready` only when those conditions hold. Keep exactly one selected task
 `Active`; parallel workers belong to its roster rather than separate Active tasks.
 Select among eligible tasks using user intent, unblock value, risk, and coherent change
-boundaries. Numeric order and task ID
-do not determine scheduling; arrival order may break only an otherwise immaterial tie.
+boundaries. Numeric order and task ID do not determine scheduling; arrival order may
+break only an otherwise immaterial tie.
 Do not activate file-changing work through overlapping dirty state or a broken shared
 baseline.
-
+<!-- meta-framework-facet:v1:end tasks.selection -->
 ## 2. Frame
 
 Create a short task frame:

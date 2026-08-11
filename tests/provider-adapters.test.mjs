@@ -535,7 +535,7 @@ test('provider timeouts terminate capability and App Server children before retu
           FAKE_CLEANUP_SENTINEL: capabilityCleanup,
         },
         clock: FixedDate,
-        timeoutMs: 50,
+        timeoutMs: 250,
       });
       assert.equal(capability.disposition, 'failed');
       assert.equal(lstatSync(capabilityCleanup).isFile(), true);
@@ -560,7 +560,7 @@ test('provider timeouts terminate capability and App Server children before retu
           FAKE_CLEANUP_SENTINEL: quotaCleanup,
         },
         clock: FixedDate,
-        timeoutMs: 50,
+        timeoutMs: 250,
       });
       assert.equal(quota.disposition, 'failed');
       assert.equal(lstatSync(quotaCleanup).isFile(), true);

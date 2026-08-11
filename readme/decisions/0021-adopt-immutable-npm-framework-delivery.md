@@ -195,9 +195,10 @@ exists.
 
 Why:
 
-The product owner supplied the target contract; current npm documentation confirms local binary, pack-inventory,
-lifecycle, and lockfile behavior; T-0026 proves guarded package/client roots and installed task mutation; and T-0032
-proves bounded provider probes, secret containment, fail-closed drift, deterministic cleanup, and independent gates. Genuine registry installation remains assigned to T-0031.
+The product owner supplied the target contract; npm documentation confirms local binary,
+pack, lifecycle, and lock behavior; T-0026 proves package/client roots and task mutation;
+T-0032 proves bounded fail-closed provider probes; and T-0027 proves one-owner facets,
+complete profiles, deterministic provenance, bounded disclosure, equivalent adapters, and source/installed parity. Registry installation remains assigned to T-0031.
 
 ## Review Trigger
 
@@ -213,8 +214,7 @@ semantics, or registry namespace ownership blocks release.
   [scripts](https://docs.npmjs.com/cli/v11/using-npm/scripts/), and
   [package-lock.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/),
   checked 2026-08-11.
-- Node.js, [package entry points](https://nodejs.org/api/packages.html), checked
-  2026-08-11.
+- Node.js, [package entry points](https://nodejs.org/api/packages.html), checked 2026-08-11.
 - `npm view meta-framework name version description dist-tags --json`, observed
   2026-08-11: the unscoped name resolves to an unrelated package at version 1.5.0.
 - Decisions 0004-0020, reviewed 2026-08-11.
