@@ -185,9 +185,10 @@ Neutral or follow-up:
   pre-npm commit `c90211b9a2cd888a1796dbd584384fd1f9eaa132`. It records all 49 archive
   files by path, mode, bytes, and SHA-256; matching data without independent provenance
   never authorizes deletion.
-- Removing the `framework-changelog` documentation identifier is a pre-release removal.
-  T-0031 must prove no released consumer relies on it; contrary evidence stops removal
-  and reopens SemVer and compatibility treatment.
+- T-0031 confirmed the public scoped package was absent and the sole legacy release
+  predated its manifest/registry, so identifier removal was pre-release compatible; contrary evidence reopens SemVer treatment.
+- It also proved script-disabled install, replacement, and byte-exact rollback; public
+  ownership, licensing, authentication, provenance, and publication remain unauthorized prerequisites.
 
 ## Confidence
 
@@ -196,10 +197,10 @@ adapters; Medium for the unpublished registry identity until release evidence ex
 
 Why:
 
-The owner supplied the target contract; npm documentation confirms local binary, pack,
-lifecycle, and lock behavior; T-0026 proves roots/task mutation; T-0032 proves bounded
+The owner supplied the target contract; npm documentation confirms binary, pack, lifecycle, and lock behavior; T-0026 proves roots/task mutation; T-0032 proves bounded
 fail-closed probes; and T-0027 proves facet ownership, profiles, provenance, disclosure,
-adapter equivalence, and source/installed parity. Registry installation remains T-0031.
+adapter equivalence, and source/installed parity. T-0031 proves the unpublished local
+release candidate and rollback; public registry installation remains a release-time gate.
 
 ## Review Trigger
 

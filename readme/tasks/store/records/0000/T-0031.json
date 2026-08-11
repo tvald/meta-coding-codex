@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0031",
-  "recordVersion": 2,
+  "recordVersion": 6,
   "taskRevision": 2,
   "outcome": "Complete end-to-end consumer, compatibility, security, deterministic-output, and release verification for immutable npm framework delivery",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0028",
     "T-0030",
@@ -24,12 +24,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Run the clean-client matrix, missing-local-package failure proof, task-store regressions, prompt-profile and extension negatives, packed-inventory audit, documentation checks, and independent high-risk gates",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "Aggregate rollback 1/1, focused 19/19, package 56/56, full 94/94, retirement 7/7, exact 52-file audit and publish dry run passed; public npm remained absent, legacy release predated package, and Architect/Security/QA/Reviewer review completed with evidence findings resolved"
+  }
 }

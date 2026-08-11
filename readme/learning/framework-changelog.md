@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Verify The Immutable NPM Release Candidate
+
+- Status: Adopted.
+- Evidence: T-0031 public-release inspection, exact package audit and publish dry run,
+  aggregate clean-client replacement/rollback fixture, 56-test package matrix, 94-test
+  full suite, and independent completion gates in its quality record.
+- Change: Added one offline exact-lock journey that exercises every packaged prompt and
+  documentation surface, proves lifecycle/fallback suppression, replaces a compatible
+  package candidate, and restores prior manifest, lock, package tree, and client state.
+- Success signal: The unpublished candidate is reproducible and locally releasable without
+  copied policy, package mutation, unsafe execution, compatibility drift, or rollback loss.
+- Review or sunset trigger: A public version appears, registry/release evidence changes,
+  rollback drifts, a supported runtime fails, or publication prerequisites are authorized.
+
 ## 2026-08-11: Retire Copied-Core Delivery
 
 - Status: Adopted.
@@ -132,21 +146,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   colliding, malformed, unsupported, or mixed-origin states stop without unsafe writes.
 - Review or sunset trigger: Missed phase, overwrite, mixed-origin skill, unsafe command,
   provider discovery drift, or cold-start recovery failure.
-
-## 2026-08-11: Adopt A Structured Task Store And Framework Data CLI
-
-- Status: Adopted.
-- Evidence: Product-owner malformed-row report and implementation direction; T-0017–
-  T-0020 analysis; Decision 0018; 26 passing tests; independent architecture, security,
-  code, migration/package, and verification gates; exact 43-file package and fresh
-  install checks.
-- Change: Replaced the hand-edited task table and archive workflow with sharded canonical
-  JSON records behind a dependency-free Node CLI. Added bounded queries, semantic CAS
-  mutations, strict migration, outside-canonical crash-safe staging, explicit lock
-  recovery, and integrated structural/process doctor checks across startup, packaging,
-  installation, and CI.
-- Success signal: malformed or stale state fails closed; normal startup remains bounded
-  at 10,000 tasks; terminal history stays queryable without archive movement; a killed
-  pre-claim writer cannot corrupt canonical state.
-- Review or sunset trigger: lost task data, unbounded query/context growth, broken lock
-  recovery, platform durability demand, migration ambiguity, or direct-edit incidents.

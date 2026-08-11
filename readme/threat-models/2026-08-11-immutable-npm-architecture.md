@@ -35,14 +35,14 @@
 | --- | --- | --- | --- |
 | Explicit immutable package root and mutable client Git root | T-0026 | Installed binary regressions plus foreign, symlink, shadow, hostile-Git, direct-bypass, nested-Git, and package-write negatives | Done |
 | Exact lifecycle-free npm inventory and versioned binary | T-0025 | `npm pack` audit, clean install, missing-dependency failure | Done |
-| Explicit local CLI path | T-0025 and T-0031 | Missing dependency with hostile same-name PATH executable is never invoked | Done for focused package boundary; aggregate repeat remains T-0031 |
-| Script-disabled install and lifecycle/dependency-free prompt extensions | T-0028 and T-0031 | Hostile direct/transitive script fixtures plus manifest/lockfile rejection | Planned |
-| One-owner facet registry and deterministic profiles | T-0027 | Completeness, conflicts, budgets, provenance, snapshot equivalence | Planned |
-| Lockfile-backed allowlisted extensions | T-0028 | Undeclared, incompatible, conflicting, unsafe-path, and oversized negatives | Planned |
-| Thin harness bootstraps | T-0029 | Clean Codex/Claude startup and provider-difference audit | Planned |
-| Transactional client initializer | T-0029 | Existing bootstrap/state, symlink, interruption, and exact rollback negatives | Planned |
+| Explicit local CLI path | T-0025 and T-0031 | Missing dependency with hostile same-name PATH executable is never invoked | Done |
+| Script-disabled install and lifecycle/dependency-free prompt extensions | T-0028 and T-0031 | Hostile direct/transitive script fixtures plus manifest/lockfile rejection | Done |
+| One-owner facet registry and deterministic profiles | T-0027 | Completeness, conflicts, budgets, provenance, snapshot equivalence | Done |
+| Lockfile-backed allowlisted extensions | T-0028 | Undeclared, incompatible, conflicting, unsafe-path, and oversized negatives | Done |
+| Thin harness bootstraps | T-0029 | Clean Codex/Claude startup and provider-difference audit | Done |
+| Transactional client initializer | T-0029 | Existing bootstrap/state, symlink, interruption, and exact rollback negatives | Done |
 | Secret-contained normalized provider probes | T-0032 | Stubbed and live normalized probes, malformed/auth failures, output redaction, cutoff equivalence, hostile process boundaries, and independent gates | Done |
-| Aggregate consumer/security/release matrix | T-0031 | Packed install, compatibility, downgrade, deterministic output, independent gates | Planned |
+| Aggregate consumer/security/release matrix | T-0031 | Packed install, compatibility, downgrade, deterministic output, independent gates | Done |
 
 ## Agentic Risks
 

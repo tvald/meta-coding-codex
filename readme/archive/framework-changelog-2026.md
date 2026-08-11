@@ -246,3 +246,21 @@
 - Review or sunset trigger: A populated seed ships or installs, producer/consumer
   inventory diverges, the source-versus-consumer state boundary confuses an adopter, or
   the 20-row catalog trigger overwrites or obscures archived task history.
+
+## 2026-08-11: Adopt A Structured Task Store And Framework Data CLI
+
+- Status: Adopted.
+- Evidence: Product-owner malformed-row report and implementation direction; T-0017–
+  T-0020 analysis; Decision 0018; 26 passing tests; independent architecture, security,
+  code, migration/package, and verification gates; exact 43-file package and fresh
+  install checks.
+- Change: Replaced the hand-edited task table and archive workflow with sharded canonical
+  JSON records behind a dependency-free Node CLI. Added bounded queries, semantic CAS
+  mutations, strict migration, outside-canonical crash-safe staging, explicit lock
+  recovery, and integrated structural/process doctor checks across startup, packaging,
+  installation, and CI.
+- Success signal: malformed or stale state fails closed; normal startup remains bounded
+  at 10,000 tasks; terminal history stays queryable without archive movement; a killed
+  pre-claim writer cannot corrupt canonical state.
+- Review or sunset trigger: lost task data, unbounded query/context growth, broken lock
+  recovery, platform durability demand, migration ambiguity, or direct-edit incidents.
