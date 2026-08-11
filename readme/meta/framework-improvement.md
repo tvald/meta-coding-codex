@@ -1,8 +1,11 @@
 # Framework Improvement
 
-Improve this framework when evidence shows avoidable mistakes, ambiguity, or drag. The
-repository—not session memory—is the runtime for detecting recurrence and evaluating
-whether a rule earned its context cost.
+Improve this framework in its source repository when evidence shows avoidable mistakes,
+ambiguity, or drag. The repository—not session memory—is the runtime for detecting
+recurrence and evaluating whether a rule earned its context cost. An installed client
+does not edit package bytes or keep a local framework changelog: it records relevant
+client evidence, reports the defect upstream under applicable external-action authority,
+and adopts an accepted fix through exact dependency and lockfile replacement.
 
 ## Improvement Triggers
 
@@ -33,8 +36,9 @@ Evidence level informs judgment; it is not a numeric score. Name the decisive ev
 
 ## Change Lifecycle
 
-1. **Find the signal.** Search the retrospective log, decisions, changelog, and current
-   framework before adding guidance. Record new concrete learning in the retrospective.
+1. **Find the signal.** In the source repository, search the retrospective log,
+   decisions, source changelog, and current framework before adding guidance. Record new
+   concrete learning in the retrospective.
 2. **Screen the proposal.** Apply the hard rejects below. For a material change, state
    the problem, before/after behavior, affected canonical owners, context cost,
    verification, and possible sunset.
@@ -44,10 +48,10 @@ Evidence level informs judgment; it is not a numeric score. Name the decisive ev
 4. **Change the smallest owner.** Routine reversible edits can be applied directly.
    Create a decision record for significant process, safety, authority, or ownership
    choices. Keep templates aligned.
-5. **Log every local framework edit.** Append status, evidence, change, success signal,
-   and review or sunset trigger to `readme/meta/framework-changelog.md`. A framework
-   source repository may keep that distributable seed blank only when an explicit
-   project policy assigns an excluded source-history owner.
+5. **Log every source-framework edit.** Append status, evidence, change, success signal,
+   and review or sunset trigger to the source project's declared project-side changelog,
+   such as `readme/learning/framework-changelog.md`. Never create or update this log in
+   an installed client or under immutable package content.
 6. **Verify and close.** Run link, template, consistency, line-budget, and request review
    as applicable. All required checks must pass before Done.
 
@@ -60,9 +64,9 @@ change when risk and available tooling justify it; role ceremony is not mandator
 Reject or revise a proposal when it:
 
 - contradicts the user, `AGENTS.md`, accepted ownership, or higher-priority policy;
-- adds portable-core runtime behavior or dependencies without direct evidence, an
-  accepted boundary decision, exact packaging, failure controls, and maintained tests;
-  optional vendor-native adapters remain declarative under
+- adds package runtime behavior or dependencies without direct evidence, an accepted
+  boundary decision, exact npm inventory, failure controls, and maintained tests;
+  optional source harness adapters remain declarative under
   [agent-definitions.md](agent-definitions.md#optional-harness-adapter-contract) and may
   not add executable code, policy ownership, or broader authority;
 - duplicates guidance with a clear canonical owner;
@@ -129,5 +133,8 @@ Before closing framework edits, confirm:
   their canonical Markdown owners;
 - required checks passed and completion status is accurate;
 - budgets, pilot terms, and maintenance triggers are explicit; and
-- the portable core contains only accepted pinned runtime files plus Markdown policy,
-  excludes host state, and reduces product-owner maintenance.
+- the npm tarball matches its exact reviewed inventory, excludes source harness
+  discovery bundles and host state, defines no lifecycle mutation, and reduces
+  product-owner maintenance; and
+- installed-client guidance contains no package patching, copied-policy reconciliation,
+  or client framework-edit log.

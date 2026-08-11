@@ -16,8 +16,8 @@ native Windows and network filesystems remain unsupported.
 
 ## Install In A Client Repository
 
-Declare an exact aliased dependency and the exact local script below, then commit both
-the manifest and generated lockfile:
+Declare an exact aliased dependency and the exact local script below, then generate and
+commit the lockfile with lifecycle scripts disabled:
 
 ```json
 {
@@ -30,12 +30,17 @@ the manifest and generated lockfile:
 }
 ```
 
-The package has no lifecycle scripts. Install the committed dependency tree with
-`npm ci --ignore-scripts`, or use an equivalently reviewed project script allowlist.
-Do not substitute a global binary, `npx`, a network fetch, or inherited `PATH` lookup
-when the checked-in local command is unavailable. Keep `--ignore-scripts` on every
-invocation so client-defined `pre*` or `post*` lifecycle hooks cannot wrap the package
-binary.
+```sh
+npm install --package-lock-only --ignore-scripts --save-exact \
+  'meta-framework@npm:@tvald/meta-framework@<exact-version>'
+npm ci --ignore-scripts
+```
+
+Review the manifest and lockfile diff before committing it. The package has no
+lifecycle scripts. Do not substitute a global binary, `npx`, a network fetch, or
+inherited `PATH` lookup when the checked-in local command is unavailable. Keep
+`--ignore-scripts` on every invocation so client-defined `pre*` or `post*` lifecycle
+hooks cannot wrap the package binary.
 
 From the physical Git root, inspect compatibility and initialization readiness before
 allowing any client-state write:
@@ -122,15 +127,59 @@ npm run --ignore-scripts --silent meta -- capability --harness claude --name del
 
 ## Upgrade And Rollback
 
-Upgrade by changing the exact dependency and lockfile together, reinstalling with
-scripts disabled, and rerunning package and client checks. The dependency is replaced as
-one unit; there is no supported command that patches package-owned files in place.
-Compatible client state stays client-owned. An incompatible data change requires a
-separately named guarded migration.
+Replace the package by changing the exact alias and lockfile together:
 
-Roll back package code by restoring the prior manifest and lockfile and reinstalling
-with the same lifecycle policy. After a data migration or mutation unsupported by the
-older package, use an explicit reverse migration when one exists or repair forward.
+```sh
+npm install --package-lock-only --ignore-scripts --save-exact \
+  'meta-framework@npm:@tvald/meta-framework@<replacement-version>'
+npm ci --ignore-scripts
+npm run --ignore-scripts --silent meta -- project --version
+npm run --ignore-scripts --silent meta -- project preflight
+```
+
+Review the complete manifest and lockfile change before installation. The dependency is
+replaced as one unit; there is no supported command that patches package-owned files in
+place, copies a new framework tree over an old one, or reconciles package files inside a
+client. Compatible client state stays client-owned. An incompatible data change
+requires a separately named guarded migration.
+
+If `project preflight` reports `fresh`, `ready_to_initialize`,
+`ready_to_add_bootstraps`, or `valid_current_project`, run
+`npm run --ignore-scripts --silent meta -- project init`; the valid-current case is an
+idempotent success. Never run initialization after any refused, unsafe, busy, malformed,
+legacy, partial, prepared, or collision disposition.
+
+After initialization is complete, verify the client task state:
+
+```sh
+npm run --ignore-scripts --silent meta -- tasks doctor
+npm run --ignore-scripts --silent meta -- tasks startup
+```
+
+Roll back package code by restoring both the prior manifest and prior lockfile, running
+`npm ci --ignore-scripts`, and repeating the local version, preflight, doctor, and
+startup checks above. After a data migration or mutation unsupported by the older
+package, use an explicit reverse migration when one exists or repair forward; restoring
+package code alone is not a data rollback.
+
+Clients that previously received the framework through the retired copied-core
+installer must not delete same-named paths merely because they resemble old framework
+files. Use the bounded
+[`copied-client-transition`](readme/meta/copied-client-transition.md) procedure, which
+requires an exact reviewed legacy snapshot, per-file provenance and digest matches, a
+dry run, and a recoverable Git boundary. It supplies guidance and inert ownership data,
+not a cleanup executable.
+
+## Report Framework Defects
+
+Do not edit installed files under `node_modules`, keep a client-side framework
+changelog, or carry a local patch into the next install. Capture the output of
+`npm run --ignore-scripts --silent meta -- project --version`, minimize sensitive client
+details, and report the defect through the
+[framework issue tracker](https://github.com/tvald/meta-coding-codex/issues). Accepted
+fixes belong in the framework source repository and reach clients through a newly
+reviewed exact dependency and lockfile replacement. Opening an issue or pull request is
+an external action and still requires the applicable user or repository authority.
 
 ## Develop This Package
 

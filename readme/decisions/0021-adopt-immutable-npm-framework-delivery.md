@@ -10,42 +10,32 @@ Owners:
 
 Supersedes:
 
-- [Decision 0004](0004-package-framework-as-addon.md) where it makes copying
-  `readme/meta/` and merging a packaged root instruction the supported framework
-  delivery mechanism. Its separation of reusable framework material from mutable
-  project memory remains current.
+- [Decision 0004](0004-package-framework-as-addon.md) where it makes copying `readme/meta/`
+  and merging a packaged root instruction the supported delivery mechanism. Reusable
+  framework and mutable project memory remain separate.
 - [Decisions 0005](0005-pilot-optional-agent-adapters.md) and
   [0016](0016-adopt-adapters-and-skip-pilot-disposition.md) where they make copied
-  provider-specific role files and a root `CLAUDE.md` import the normal role/startup
-  delivery surface. Canonical role ownership, least privilege, bounded delegation, and
-  this repository's skip-Pilot policy remain current.
-- [Decisions 0007](0007-add-codex-quota-monitor-skill.md) and
-  [0014](0014-add-claude-usage-telemetry-skill.md) where provider quota acquisition is
-  shipped as copied repository skills. Their normalized telemetry semantics, secret
-  boundaries, and fail-unknown behavior remain requirements behind the package CLI.
-- [Decisions 0008](0008-adopt-durable-task-orchestration.md) and
-  [0009](0009-authorize-bounded-project-delegation.md) only where onboarding imports
-  reusable templates or merges a portable startup instruction. Client-owned state,
-  durable task semantics, and client-owned delegation authority remain current.
-- [Decisions 0010](0010-automate-portable-core-archive.md),
-  [0011](0011-publish-moving-latest-core-release.md),
-  [0012](0012-add-fail-closed-piped-installer.md), and
-  [0013](0013-streamline-installer-invocation.md) for supported ZIP production,
-  moving-release publication, curl installation, and fresh-copy delivery. Their
-  state-exclusion, exact-inventory, reproducibility, least-privilege, collision, and
-  fail-closed lessons carry forward where applicable.
-- [Decision 0017](0017-ship-blank-framework-changelog-seed.md) where an installed
-  client receives and maintains a framework-edit changelog. The framework source
-  repository retains its project-side history, while clients report defects upstream
-  and replace the immutable dependency.
-- [Decision 0018](0018-adopt-node-structured-task-store.md) where the task CLI is
-  repository-pinned under `readme/meta/` and existing clients reconcile copied core
-  files to update it. Its task model, bounded queries, canonical serialization,
-  optimistic concurrency, atomic-write, migration, and platform-safety decisions
-  remain current.
-- [Decisions 0019](0019-adopt-guarded-project-onboarding-skill.md) and
-  [0020](0020-adopt-guarded-task-recovery-skill.md) where the procedures are installed
-  into provider skill-discovery directories. Their conservative procedure contracts
+  provider role files and a root `CLAUDE.md` import the normal
+  role/startup surface. Role ownership, least privilege, bounded delegation, and this
+  repository's skip-Pilot policy remain current.
+- [Decisions 0007](0007-add-codex-quota-monitor-skill.md) and [0014](0014-add-claude-usage-telemetry-skill.md)
+  where quota acquisition ships as copied skills. Normalized telemetry, secret boundaries,
+  and fail-unknown behavior remain package CLI requirements.
+- [Decisions 0008](0008-adopt-durable-task-orchestration.md) and [0009](0009-authorize-bounded-project-delegation.md)
+  only where onboarding imports templates or startup instructions. Client-owned state,
+  durable task semantics, and delegation authority remain current.
+- [Decisions 0010](0010-automate-portable-core-archive.md), [0011](0011-publish-moving-latest-core-release.md),
+  [0012](0012-add-fail-closed-piped-installer.md), and [0013](0013-streamline-installer-invocation.md)
+  for ZIP, moving-release, curl, and fresh-copy delivery. Their state exclusion, exact
+  inventory, reproducibility, least privilege, collision, and fail-closed lessons remain.
+- [Decision 0017](0017-ship-blank-framework-changelog-seed.md) where a client maintains a
+  framework changelog. Source history remains project-side; clients report defects
+  upstream and replace the immutable dependency.
+- [Decision 0018](0018-adopt-node-structured-task-store.md) where the task CLI is pinned
+  under copied `readme/meta/`. Its task model, bounded queries, canonical serialization,
+  concurrency, atomic writes, migration, and platform safety remain current.
+- [Decisions 0019](0019-adopt-guarded-project-onboarding-skill.md) and [0020](0020-adopt-guarded-task-recovery-skill.md)
+  where procedures install into provider skill directories. Their conservative contracts
   remain canonical package content exposed through role facets and bounded docs.
 
 Superseded by:
@@ -54,22 +44,18 @@ Superseded by:
 
 ## Context
 
-The existing framework is delivered by copying a reusable tree and several optional
-harness files into each client repository. Updating requires manual reconciliation,
-provider procedures are duplicated into discovery paths, and agents must load multiple
-long documents before working. The product owner instead requires one immutable,
-versioned npm dependency with a local executable, complete packaged documentation,
-deterministically derived role prompts, package-owned task tooling, thin project
-bootstraps, and explicit extensions.
+The existing framework copies a reusable tree and optional harness files into each client.
+Updates require manual reconciliation, provider procedures are duplicated, and agents
+load multiple long documents. The owner instead requires one immutable npm dependency
+with a local executable, complete docs, derived role prompts, package-owned task tooling,
+thin bootstraps, and explicit extensions.
 
-Current npm behavior supports that boundary: a package `bin` is exposed to scripts of a
-depending project, a `files` allowlist controls the packed inventory, and a committed
-lockfile records the exact installed tree. npm also runs declared lifecycle scripts in
-several install and pack flows, so this package must define no install-time or prepare
-hook. The unscoped registry name `meta-framework` is already owned by an unrelated
-package; the implementation therefore uses `@tvald/meta-framework` as the publication
-name unless the owner selects another available scope before release. The stable binary
-name remains `meta-framework`.
+npm exposes package `bin` entries to client scripts, a `files` allowlist controls the
+tarball, and a committed lockfile records the installed tree. Because npm runs declared
+lifecycle scripts in install and pack flows, this package defines no install-time or
+prepare hook. The unrelated unscoped `meta-framework` name is occupied, so the
+implementation uses `@tvald/meta-framework` unless the owner selects another scope
+before release. The stable binary remains `meta-framework`.
 
 ## Decision
 
@@ -182,39 +168,52 @@ Neutral or follow-up:
 
 - T-0025 through T-0032 implement and independently verify the slices defined by the
   umbrella brief; this decision does not authorize publication.
-- The source repository may retain obsolete delivery artifacts until T-0030 removes or
-  supersedes them after their replacements pass focused checks.
+- T-0030 removes obsolete repository delivery artifacts after focused checks; the
+  historical remote moving release and tag remain untouched external state.
 - `@tvald/meta-framework` is a reversible default until publication. A different scoped
   registry name changes dependency metadata, not the binary or CLI contract.
 
+## Implementation And Compatibility
+
+- Source harness discovery bundles remain in `.agents/`, `.codex/`, and `.claude/` for
+  maintainers but outside the npm tarball. Clients receive canonical documents, compiled
+  facets, explicit profiles, and thin generated bootstraps, not discovery bundles.
+- Clients have no package-local framework changelog. Source edits stay in
+  `readme/learning/framework-changelog.md`; upstream fixes arrive through exact manifest
+  and lockfile replacement.
+- The guidance-only copied-client transition has a closed data manifest anchored to
+  pre-npm commit `c90211b9a2cd888a1796dbd584384fd1f9eaa132`. It records all 49 archive
+  files by path, mode, bytes, and SHA-256; matching data without independent provenance
+  never authorizes deletion.
+- Removing the `framework-changelog` documentation identifier is a pre-release removal.
+  T-0031 must prove no released consumer relies on it; contrary evidence stops removal
+  and reopens SemVer and compatibility treatment.
+
 ## Confidence
 
-Confidence: High for the package/client boundary, local invocation, and normalized
-provider adapters; Medium for the unpublished registry identity until release evidence
-exists.
+Confidence: High for the package/client boundary, local invocation, and normalized provider
+adapters; Medium for the unpublished registry identity until release evidence exists.
 
 Why:
 
-The product owner supplied the target contract; npm documentation confirms local binary,
-pack, lifecycle, and lock behavior; T-0026 proves package/client roots and task mutation;
-T-0032 proves bounded fail-closed provider probes; and T-0027 proves one-owner facets,
-complete profiles, deterministic provenance, bounded disclosure, equivalent adapters, and source/installed parity. Registry installation remains assigned to T-0031.
+The owner supplied the target contract; npm documentation confirms local binary, pack,
+lifecycle, and lock behavior; T-0026 proves roots/task mutation; T-0032 proves bounded
+fail-closed probes; and T-0027 proves facet ownership, profiles, provenance, disclosure,
+adapter equivalence, and source/installed parity. Registry installation remains T-0031.
 
 ## Review Trigger
 
-Revisit when package-root/client-root isolation fails, a prompt diverges from its owner,
-an undeclared extension composes, a provider probe leaks sensitive data or reports false
-capacity, a dependency revert damages client state, npm changes local binary or lockfile
-semantics, or registry namespace ownership blocks release.
+Revisit when root isolation fails, a prompt diverges, an undeclared extension composes, a
+probe leaks data or reports false capacity, a revert damages client state, npm changes
+local-binary or lockfile semantics, or registry ownership blocks release.
 
 ## Sources
 
 - [T-0023 immutable npm delivery brief](../tasks/0023-npm-package-delivery-brief.md).
-- npm, [package.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/),
+- npm [package.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/),
   [scripts](https://docs.npmjs.com/cli/v11/using-npm/scripts/), and
-  [package-lock.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/),
-  checked 2026-08-11.
+  [package-lock.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/), checked 2026-08-11.
 - Node.js, [package entry points](https://nodejs.org/api/packages.html), checked 2026-08-11.
-- `npm view meta-framework name version description dist-tags --json`, observed
-  2026-08-11: the unscoped name resolves to an unrelated package at version 1.5.0.
+- `npm view meta-framework name version description dist-tags --json`, 2026-08-11:
+  unscoped name owned by an unrelated package at version 1.5.0.
 - Decisions 0004-0020, reviewed 2026-08-11.

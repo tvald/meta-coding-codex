@@ -14,7 +14,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), for supported ZIP
+  production and copied-core delivery. Exact inventory, reproducibility, state
+  exclusion, and fail-closed boundary lessons remain applicable to npm packaging.
 
 ## Context
 

@@ -37,7 +37,6 @@ const PROCESS_FILES = Object.freeze([
   "workflow-routing.md",
 ]);
 
-const FRAMEWORK_CHANGELOG_MARKER = "<!-- Local framework entries go below this line. -->";
 const MAX_MARKDOWN_FILES = 10_000;
 const MAX_MARKDOWN_FILE_BYTES = 1_048_576;
 const MAX_MARKDOWN_TOTAL_BYTES = 67_108_864;
@@ -211,6 +210,46 @@ async function inspectPath(root, relativePath, { required = true } = {}) {
     throw new CheckFailure("DOCTOR_PATH_UNSAFE", "repository path escapes its lexical location", relativePath);
   }
   return { absolutePath, info };
+}
+
+async function inspectSourceArtifact(root, relativePath, { packageIdentity = false, executable = false } = {}) {
+  const inspected = await inspectPath(root, relativePath, { required: false });
+  if (inspected === null) return false;
+  if (!inspected.info.isFile() || inspected.info.nlink !== 1 ||
+      (inspected.info.mode & (executable ? 0o7022 : 0o7133)) !== 0 || inspected.info.size < 1 ||
+      inspected.info.size > MAX_MARKDOWN_FILE_BYTES) {
+    throw new CheckFailure("DOCTOR_SOURCE_IDENTITY", "source identity artifact is unsafe", relativePath);
+  }
+  if (!packageIdentity) return true;
+  let handle;
+  try {
+    handle = await fs.open(inspected.absolutePath, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    const opened = await handle.stat();
+    if (!opened.isFile() || opened.nlink !== 1 || opened.dev !== inspected.info.dev ||
+        opened.ino !== inspected.info.ino || opened.size !== inspected.info.size ||
+        (opened.mode & 0o7777) !== (inspected.info.mode & 0o7777)) {
+      throw new CheckFailure("DOCTOR_SOURCE_IDENTITY", "source package identity changed", relativePath);
+    }
+    const bytes = await handle.readFile();
+    const current = await fs.lstat(inspected.absolutePath).catch(() => null);
+    if (current === null || current.isSymbolicLink() || current.dev !== opened.dev ||
+        current.ino !== opened.ino || current.size !== opened.size ||
+        (current.mode & 0o7777) !== (opened.mode & 0o7777) || bytes.length !== opened.size ||
+        (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf)) {
+      throw new CheckFailure("DOCTOR_SOURCE_IDENTITY", "source package identity changed", relativePath);
+    }
+    let manifest;
+    try {
+      manifest = JSON.parse(UTF8.decode(bytes));
+    } catch {
+      throw new CheckFailure("DOCTOR_SOURCE_IDENTITY", "source package identity is invalid", relativePath);
+    }
+    return manifest?.name === "@tvald/meta-framework" && typeof manifest.version === "string" &&
+      /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u
+        .test(manifest.version);
+  } finally {
+    await handle?.close();
+  }
 }
 
 async function readMarkdown(root, relativePath) {
@@ -619,10 +658,10 @@ function parseMaintenance(cursor, tasks, today) {
 }
 
 function frameworkPath(relativePath) {
-  return relativePath === "AGENTS.md" || relativePath === "scripts/package-core.sh" ||
-    relativePath === "scripts/install-core.sh" || relativePath.startsWith("readme/meta/") ||
-    relativePath.startsWith(".codex/agents/") || relativePath.startsWith(".claude/agents/") ||
-    relativePath.startsWith(".agents/skills/") || relativePath.startsWith(".claude/skills/");
+  return ["AGENTS.md", "CLAUDE.md", "README.md", "package.json", "package-lock.json",
+    "package-files.json", "scripts/check-npm-package.mjs"].includes(relativePath) ||
+    ["bin/", "lib/", "prompts/", "tests/", "readme/meta/", ".agents/", ".claude/", ".codex/"]
+      .some((prefix) => relativePath.startsWith(prefix));
 }
 
 function statusFor(errors, warnings, errorStart, warningStart) {
@@ -924,53 +963,38 @@ export async function runFrameworkChecks({
   errorStart = errors.length;
   warningStart = warnings.length;
   let sourceRepository = false;
-  let changelogDetails = { sourceRepository };
+  let changelogDetails = { sourceRepository: false, activePath: null };
   try {
-    const sourceSignals = await Promise.all([
-      inspectPath(repositoryRoot, "readme/learning/framework-changelog.md", { required: false }),
-      inspectPath(repositoryRoot, "scripts/package-core.sh", { required: false }),
-      inspectPath(repositoryRoot, "scripts/install-core.sh", { required: false }),
-    ]);
-    sourceRepository = frameworkRepositoryRoot === repositoryRoot && sourceSignals.every((signal) =>
-      signal !== null && signal.info.isFile() && signal.info.nlink === 1);
-    const meta = await getFrameworkMarkdown("readme/meta/framework-changelog.md");
-    if (meta !== null) {
-      const markers = meta.text.split(FRAMEWORK_CHANGELOG_MARKER).length - 1;
-      if (markers !== 1) {
-        errors.push({
-          code: "DOCTOR_CHANGELOG_BOUNDARY",
-          message: "framework changelog must contain the exact local-entry marker once",
-          path: "readme/meta/framework-changelog.md",
-        });
-      } else if (sourceRepository && meta.text.split(FRAMEWORK_CHANGELOG_MARKER)[1].trim() !== "") {
-        errors.push({
-          code: "DOCTOR_SOURCE_CHANGELOG_POPULATED",
-          message: "framework source repository must keep the distributable changelog seed blank",
-          path: "readme/meta/framework-changelog.md",
-        });
-      }
+    if (frameworkRepositoryRoot === repositoryRoot) {
+      const sourceSignals = await Promise.all([
+        inspectSourceArtifact(repositoryRoot, "package.json", { packageIdentity: true }),
+        inspectSourceArtifact(repositoryRoot, "package-files.json"),
+        inspectSourceArtifact(repositoryRoot, "scripts/check-npm-package.mjs", { executable: true }),
+        inspectSourceArtifact(repositoryRoot, "readme/learning/framework-changelog.md"),
+      ]);
+      sourceRepository = sourceSignals.every(Boolean);
     }
-    const activeChangelogPath = sourceRepository ? "readme/learning/framework-changelog.md" :
-      "readme/meta/framework-changelog.md";
-    const activeChangelog = sourceRepository ? await getMarkdown(activeChangelogPath) :
-      await getFrameworkMarkdown(activeChangelogPath);
-    if (activeChangelog !== null) {
-      const lines = lineCount(activeChangelog.text);
-      const entries = changelogEntries(activeChangelog.text);
-      changelogDetails = { sourceRepository, activePath: activeChangelogPath, lines, entries };
-      if (lines > FRAMEWORK_DOCTOR_LIMITS.changelogLines ||
-          entries > FRAMEWORK_DOCTOR_LIMITS.changelogEntries) {
-        warnings.push({
-          code: "DOCTOR_CHANGELOG_BUDGET",
-          message: "active framework changelog exceeds its default line or entry budget",
-          path: activeChangelogPath,
-          details: {
-            lines,
-            lineLimit: FRAMEWORK_DOCTOR_LIMITS.changelogLines,
-            entries,
-            entryLimit: FRAMEWORK_DOCTOR_LIMITS.changelogEntries,
-          },
-        });
+    if (sourceRepository) {
+      const activeChangelogPath = "readme/learning/framework-changelog.md";
+      const activeChangelog = await getMarkdown(activeChangelogPath);
+      if (activeChangelog !== null) {
+        const lines = lineCount(activeChangelog.text);
+        const entries = changelogEntries(activeChangelog.text);
+        changelogDetails = { sourceRepository, activePath: activeChangelogPath, lines, entries };
+        if (lines > FRAMEWORK_DOCTOR_LIMITS.changelogLines ||
+            entries > FRAMEWORK_DOCTOR_LIMITS.changelogEntries) {
+          warnings.push({
+            code: "DOCTOR_CHANGELOG_BUDGET",
+            message: "active framework changelog exceeds its default line or entry budget",
+            path: activeChangelogPath,
+            details: {
+              lines,
+              lineLimit: FRAMEWORK_DOCTOR_LIMITS.changelogLines,
+              entries,
+              entryLimit: FRAMEWORK_DOCTOR_LIMITS.changelogEntries,
+            },
+          });
+        }
       }
     }
   } catch (error) {
@@ -1009,6 +1033,7 @@ export async function runFrameworkChecks({
     errorStart = errors.length;
     warningStart = warnings.length;
     let paths = [];
+    let frameworkPathCount = 0;
     try {
       paths = stagedPaths === undefined ? listStagedPaths(repositoryRoot) :
         [...new Set(stagedPaths.map((item) => validateRelativePath(item, "staged path")))].sort(compareText);
@@ -1025,12 +1050,12 @@ export async function runFrameworkChecks({
           details: { stagedPathCount: paths.length },
         });
       }
-      const frameworkChanges = paths.filter(frameworkPath);
+      const frameworkChanges = sourceRepository ? paths.filter(frameworkPath) : [];
+      frameworkPathCount = frameworkChanges.length;
       if (frameworkChanges.length > 0) {
         const evidence = [
           ["decision", (item) => /^readme\/decisions\/[^/]+\.md$/u.test(item)],
-          ["changelog", (item) => item === (sourceRepository ?
-            "readme/learning/framework-changelog.md" : "readme/meta/framework-changelog.md")],
+          ["changelog", (item) => item === "readme/learning/framework-changelog.md"],
           ["quality", (item) => /^readme\/quality\/[^/]+\.md$/u.test(item)],
           ["task", (item) => closeRecords.includes(item)],
         ];
@@ -1048,7 +1073,7 @@ export async function runFrameworkChecks({
       errors.push(issueFrom(error, "DOCTOR_GIT_FAILED"));
     }
     checks.push({ id: "staged_framework_evidence", status: statusFor(errors, warnings, errorStart, warningStart),
-      details: { stagedPathCount: paths.length, frameworkPathCount: paths.filter(frameworkPath).length } });
+      details: { stagedPathCount: paths.length, frameworkPathCount } });
   }
 
   errors.sort((left, right) => compareText(`${left.code}\0${left.path ?? ""}\0${left.message}`,

@@ -41,8 +41,8 @@ Create or update these artifacts only when useful:
 - `readme/project/brief.md`: stable product context.
 - `readme/project/assumptions.md`: unresolved assumptions, confidence, owner, and validation plan.
 - `readme/project/glossary.md`: domain terms, acronyms, and canonical names.
-- `readme/tasks/store/` through `node readme/meta/framework-data/cli.mjs`: stable task
-  intake, lifecycle,
+- `readme/tasks/store/` through
+  `npm run --ignore-scripts --silent meta -- tasks ...`: stable task intake, lifecycle,
   dependencies, and discovery; `readme/tasks/README.md` is only its static entrypoint.
 - `readme/tasks/NNNN-topic-brief.md` and `NNNN-topic-notes.md`: proportional scope,
   acceptance, amendments, and resumable execution detail.

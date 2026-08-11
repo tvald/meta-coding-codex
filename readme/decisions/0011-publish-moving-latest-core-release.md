@@ -16,6 +16,9 @@ Superseded by:
 
 - [Decision 0012](0012-add-fail-closed-piped-installer.md), for the installation
   procedure only; publication behavior remains current.
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), for the remaining
+  moving `latest` ZIP publication contract. Historical remote state is not mutated by
+  this supersession.
 
 ## Context
 

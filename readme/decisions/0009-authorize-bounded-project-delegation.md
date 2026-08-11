@@ -14,7 +14,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where clients
+  receive copied startup or provider adapter files. Project-owned delegation authority,
+  least privilege, and bounded assignments remain current.
 
 ## Context
 

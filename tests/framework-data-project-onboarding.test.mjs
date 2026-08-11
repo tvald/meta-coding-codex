@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -17,17 +16,36 @@ test("project-onboarding has one maintained workflow and thin discovery metadata
     fs.readFile(METADATA, "utf8"),
   ]);
   assert.match(canonical, /^---\nname: project-onboarding\ndescription: .+\n---\n/u);
-  assert.match(canonical, /\.\.\/\.\.\/\.\.\/readme\/meta\/onboarding\.md/u);
-  assert.match(canonical, /node readme\/meta\/framework-data\/cli\.mjs preflight/u);
+  assert.match(canonical, /npm run --ignore-scripts --silent meta -- docs onboarding/u);
+  for (const command of [
+    "project --version",
+    "project preflight",
+    "project init",
+    "tasks doctor",
+    "tasks startup --limit 20 --max-bytes 32768",
+    "tasks task candidates --max-bytes 32768",
+    "tasks task context T-NNNN --max-bytes 32768",
+  ]) {
+    const exactInvocation = `npm run --ignore-scripts --silent meta -- ${command}`;
+    assert.match(canonical, new RegExp(exactInvocation.replaceAll(" ", "\\s+"), "u"));
+  }
+  assert.doesNotMatch(canonical, /tasks doctor[^\n`]*--max-bytes/u);
   for (const disposition of [
-    "ready_to_initialize", "valid_current_store", "uninitialized", "legacy_format1",
-    "partial", "prepared", "collision", "malformed", "busy",
+    "fresh", "ready_to_initialize", "ready_to_add_bootstraps", "valid_current_project",
+    "source_repository", "legacy_format1", "partial", "prepared", "bootstrap_collision",
+    "collision", "malformed", "busy",
   ]) assert.match(canonical, new RegExp(`\\b${disposition}\\b`, "u"));
-  assert.match(canonical, /Unsupported Node, native Windows, missing Git, schema mismatch, invalid/u);
+  for (const guard of [
+    "Unsupported Node", "native Windows", "missing Git", "schema mismatch", "invalid output",
+  ]) assert.match(canonical, new RegExp(guard.replaceAll(" ", "\\s+"), "u"));
   assert.match(canonical, /only after observing exit zero/u);
   assert.match(canonical, /task candidates/u);
   assert.match(canonical, /task context T-NNNN/u);
   assert.doesNotMatch(canonical, /curl\s*\|\s*(?:ba)?sh/u);
+  assert.doesNotMatch(canonical, /node readme\/meta\/framework-data\/cli\.mjs/u);
+  assert.doesNotMatch(canonical, /(?:\.\.\/)+readme\/meta\//u);
+  assert.match(canonical, /Do not substitute[\s\S]{0,160}global binary[\s\S]{0,80}`npx`[\s\S]{0,80}network fetch/iu);
+  assert.doesNotMatch(canonical, /^\s*(?:\$\s*)?(?:npx\s+|npm (?:install|i)\s+[^\n]*-g\b|npm exec --global\b)/mu);
 
   assert.match(claude, /^---\nname: project-onboarding\ndescription: .+\n---\n/u);
   assert.match(claude, /\.\.\/\.\.\/\.\.\/\.agents\/skills\/project-onboarding\/SKILL\.md/u);
@@ -38,17 +56,4 @@ test("project-onboarding has one maintained workflow and thin discovery metadata
   await assert.rejects(fs.lstat(path.join(path.dirname(CANONICAL), "scripts")), { code: "ENOENT" });
   await assert.rejects(fs.lstat(path.join(path.dirname(CANONICAL), "references")), { code: "ENOENT" });
   await assert.rejects(fs.lstat(path.join(path.dirname(CANONICAL), "assets")), { code: "ENOENT" });
-});
-
-test("installer inventory and collision logic cover the complete skill bundle", () => {
-  const result = spawnSync("bash", [path.join(ROOT, "scripts", "install-core.sh"),
-    "--print-expected-inventory"], { cwd: ROOT, encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  const entries = result.stdout.trim().split("\n");
-  assert.equal(new Set(entries).size, entries.length);
-  for (const entry of [
-    ".agents/skills/project-onboarding/SKILL.md",
-    ".agents/skills/project-onboarding/agents/openai.yaml",
-    ".claude/skills/project-onboarding/SKILL.md",
-  ]) assert.equal(entries.filter((candidate) => candidate === entry).length, 1);
 });

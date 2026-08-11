@@ -18,8 +18,8 @@ agent restart, approval waits, and deliberate user interruption.
 ## Durable Recovery State
 
 `readme/README.md` is the first project pointer and `readme/tasks/README.md` is the static
-task-store entrypoint. Run `node readme/meta/framework-data/cli.mjs doctor` and
-`node readme/meta/framework-data/cli.mjs startup` before task details.
+task-store entrypoint. Run `npm run --ignore-scripts --silent meta -- tasks doctor` and
+`npm run --ignore-scripts --silent meta -- tasks startup` before task details.
 The structured store owns pause, stable identity and revisions, authority provenance,
 outcome, lifecycle, dependencies, route/risk, task gate, next action, and detail/result
 links.

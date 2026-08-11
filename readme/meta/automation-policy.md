@@ -20,9 +20,11 @@ Agents may do these without asking when they are relevant to the current task:
 - Run build, lint, typecheck, test, format, and local app commands.
 - Install local development utilities needed to inspect, test, or format the project when repository policy allows it.
 - Refactor narrowly when required to implement the requested change safely.
-- Patch this framework when a clear repeated gap or user preference should become durable.
-- Read and maintain `readme/README.md`; append concrete learnings and framework edits to
-  their canonical logs when triggered.
+- In the framework source repository, patch this framework when a clear repeated gap or
+  user preference should become durable. In an installed client, never patch package
+  bytes; report the defect upstream and replace the exact dependency after a fix.
+- Read and maintain `readme/README.md`; append concrete learnings and source-framework
+  edits to their project-side canonical logs when triggered.
 - Create a local, task-scoped commit after completing and verifying file changes in a Git repository, following [Local Commit Completion](#local-commit-completion).
 - Continue after a clarification window using explicit assumptions.
 - Resume interrupted work from repository state, task notes, plans, and agent rosters without asking the product owner to reconstruct context.
@@ -37,8 +39,8 @@ Agents may do these without asking when they are relevant to the current task:
 ## Task Intake Persistence
 
 The Root Orchestrator may persist newly delivered instructions through
-`node readme/meta/framework-data/cli.mjs task add` without waiting for the Active task
-to finish. Write the minimal record
+`npm run --ignore-scripts --silent meta -- tasks task add` without waiting for the
+Active task to finish. Write the minimal record
 immediately and preserve it through interruptions. Do not create a commit for unfinished
 intake merely to persist it; that requires separate explicit user direction or
 repository authority. At completion, stage only the selected task's record and owned

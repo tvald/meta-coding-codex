@@ -14,7 +14,10 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where this decision
+  prescribed copying provider skill bundles into clients and packaging them as installer
+  collision domains. The bounded proposal-only recovery contract remains package-owned
+  guidance.
 
 ## Context
 

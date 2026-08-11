@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "snapshot": {
+    "kind": "git_commit",
+    "commit": "c90211b9a2cd888a1796dbd584384fd1f9eaa132",
+    "committedAt": "2026-08-11T08:26:26Z",
+    "description": "Last reviewed pre-npm portable archive source snapshot",
+    "derivation": "Inventory is the 49-file output declared by scripts/install-core.sh at this commit. Every entry hashes the Git blob except AGENTS.md, which hashes the archive's generated startup prefix before the source-only Operating Contract. This manifest makes no claim about a remote release or any client path."
+  },
+  "digestAlgorithm": "sha256",
+  "aggregate": {
+    "fileCount": 49,
+    "totalBytes": 346611
+  },
+  "files": [
+    {
+      "path": ".agents/skills/codex-quota-monitor/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 3661,
+      "sha256": "1a804c41620ebc235cb2ffe45056f13da1113eb90cca99811b2ed857b9ac70c8"
+    },
+    {
+      "path": ".agents/skills/codex-quota-monitor/agents/openai.yaml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 213,
+      "sha256": "db5e60831fc37474ba53a489ab5bd39c7f275758b57bfcbaedc53d7fb48f3755"
+    },
+    {
+      "path": ".agents/skills/project-onboarding/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 5636,
+      "sha256": "db0feba12bdb4ca71d2734c2db92c760e3d859645260eeedfe3eb7c0bdaf147a"
+    },
+    {
+      "path": ".agents/skills/project-onboarding/agents/openai.yaml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 230,
+      "sha256": "d40bd780114a57ca9a140e3e54b1b7d70f5aa2a8176ce6f607199715c3ff184b"
+    },
+    {
+      "path": ".agents/skills/task-recovery/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 13830,
+      "sha256": "fdbec84c60efe9c6f895b8a240399362de4be56b8e3e9ceab6f3618c5c87b19a"
+    },
+    {
+      "path": ".agents/skills/task-recovery/agents/openai.yaml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 224,
+      "sha256": "adccca516d925b745adeef9ebf6539ba88ab0d10de7ae9647de32a6d5bfab759"
+    },
+    {
+      "path": ".claude/agents/reviewer.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 675,
+      "sha256": "27cee943002f25b15ff9456a569ac109192bf9ea371db1b7368c0c06a0b79053"
+    },
+    {
+      "path": ".claude/agents/security-reviewer.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 764,
+      "sha256": "b48da33efcf5d80a41bc286381891c13a23d116718a8d6316b70a3f57d87ac55"
+    },
+    {
+      "path": ".claude/agents/verifier.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 977,
+      "sha256": "e7aba5a05cbf4e31c5f1f3d78d2e3c9abfcd1d07567f1949fe737b722c1d265c"
+    },
+    {
+      "path": ".claude/skills/claude-quota-monitor/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 6513,
+      "sha256": "e3183a05411a06aa72aa39553ca7a57b1de67476d24d27f98191e7dd2cd9027c"
+    },
+    {
+      "path": ".claude/skills/project-onboarding/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 551,
+      "sha256": "a293765723b78d104945d3d99125d258c0ca81ed3b41929da449aaa5d1f0b3a9"
+    },
+    {
+      "path": ".claude/skills/task-recovery/SKILL.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 557,
+      "sha256": "dae2e2a36d6b6e9754be394408e1d224c7b28c241ffe979cf3f5d7e0b76f2539"
+    },
+    {
+      "path": ".codex/agents/reviewer.toml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 661,
+      "sha256": "2031b73ad3fd42c52b3d35d2f1371eb87293fe843451fa2b9f97b45caaf10487"
+    },
+    {
+      "path": ".codex/agents/security-reviewer.toml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 750,
+      "sha256": "33c119ca1547ab6917702fe18c4182b8edb3d63207e05ca962d4b3e63d177f66"
+    },
+    {
+      "path": ".codex/agents/verifier.toml",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 855,
+      "sha256": "9d51153ee135670e57b71c1312175be0f23c012aee55d3cb37ae6fc80a2f83c9"
+    },
+    {
+      "path": "AGENTS.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1778,
+      "sha256": "82ecf499a271bedec254ea3441c097afa486e453b33ec83515e4c72bffde0a52"
+    },
+    {
+      "path": "readme/meta/README.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 12965,
+      "sha256": "f1547495faf681cb928e8e28c09898ca3c248aaf9dda3fa95a172a03feaa27a1"
+    },
+    {
+      "path": "readme/meta/agent-definitions.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 12338,
+      "sha256": "d20ea8022e239b9e5e8e8eed2dd052d7fed7c5f47ad50b5b45ef4677649ddf92"
+    },
+    {
+      "path": "readme/meta/automation-policy.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 10499,
+      "sha256": "469dcfdcb3db3719a938d45933e9ef6724f308161e742f7eb1da55fb2bfdbbfc"
+    },
+    {
+      "path": "readme/meta/development-standards.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 6260,
+      "sha256": "2a3b11b79a297f43734826815b6b668af01ea6fdd7eef42fe70d44a75768d29b"
+    },
+    {
+      "path": "readme/meta/framework-changelog.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1643,
+      "sha256": "fd96d97375950147c1394946f44fad63693453842d7c9cca31f635dc6e107266"
+    },
+    {
+      "path": "readme/meta/framework-data/cli.mjs",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 52244,
+      "sha256": "55b6f1d20ffd6594441014ae08373cacc595a15fc7caa1ebf9f1e1b07abdc9b4"
+    },
+    {
+      "path": "readme/meta/framework-data/framework-checks.mjs",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 41285,
+      "sha256": "177947e3a2f4d684a36a2bca5675d61f2d9bc64ad8c9f32dffa72360e66960a3"
+    },
+    {
+      "path": "readme/meta/framework-data/importer.mjs",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 24519,
+      "sha256": "f8fcd32f95834992d447417ff3ac76449970fc9e38296bf35948e816cf86c62d"
+    },
+    {
+      "path": "readme/meta/framework-data/schema.mjs",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 12653,
+      "sha256": "f7089f2f38507cbf403cce3f175297016ba83a968b709031682f76c5d313985f"
+    },
+    {
+      "path": "readme/meta/framework-data/schemas/control-v1.schema.json",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1001,
+      "sha256": "7774542f5017efbad110380641ad494627a61069daafbd347e682bf7d7b3bb17"
+    },
+    {
+      "path": "readme/meta/framework-data/schemas/task-v1.schema.json",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 5330,
+      "sha256": "286d1dfc5abfa617cc1125fed430af4fec41565a5e145addb975e147a5a706ad"
+    },
+    {
+      "path": "readme/meta/framework-data/store.mjs",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 38778,
+      "sha256": "978940cbe8395ed4b86af914f5250b05d3ae0cdd608bf83731308f4d5c79559a"
+    },
+    {
+      "path": "readme/meta/framework-improvement.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 6572,
+      "sha256": "348f01a556af6446d3484fc62e7b4791c661157783436f05d68ec771efe9e4c3"
+    },
+    {
+      "path": "readme/meta/knowledge-ingestion.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 7151,
+      "sha256": "7c325271dc3962e2be43d36ba89b47c479601a3ab23e65d4711db291ce408746"
+    },
+    {
+      "path": "readme/meta/knowledge-management.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 12572,
+      "sha256": "59c1aa6b9e7e447e56dae16eeca5f72676e4e0c29a8826c6911ce48a7b6c56b0"
+    },
+    {
+      "path": "readme/meta/onboarding.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 5420,
+      "sha256": "00bb5beb0fcba397d1ca26990942a5156fbf9fc9d22b2628b36ffdc9afa324ad"
+    },
+    {
+      "path": "readme/meta/quality-system.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 13651,
+      "sha256": "ce83d5c78e8916078dc8b3184aa3a1cdef0b745999122ab63192a87f5fa82045"
+    },
+    {
+      "path": "readme/meta/references.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 7862,
+      "sha256": "16d470821132d7c0f68e7b9accd27650b600a6cb02a54d6544b1cd332cf5379e"
+    },
+    {
+      "path": "readme/meta/resumption-protocol.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 7162,
+      "sha256": "aa8256302b73de70d287afb59e62c7cf62b881aa988be2022a0dd05e579d2de1"
+    },
+    {
+      "path": "readme/meta/root-loop.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 9123,
+      "sha256": "6434c4242329afaa7e4c5ea4cb146805893e9315b6da39b64ce70b09b44e8554"
+    },
+    {
+      "path": "readme/meta/templates/assumptions.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 543,
+      "sha256": "f56a1782c9a5b0d81d57bf308e6a8d4ce516350f0791bdf13147a80a77442aa7"
+    },
+    {
+      "path": "readme/meta/templates/decision-record.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 519,
+      "sha256": "cdeaf3278bc6ae0f1e92e09a18809c1b9b651ddc1b31410de02285ad7c778c04"
+    },
+    {
+      "path": "readme/meta/templates/incident-note.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 768,
+      "sha256": "d6c7f2b63349f02f870c856a1155e7f4374e987c3f6230d560d5090fa3f71659"
+    },
+    {
+      "path": "readme/meta/templates/project-brief.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1071,
+      "sha256": "3b8f62f3cb632b8df651457f37289c5ce5726fc3b444fcb6242dbe8758aefa37"
+    },
+    {
+      "path": "readme/meta/templates/project-context.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1154,
+      "sha256": "212363bb83c64c826635b3f5086e4fd9f5c86046ed6db888486726ce55a75bf2"
+    },
+    {
+      "path": "readme/meta/templates/project-state.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1610,
+      "sha256": "9f563286a30c48f50473c4a9c32069ce144abc506e45933612fe85a46c56a986"
+    },
+    {
+      "path": "readme/meta/templates/quality-record.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 2342,
+      "sha256": "9173e35219a2dc8d0fb5d6f3fec2eef4d095be8b3430a8765fe42072e8b7d6d6"
+    },
+    {
+      "path": "readme/meta/templates/standards.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 987,
+      "sha256": "2749d50251c8d9937894013115c5691071d06447d251cd6b9839160b04959f18"
+    },
+    {
+      "path": "readme/meta/templates/task-brief.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 1828,
+      "sha256": "09fa53d88f9b81110aad75e8364a886e0b7b44e38b1221a59e3625167813430c"
+    },
+    {
+      "path": "readme/meta/templates/task-catalog.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 2405,
+      "sha256": "c36c69e2a63c6754dec56827dc28b23956adce5dd85ecb222f8a4d3ab257cc64"
+    },
+    {
+      "path": "readme/meta/templates/task-notes.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 2117,
+      "sha256": "0df7d9fac7e5396d941b343d5f1c012f5fec73cc95d7a3eef9c4bbbae4bdc0b8"
+    },
+    {
+      "path": "readme/meta/templates/threat-model-card.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 811,
+      "sha256": "c1719e03d8d8e9abbaffeb51ccea5d4157bb53cc5eb4c5229b5281bef28b7b08"
+    },
+    {
+      "path": "readme/meta/workflow-routing.md",
+      "type": "ordinary_file",
+      "mode": "0644",
+      "bytes": 3553,
+      "sha256": "9ecc84b8ae4123aa1698182eb7d876b8c6296bef57d791eb538cdde19d583dcb"
+    }
+  ]
+}

@@ -20,7 +20,7 @@ to its canonical repository owner and stop relying on the external copy.
 | Artifact | Canonical Purpose | Owner |
 | --- | --- | --- |
 | `readme/README.md` | Bounded project policies, dead ends, documentation index, and maintenance baseline | Root Orchestrator |
-| `readme/tasks/store/` | Versioned task identity, authority, lifecycle, dependencies, route/risk, gates, next action, details, and result | Root Orchestrator through `node readme/meta/framework-data/cli.mjs` only |
+| `readme/tasks/store/` | Versioned task identity, authority, lifecycle, dependencies, route/risk, gates, next action, details, and result | Root Orchestrator through `npm run --ignore-scripts --silent meta -- tasks ...` only |
 | `readme/tasks/README.md` | Static task-store command entrypoint; never a projection | Root Orchestrator |
 | `readme/project/brief.md` | Product purpose, users, outcomes, and constraints | Agents update from product evidence |
 | `readme/project/context.md` | Concise stack, conventions, and conflict-prone implementation rules | Architect or Root Orchestrator |
@@ -37,7 +37,7 @@ to its canonical repository owner and stop relying on the external copy.
 | `readme/threat-models/` | Security and trust-boundary analysis | Security or risk owner |
 | `readme/incidents/` | Blameless incident and near-miss learning | Incident owner |
 | `readme/learning/retrospectives.md` | Searchable cross-session correction signals | Agent observing the signal |
-| `readme/meta/framework-changelog.md` | Installed-host framework changes | Agent changing the installed framework |
+| `readme/learning/framework-changelog.md` | Framework-source edit history, only in a repository whose product is this framework | Source-project policy and Root Orchestrator |
 
 The cursor, task entrypoint, and structured store are mandatory after onboarding. Create
 other project artifacts only when they have real content.
@@ -102,8 +102,9 @@ unverified task blocks its dependents, not independent eligible work.
 
 ## Structured Store Contract
 
-Use `node readme/meta/framework-data/cli.mjs` from the repository root. Every normal read
-validates the whole store before emitting a bounded JSON envelope. Exact-ID and
+Use `npm run --ignore-scripts --silent meta -- tasks ...` from the physical client
+repository root. Every normal read validates the whole store before emitting a bounded
+JSON envelope. Exact-ID and
 dependency queries include terminal records; default lists omit only `Done`,
 `Cancelled`, and `Superseded` while reporting omissions and truncation.
 List/export queries support exact authority and tag filters plus accepted/completed date
@@ -122,8 +123,8 @@ migration evidence; normal commands never read them.
 ## Project Cursor
 
 Read `readme/README.md` at startup, then run
-`node readme/meta/framework-data/cli.mjs doctor` and
-`node readme/meta/framework-data/cli.mjs startup`. Keep the cursor at or below 80 lines
+`npm run --ignore-scripts --silent meta -- tasks doctor` and
+`npm run --ignore-scripts --silent meta -- tasks startup`. Keep the cursor at or below 80 lines
 with only standing project policies, current cross-task dead ends, the
 documentation map, and maintenance baseline. Do not copy primary task, recent outcomes,
 task gates, scheduling, or completion counts into it.

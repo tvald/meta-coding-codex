@@ -7,7 +7,7 @@ project-wide facts, not a task projection or history log.
 ## Task State
 
 - Task entrypoint: [Task store](tasks/README.md)
-- Startup query: `node readme/meta/framework-data/cli.mjs startup`
+- Startup query: `npm run --ignore-scripts --silent meta -- tasks startup`
 
 Task identity, authority, lifecycle, dependencies, gates, next actions, details, and
 results live only in the structured task store. Do not copy primary or recent-task state

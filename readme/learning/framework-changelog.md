@@ -1,10 +1,10 @@
 # Framework Changelog
 
-This upstream framework-source repository records its own framework edits here so the
-distributed [blank changelog seed](../meta/framework-changelog.md) never carries source
-project history. This is the project-specific override established by
-[Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md); installed
-frameworks use the meta-path log.
+This framework-source repository records its own framework edits in
+`readme/learning/framework-changelog.md`. Immutable npm clients do not receive or
+maintain a framework changelog; accepted upstream fixes ship only through an exact
+dependency and lockfile replacement. This source-owned boundary is established by
+[Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
 
 Keep entries append-only. Limit the active file to 20 entries or 160 lines; move older
 entries unchanged to `readme/archive/framework-changelog-YYYY.md` and link the archive.
@@ -12,6 +12,23 @@ Review sunset triggers during the scheduled hygiene pass in
 [knowledge management](../meta/knowledge-management.md).
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
+
+## 2026-08-11: Retire Copied-Core Delivery
+
+- Status: Adopted.
+- Evidence: T-0030's frozen architecture and security contract, the exact reviewed
+  pre-npm snapshot at `c90211b9a2cd888a1796dbd584384fd1f9eaa132`, and its 49-entry
+  data-only transition manifest; final verification remains in the T-0030 quality record.
+- Change: Retired ZIP, moving-release, and curl delivery artifacts; removed the
+  client-side changelog seed; retained source-only discovery bundles outside the npm
+  tarball; and documented exact package replacement, rollback, upstream contribution,
+  and conservative copied-client transition guidance.
+- Success signal: Every supported client path uses the immutable local npm dependency,
+  while old copied clients receive only bounded provenance guidance and inert ownership
+  data rather than executable cleanup.
+- Review or sunset trigger: A live copied-core path, mutable installed package, client
+  framework log, ambiguous legacy deletion, source-bundle tarball leak, or replacement
+  path that does not bind manifest and lockfile together.
 
 ## 2026-08-11: Adopt Thin Harness Bootstraps And Guarded Client Initialization
 
@@ -133,25 +150,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   pre-claim writer cannot corrupt canonical state.
 - Review or sunset trigger: lost task data, unbounded query/context growth, broken lock
   recovery, platform durability demand, migration ambiguity, or direct-edit incidents.
-
-## 2026-08-05: Reconcile Downstream Framework Changes And Ship A Changelog Seed
-
-- Status: Revised; individual imported groups were Adopted, Revised, or Rejected under
-  the source repository's skip-Pilot policy.
-- Evidence: Product-owner instructions through T-0016@r2, two downstream failure signals
-  transferred into the task note, an independent Reviewer audit, exact 36-entry package
-  and installer inventories, reproducible archives, and positive and negative install
-  fixtures; see [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md).
-- Change: Added the blank meta-path changelog seed and kept upstream framework-development
-  state project-side; adopted a repository-backed auxiliary-memory rule, a collision-safe
-  ~20-row task-catalog budget with concise cells, and context-triggered decision review;
-  rejected the foreign task schema, KB projection, worker-write, and intermediate-commit
-  rules. Extended package and installer validation so local changelog entries cannot
-  enter a clean installation.
-- Success signal: A fresh install contains one blank, self-describing changelog seed;
-  producer, consumer, and CI-derived inventories agree; foreign state and populated-seed
-  mutations fail before destination mutation; upstream task and audit history remains in
-  project-side records.
-- Review or sunset trigger: A populated seed ships or installs, producer/consumer
-  inventory diverges, the source-versus-consumer state boundary confuses an adopter, or
-  the 20-row catalog trigger overwrites or obscures archived task history.

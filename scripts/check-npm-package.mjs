@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
@@ -33,16 +33,21 @@ export const forbiddenLifecycleScripts = Object.freeze([
   'postversion',
 ]);
 const requiredFileGlobs = [
-  '.agents/skills/',
-  '.claude/agents/',
-  '.claude/skills/',
-  '.codex/agents/',
   'bin/',
   'lib/',
   'package-files.json',
   'prompts/',
   'readme/meta/',
 ];
+const legacyManifestPath = 'readme/meta/legacy-copy-manifest-v1.json';
+const legacySnapshotCommit = 'c90211b9a2cd888a1796dbd584384fd1f9eaa132';
+const forbiddenPackagePrefixes = Object.freeze(['.agents/', '.claude/', '.codex/']);
+const sourceOnlyConjunction = Object.freeze([
+  'package.json',
+  'package-files.json',
+  'scripts/check-npm-package.mjs',
+  'readme/learning/framework-changelog.md',
+]);
 const expectedTarballName = 'tvald-meta-framework-1.0.0.tgz';
 const spawnBounds = {
   encoding: 'utf8',
@@ -64,6 +69,61 @@ function assertCanonicalInventory(files) {
   const sorted = [...files].sort();
   assert(JSON.stringify(files) === JSON.stringify(sorted), 'package inventory must be sorted');
   assert(new Set(files).size === files.length, 'package inventory must not contain duplicates');
+  assert(!files.some((entry) => forbiddenPackagePrefixes.some((prefix) => entry.startsWith(prefix))),
+    'provider discovery bundles must not be packaged');
+  const metaJson = files.filter((entry) => entry.startsWith('readme/meta/') && entry.endsWith('.json'));
+  assert(JSON.stringify(metaJson) === JSON.stringify([
+    'readme/meta/framework-data/schemas/control-v1.schema.json',
+    'readme/meta/framework-data/schemas/task-v1.schema.json',
+    legacyManifestPath,
+  ]), 'readme/meta JSON inventory contains an unreviewed data file');
+}
+
+function exactKeys(value, expected) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) &&
+    JSON.stringify(Object.keys(value)) === JSON.stringify(expected);
+}
+
+export function validateLegacyCopyManifest(candidate) {
+  assert(exactKeys(candidate, ['schemaVersion', 'snapshot', 'digestAlgorithm', 'aggregate', 'files']),
+    'legacy copy manifest top-level shape is invalid');
+  assert(candidate.schemaVersion === 1, 'legacy copy manifest schemaVersion must be 1');
+  assert(exactKeys(candidate.snapshot, ['kind', 'commit', 'committedAt', 'description', 'derivation']),
+    'legacy copy manifest snapshot shape is invalid');
+  assert(candidate.snapshot.kind === 'git_commit' && candidate.snapshot.commit === legacySnapshotCommit,
+    'legacy copy manifest source snapshot is invalid');
+  assert(candidate.snapshot.committedAt === '2026-08-11T08:26:26Z',
+    'legacy copy manifest source timestamp is invalid');
+  assert(typeof candidate.snapshot.description === 'string' && candidate.snapshot.description.length > 0 &&
+    candidate.snapshot.description.length <= 512 && typeof candidate.snapshot.derivation === 'string' &&
+    candidate.snapshot.derivation.length > 0 && candidate.snapshot.derivation.length <= 1_024,
+  'legacy copy manifest snapshot description is invalid');
+  assert(candidate.digestAlgorithm === 'sha256', 'legacy copy manifest digest algorithm must be sha256');
+  assert(exactKeys(candidate.aggregate, ['fileCount', 'totalBytes']) &&
+    candidate.aggregate.fileCount === 49 && candidate.aggregate.totalBytes === 346_611,
+  'legacy copy manifest aggregate is invalid');
+  assert(Array.isArray(candidate.files) && candidate.files.length === candidate.aggregate.fileCount,
+    'legacy copy manifest file count is invalid');
+  let totalBytes = 0;
+  let previous = null;
+  for (const record of candidate.files) {
+    assert(exactKeys(record, ['path', 'type', 'mode', 'bytes', 'sha256']),
+      'legacy copy manifest record shape is invalid');
+    assert(typeof record.path === 'string' && record.path.length > 0 && record.path.length <= 4_096 &&
+      !record.path.startsWith('/') && !record.path.includes('\\') && posix.normalize(record.path) === record.path &&
+      !record.path.split('/').some((part) => part === '' || part === '.' || part === '..'),
+    'legacy copy manifest record path is unsafe');
+    assert(previous === null || previous < record.path, 'legacy copy manifest records must be sorted and unique');
+    assert(record.type === 'ordinary_file' && record.mode === '0644',
+      'legacy copy manifest record type or mode is invalid');
+    assert(Number.isSafeInteger(record.bytes) && record.bytes > 0 && record.bytes <= 1_048_576,
+      'legacy copy manifest record size is invalid');
+    assert(typeof record.sha256 === 'string' && /^[0-9a-f]{64}$/u.test(record.sha256),
+      'legacy copy manifest record digest is invalid');
+    totalBytes += record.bytes;
+    previous = record.path;
+  }
+  assert(totalBytes === candidate.aggregate.totalBytes, 'legacy copy manifest aggregate bytes are invalid');
 }
 
 export function validateManifest(candidate = manifest) {
@@ -228,6 +288,11 @@ function digest(path, algorithm, encoding) {
 function main() {
   validateManifest();
   assertCanonicalInventory(inventory.files);
+  const legacyManifestText = readFileSync(join(sourceRoot, legacyManifestPath), 'utf8');
+  const legacyManifest = JSON.parse(legacyManifestText);
+  assert(legacyManifestText === `${JSON.stringify(legacyManifest, null, 2)}\n`,
+    'legacy copy manifest must use canonical JSON formatting');
+  validateLegacyCopyManifest(legacyManifest);
   const workRoot = mkdtempSync(join(tmpdir(), 'meta-framework-pack-'));
   try {
     const firstDirectory = join(workRoot, 'first');
@@ -244,6 +309,10 @@ function main() {
     assert(JSON.stringify(actualFiles) === JSON.stringify(inventory.files), 'packed files differ from package-files.json');
     assert(JSON.stringify(second.artifact.files.map(({ path }) => path).sort()) === JSON.stringify(inventory.files), 'second packed inventory differs');
     assert(!actualFiles.includes('binding.gyp'), 'implicit node-gyp installation input is forbidden');
+    assert(!actualFiles.some((entry) => forbiddenPackagePrefixes.some((prefix) => entry.startsWith(prefix))),
+      'packed artifact contains provider discovery files');
+    assert(!sourceOnlyConjunction.every((entry) => actualFiles.includes(entry)),
+      'packed artifact contains the complete source-repository identity conjunction');
     assert(first.artifact.files.every(({ mode }) => (mode & 0o022) === 0), 'package files must not be group/world writable');
 
     const binEntry = first.artifact.files.find(({ path }) => path === manifest.bin['meta-framework']);

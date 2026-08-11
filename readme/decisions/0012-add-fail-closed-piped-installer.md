@@ -19,6 +19,8 @@ Superseded by:
 - [Decision 0013](0013-streamline-installer-invocation.md), for the public pipe
   invocation and stream-completion mechanism only; archive and destination behavior
   remain current.
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), for the remaining
+  curl, archive, fresh-copy, collision-bundle, and installer transaction contract.
 
 ## Context
 

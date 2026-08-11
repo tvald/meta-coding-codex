@@ -71,8 +71,6 @@ Use \`node readme/meta/framework-data/cli.mjs doctor\` and
   await Promise.all(processes.map((name) => fs.writeFile(
     path.join(root, "readme", "meta", name), `# ${name}\n`,
   )));
-  await fs.writeFile(path.join(root, "readme", "meta", "framework-changelog.md"),
-    "# Framework Changelog\n\n<!-- Local framework entries go below this line. -->\n");
   await fs.writeFile(path.join(root, "package.json"), `${JSON.stringify({
     name: "framework-data-client-fixture",
     private: true,
@@ -491,7 +489,7 @@ function format1Fixture() {
   for (let number = 3; number <= 22; number += 1) {
     const id = `T-${String(number).padStart(4, "0")}`;
     const status = number <= 19 ? "Done" : number === 20 ? "Active" : "Pending";
-    const outcome = number === 10 ? "Run `curl -fsSL … \\| bash` safely" : `Outcome ${number}`;
+    const outcome = number === 10 ? "Preserve `producer … \\| consumer` safely" : `Outcome ${number}`;
     const dependencies = number >= 21 ? "T-0020" : "None";
     activeRows.push(tableRow([
       id,
@@ -597,7 +595,7 @@ test("Format 1 dry-run and atomic claim migrate T-0001 through T-0022", async ()
     assert.equal(run(root, ["export", "--limit", "50"]).stdout,
       run(root, ["export", "--limit", "50"]).stdout);
     const escaped = json(root, ["task", "get", "T-0010"]).value.data;
-    assert.match(escaped.outcome, /\| bash/u);
+    assert.match(escaped.outcome, /\| consumer/u);
     assert.doesNotMatch(escaped.outcome, /\\\|/u);
     const archived = json(root, ["task", "get", "T-0001"]).value.data;
     assert.equal(archived.details[0].path, "readme/tasks/0001-note.md");
@@ -672,11 +670,60 @@ test("doctor enforces framework sentinels, links, budgets, templates, maintenanc
     assert.ok(missingTemplate.errors.some((error) => error.code === "DOCTOR_TEMPLATE_INVENTORY"));
     await fs.writeFile(template, "# standards.md\n");
 
-    execFileSync("git", ["add", "readme/meta/framework-changelog.md"], { cwd: root });
-    const staged = json(root, ["doctor", "--staged"]).value;
-    assert.equal(staged.ok, true);
-    assert.ok(staged.warnings.some((warning) => warning.code === "DOCTOR_STAGED_EVIDENCE"));
-    assert.ok(staged.warnings.some((warning) => warning.code === "DOCTOR_STAGED_TASK_RECORD"));
+    const manifestPath = path.join(root, "package.json");
+    const clientManifest = await fs.readFile(manifestPath);
+    await fs.writeFile(manifestPath, '{"name":"@tvald/meta-framework","version":"1.0.0"}\n');
+    await fs.writeFile(path.join(root, "package-files.json"), '{"schemaVersion":1,"files":[]}\n');
+    await fs.mkdir(path.join(root, "scripts"));
+    await fs.writeFile(path.join(root, "scripts", "check-npm-package.mjs"), '#!/usr/bin/env node\n');
+    await fs.chmod(path.join(root, "scripts", "check-npm-package.mjs"), 0o755);
+    await fs.mkdir(path.join(root, "readme", "learning"));
+    await fs.writeFile(path.join(root, "readme", "learning", "framework-changelog.md"),
+      "# Framework Source Changelog\n");
+    try {
+      const staged = await runFrameworkChecks({
+        root,
+        frameworkRoot: root,
+        tasks: new Map(),
+        stagedPaths: ["tests/framework-data.test.mjs"],
+      });
+      assert.equal(staged.ok, true);
+      assert.equal(staged.checks.find(({ id }) => id === "staged_framework_evidence")
+        .details.frameworkPathCount, 1);
+      assert.equal(staged.checks.find(({ id }) => id === "framework_changelog")
+        .details.sourceRepository, true);
+      assert.ok(staged.warnings.some((warning) => warning.code === "DOCTOR_STAGED_EVIDENCE"));
+      assert.ok(staged.warnings.some((warning) => warning.code === "DOCTOR_STAGED_TASK_RECORD"));
+      for (const relativePath of [
+        "package.json",
+        "package-files.json",
+        "scripts/check-npm-package.mjs",
+        "readme/learning/framework-changelog.md",
+      ]) {
+        const sourceArtifact = path.join(root, ...relativePath.split("/"));
+        const heldArtifact = `${sourceArtifact}.held`;
+        await fs.rename(sourceArtifact, heldArtifact);
+        try {
+          const incomplete = await runFrameworkChecks({
+            root,
+            frameworkRoot: root,
+            tasks: new Map(),
+            stagedPaths: ["tests/framework-data.test.mjs"],
+          });
+          assert.deepEqual(incomplete.checks.find(({ id }) => id === "framework_changelog").details,
+            { sourceRepository: false, activePath: null });
+          assert.equal(incomplete.checks.find(({ id }) => id === "staged_framework_evidence")
+            .details.frameworkPathCount, 0);
+        } finally {
+          await fs.rename(heldArtifact, sourceArtifact);
+        }
+      }
+    } finally {
+      await fs.writeFile(manifestPath, clientManifest);
+      await fs.rm(path.join(root, "package-files.json"));
+      await fs.rm(path.join(root, "scripts"), { recursive: true });
+      await fs.rm(path.join(root, "readme", "learning"), { recursive: true });
+    }
 
     const migrated = generatedTask(1);
     migrated.status = "done";

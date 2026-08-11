@@ -9,7 +9,7 @@ gates, next action, and result.
 - Task ID:
 - Initial revision: r1
 - Task store: `readme/tasks/store/` through
-  `node readme/meta/framework-data/cli.mjs task get <ID>`
+  `npm run --ignore-scripts --silent meta -- tasks task get <ID>`
 - Accepted source: User instruction / accepted in-scope finding / decision
 - Source reference and date:
 - Parent or split task IDs: None
