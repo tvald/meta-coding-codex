@@ -113,7 +113,8 @@ skills. They should be inputs to structural validation and the applicable proces
 ### Explicit Rejections
 
 - A monolithic root-loop or “run the framework” skill.
-- A task-catalog mutator, scheduler, route/risk scorer, or automatic archival tool.
+- A scheduler, route/risk scorer, or automatic archival tool. T-0018 supersedes this
+  assessment's earlier rejection of a guarded task-state mutator.
 - Automated trust classification, conflict resolution, approval, staging, or commits.
 - A generic runner that executes commands extracted from Markdown.
 - A skill per template, checklist, role, or process document.
@@ -146,3 +147,15 @@ copies cannot drift.
   templates.
 - Residual risk: this is a design evaluation, not implementation evidence. The proposed
   validator and skills still require their own scoped decisions and verification.
+
+## Promotion Status — 2026-08-11
+
+- Promoted: the validator is consolidated with the required structured task boundary in
+  [T-0020](0020-framework-data-cli-brief.md); onboarding and recovery each have their own
+  dependent skill tasks in [T-0021](0021-project-onboarding-skill-brief.md) and
+  [T-0022](0022-task-recovery-skill-brief.md).
+- Retained for product-owner review: `framework-maintenance`, `knowledge-ingestion`, and
+  narrowly scoped high-risk quality-planning skills. They remain recommendations here,
+  not accepted tasks.
+- Unchanged: the remaining explicit rejections above stay rejected unless new evidence or
+  product-owner direction reopens them.

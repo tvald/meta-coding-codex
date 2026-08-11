@@ -4,18 +4,16 @@ This is the canonical discovery and lifecycle record for every accepted task. Ph
 row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 
 - Format: 1
-- Next task ID: T-0019
+- Next task ID: T-0023
 - Primary task: None
 - Scheduling: Idle
 - Global pause source or reason: None
-- Archived task rows: None
+- Archived task rows: [T-0001–T-0002](../archive/tasks/2026-08-catalog.md)
 
 ## Tasks
 
 | ID | Outcome | Authority / Rev | Status | Depends On | Route / Risk | Approval Or Blocker | Next Safe Action | Details | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-0001 | Disposition and address the framework critique | User instruction, 2026-07-10 / r1 | Done | None | Initiative / High | None | None | [Notes](0001-framework-critique-notes.md) | `dbe609d` |
-| T-0002 | Package the framework as a self-contained add-on | User-approved plan, 2026-07-10 / r1 | Done | None | Initiative / High | None | None | [Brief](0002-restructure-framework-addon-brief.md), [notes](0002-restructure-framework-addon-notes.md) | `9eb2e82` |
 | T-0003 | Pilot optional Codex and Claude Code agent adapters | User instruction, 2026-07-10 / r1 | Done | T-0002 | Initiative / High | None | None | [Brief](0003-agent-adapter-pilot-brief.md), [notes](0003-agent-adapter-pilot-notes.md) | `dc26eca` |
 | T-0004 | Add quota-aware subagent suspension and resumption | User instruction, 2026-07-13 / r1 | Done | None | Initiative / High | None | None | [Brief](0004-quota-aware-subagent-control-brief.md), [notes](0004-quota-aware-subagent-control-notes.md) | `8c57799` |
 | T-0005 | Add a dependency-free Codex quota-monitor skill | User instruction, 2026-07-13 / r1 | Done | T-0004 | Initiative / High | None | None | [Brief](0005-codex-quota-monitor-skill-brief.md), [notes](0005-codex-quota-monitor-skill-notes.md) | `058349e` |
@@ -32,6 +30,10 @@ row order has no scheduling meaning. The Root Orchestrator is the sole writer.
 | T-0016 | Reconcile imported meta-framework changes and establish the framework-changelog stub and boundary | User instructions, 2026-08-05 / r2 | Done | None | Initiative / High | None | None | [Brief](0016-imported-framework-reconciliation-brief.md), [notes](0016-imported-framework-reconciliation-notes.md) | [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md), [quality](../quality/2026-08-05-imported-framework-reconciliation.md) |
 | T-0017 | Evaluate which meta-framework processes should be codified as skills or scripts | User instruction, 2026-08-11 / r1 | Done | None | Discover / Low | None | None | [Notes](0017-process-codification-evaluation-notes.md) | [Assessment](0017-process-codification-evaluation-notes.md#findings) |
 | T-0018 | Evaluate script-gated framework data stores and long-horizon process scalability | User instruction, 2026-08-11 / r1 | Done | None | Decide / Medium | None | None | [Notes](0018-data-store-scalability-evaluation-notes.md) | [Assessment](0018-data-store-scalability-evaluation-notes.md#findings) |
+| T-0019 | Promote the highest-value T-0017 and T-0018 recommendations into dedicated tasks and retain the rest for product-owner review | User instruction, 2026-08-11 / r1 | Done | T-0017, T-0018 | Quick change / Low | None | None | [Notes](0019-promote-exploration-features-notes.md) | Promoted T-0020–T-0022; retained remaining candidates in the source assessments |
+| T-0020 | Build and adopt the required `framework-data` CLI, structured task store, migration, and integrated doctor | User instruction, 2026-08-11 via T-0019 / r1 | Ready | None | Initiative / High | None | Run the implementation readiness gate and decide the runtime, schema, distribution, migration, and rollback boundary | [Brief](0020-framework-data-cli-brief.md) | Pending |
+| T-0021 | Add a guarded `project-onboarding` skill backed by the structured preflight | User instruction, 2026-08-11 via T-0019 / r1 | Pending | T-0020 | Initiative / High | None | After T-0020 is Done, run the implementation readiness gate against the canonical onboarding and packaging boundaries | [Brief](0021-project-onboarding-skill-brief.md) | Pending |
+| T-0022 | Add a guarded `task-recovery` skill backed by bounded durable-state queries | User instruction, 2026-08-11 via T-0019 / r1 | Pending | T-0020 | Initiative / High | None | After T-0020 is Done, run the implementation readiness gate against resumption, delegation, quota, and packaging boundaries | [Brief](0022-task-recovery-skill-brief.md) | Pending |
 
 ## Operating Contract
 

@@ -265,3 +265,14 @@ to retain the brittle Markdown database.
 - Residual risk: this is an architecture assessment, not an implementation. The runtime,
   schemas, lock portability, migration, recovery fixtures, packaging boundary, and CI
   enforcement require their own repository-changing task and independent verification.
+
+## Promotion Status — 2026-08-11
+
+- Promoted: [T-0020](0020-framework-data-cli-brief.md) owns the required task store,
+  bounded query/mutation boundary, migration, integrated doctor, archive removal, and
+  package/process cutover. [T-0022](0022-task-recovery-skill-brief.md) owns the recovery
+  workflow that consumes its bounded context queries.
+- Retained for product-owner review: structured checkpoints and progress, typed command/
+  assumption/source/approval/automation registries, origin-sharded retrospectives and
+  changelogs, glossary queries, narrative-record metadata/scaffolding, and any later
+  disposable query cache. They remain recommendations here, not accepted tasks.
