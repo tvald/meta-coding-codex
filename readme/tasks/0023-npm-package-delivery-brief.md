@@ -6,6 +6,12 @@
 - Accepted source: user direction on 2026-08-11 after evaluating npm delivery,
   locally installed CLI execution, package-owned process guidance, and harness loading
 - Subtasks: T-0024 through T-0032
+- Accepted task revision: 5
+- Safety amendment: npm scripts preserve inherited `PATH`, so revision 5 replaces the
+  bare binary script with an explicit local dependency-alias path. The public
+  `npm run --silent meta -- ...` interface is unchanged and the local-only failure
+  guarantee is stronger. [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md)
+  owns the architecture and evidence.
 
 ## Goal
 
@@ -19,21 +25,21 @@ without copying or editing the framework source inside the client repository.
 
 ### Installation And Invocation
 
-- The client repository declares `meta-framework` as a direct dependency and commits
-  `package-lock.json`.
+- The client repository declares the exact direct alias
+  `"meta-framework": "npm:@tvald/meta-framework@<version>"` and commits `package-lock.json`.
 - The client exposes the package binary through a stable script:
 
   ```json
   {
     "scripts": {
-      "meta": "meta-framework"
+      "meta": "node ./node_modules/meta-framework/bin/meta-framework.mjs"
     }
   }
   ```
 
-- Routine commands use `npm run --silent meta -- ...`. This resolves only the locally
-  installed binary and fails when it is unavailable instead of fetching a package on
-  demand.
+- Routine commands use `npm run --silent meta -- ...`. The explicit dependency-alias
+  path fails when it is unavailable and cannot fall through to an inherited `PATH`
+  executable or fetch a package on demand.
 - Dependency installation is a documented environmental prerequisite. The framework
   does not add special behavior for sessions started before dependencies are installed.
 - Package installation has no lifecycle hook that mutates the client repository.
@@ -250,7 +256,8 @@ Out of scope:
   load each supported prompt profile, and run task doctor/startup without a copied
   `readme/meta` tree.
 - [ ] Removing or withholding the local dependency makes the npm script fail without a
-  registry download or cache-installed fallback.
+  registry download, cache-installed fallback, or execution of a hostile same-name
+  binary inherited through `PATH`.
 - [ ] Prompt output is deterministic, bounded, profile-specific, attributable to a
   package version and digest, and complete for every role contract it claims to serve.
 - [ ] Complete long-form mechanics, rationale, and intent remain inspectable in the

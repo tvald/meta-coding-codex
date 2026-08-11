@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0024",
-  "recordVersion": 1,
+  "recordVersion": 3,
   "taskRevision": 1,
   "outcome": "Adopt and document the immutable npm package, local npm-script, compiled prompt, client-state, extension, and replacement-only update architecture",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "ready",
+  "status": "done",
   "dependencies": [],
   "route": "decide",
   "risk": "high",
@@ -19,12 +19,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Write the superseding architecture decision and reconcile the package, bootstrap, CLI, update, and framework-edit consequences of existing accepted decisions",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "Decision 0021 accepted with explicit supersession, immutable package/client-root, prompt provenance, extension/provider trust, compatibility, and rollback contracts; T-0023 amended to r5 for hostile-PATH-safe local invocation; independent Architect and Reviewer gates approved with zero open findings; threat model, source map, cursor, git diff check, and all doctor checks passed"
+  }
 }
