@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
 import { PROVIDER_PROBE_COMPATIBILITY } from '../lib/provider-contract.mjs';
+import { PROMPT_COMPILER_COMPATIBILITY } from '../lib/prompt-contract.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -38,6 +39,7 @@ const requiredFileGlobs = [
   'bin/',
   'lib/',
   'package-files.json',
+  'prompts/',
   'readme/meta/',
 ];
 const expectedTarballName = 'tvald-meta-framework-1.0.0.tgz';
@@ -99,6 +101,27 @@ export function validateManifest(candidate = manifest) {
       JSON.stringify(providerCompatibility.capabilities) ===
         JSON.stringify(PROVIDER_PROBE_COMPATIBILITY.capabilities),
     'provider probe compatibility metadata differs from the runtime contract',
+  );
+  const promptCompatibility = candidate.metaFramework?.promptCompiler;
+  const promptCompatibilityKeys = promptCompatibility !== null &&
+    typeof promptCompatibility === 'object' && !Array.isArray(promptCompatibility) ?
+    Object.keys(promptCompatibility).sort() : [];
+  const expectedPromptCompatibilityKeys = Object.keys(PROMPT_COMPILER_COMPATIBILITY).sort();
+  assert(
+    promptCompatibilityKeys.length === expectedPromptCompatibilityKeys.length &&
+      promptCompatibilityKeys.every((key, index) => key === expectedPromptCompatibilityKeys[index]) &&
+      promptCompatibility.version === PROMPT_COMPILER_COMPATIBILITY.version &&
+      JSON.stringify(promptCompatibility.envelopeVersions) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.envelopeVersions) &&
+      JSON.stringify(promptCompatibility.promptFormatVersions) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.promptFormatVersions) &&
+      JSON.stringify(promptCompatibility.registrySchemaVersions) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.registrySchemaVersions) &&
+      JSON.stringify(promptCompatibility.profiles) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.profiles) &&
+      JSON.stringify(promptCompatibility.harnesses) ===
+        JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.harnesses),
+    'prompt compiler compatibility metadata differs from the runtime contract',
   );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
   assert(candidate.scripts?.meta === 'node ./bin/meta-framework.mjs', 'unexpected source meta command');

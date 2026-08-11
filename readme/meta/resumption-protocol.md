@@ -29,12 +29,14 @@ for long-running, risky, paused, or parallel execution. A task note contains the
 execution checkpoint, work-item status, changed files, commits, observed checks, worker
 roster, relevant decisions, failed approaches, approval evidence, and work still needed.
 It links the structured record instead of copying current task fields.
-
+<!-- meta-framework-facet:v1:start recovery.resume -->
 ## Resume Loop
 
-1. Read `AGENTS.md`, the meta README, `readme/README.md`, and the static task entrypoint.
-   Run `doctor`, `startup`, and targeted `task context` for the returned primary task,
-   then read any newly delivered message.
+1. Reload the same package-owned role profile and harness selection, then read
+   `readme/README.md` and the static task entrypoint. Run
+   `npm run --silent meta -- tasks doctor`, bounded `tasks startup`, and targeted
+   `tasks task context` for the returned primary task, then read any newly delivered
+   message.
 2. Inspect `git status`, recent commits, relevant diffs, running tools, worktrees, and
    worker state. Do not repeat a risky side effect until its prior result is known.
 3. Require whole-store integrity: canonical schemas, unique IDs, current revisions,
@@ -55,7 +57,7 @@ It links the structured record instead of copying current task fields.
 
 If multiple tasks incorrectly appear primary-`Active`, checkpoint them and reconcile
 ownership before editing. Do not guess which dirty changes belong to which task.
-
+<!-- meta-framework-facet:v1:end recovery.resume -->
 ## Delivered Message Semantics
 
 Classify a new message by target and intent rather than treating recency as global

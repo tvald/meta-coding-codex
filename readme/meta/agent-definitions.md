@@ -2,7 +2,7 @@
 
 This framework supports one capable agent or coordinated specialists. Roles are optional
 responsibility bundles within a workflow route, not a menu every task must classify.
-
+<!-- meta-framework-facet:v1:start agents.shared -->
 ## Shared Agent Contract
 
 Every agent follows this loop:
@@ -21,7 +21,10 @@ Every agent must:
 - Keep changes inside its assigned ownership boundary.
 - Prefer evidence over preference.
 - Escalate only concrete blockers.
-
+- When the loaded profile lacks necessary detail, use
+  `npm run --silent meta -- docs TOPIC` or
+  `npm run --silent meta -- explain FACET`; do not locate package-internal files.
+<!-- meta-framework-facet:v1:end agents.shared -->
 ## Optional Harness Adapter Contract
 
 This file is the canonical owner for framework roles, triggers, boundaries, and handoff
@@ -49,7 +52,7 @@ Three adopted optional adapters map bounded, independently useful roles:
 
 The Root Orchestrator applies the decomposition rules, assigns ownership, and integrates
 results; native discovery never mandates delegation.
-
+<!-- meta-framework-facet:v1:start roles.root -->
 ## Root Orchestrator
 
 Purpose: own the goal end to end.
@@ -59,7 +62,7 @@ Responsibilities:
 - Run the root loop.
 - Run the resume check before continuing interrupted work.
 - Solely own semantic task-store mutations, eligibility judgment, and primary selection;
-  invoke the repository-pinned CLI while workers return proposals.
+  invoke `npm run --silent meta -- tasks ...` while workers return proposals.
 - Decide whether selected work stays single-agent or is decomposed.
 - Maintain the plan, quality bar, and final integration.
 - Maintain the agent roster for multi-agent work: assignment, ownership, status, last known output, and restart policy.
@@ -70,7 +73,7 @@ Responsibilities:
 Exit criteria:
 
 - Goal complete, verified, and recorded, or blocker proven and explained.
-
+<!-- meta-framework-facet:v1:end roles.root -->
 ## Product Analyst
 
 Purpose: turn fuzzy product intent into implementable slices.
@@ -118,7 +121,7 @@ Responsibilities:
 Use when:
 
 - Changing architecture, data model, security model, integration patterns, dependencies, or deployment topology.
-
+<!-- meta-framework-facet:v1:start roles.implementer -->
 ## Implementer
 
 Purpose: make scoped code changes.
@@ -131,10 +134,9 @@ Responsibilities:
 - Avoid unrelated formatting or refactors.
 - Document behavior changes.
 
-Use when:
-
-- The implementation surface is clear enough to edit.
-
+Use when: the implementation surface is clear enough to edit.
+<!-- meta-framework-facet:v1:end roles.implementer -->
+<!-- meta-framework-facet:v1:start roles.reviewer -->
 ## Reviewer
 
 Purpose: find bugs, regressions, missing tests, and standard violations.
@@ -146,10 +148,10 @@ Responsibilities:
 - Provide concrete file and line feedback when possible.
 - Separate blocking issues from nits.
 
-Use when:
-
-- Any non-trivial code, process, architecture, or user-facing change is ready for review.
-
+Use when: any non-trivial code, process, architecture, or user-facing change is ready
+for review.
+<!-- meta-framework-facet:v1:end roles.reviewer -->
+<!-- meta-framework-facet:v1:start roles.qa -->
 ## QA And Verification Agent
 
 Purpose: validate behavior independently from implementation.
@@ -161,10 +163,9 @@ Responsibilities:
 - Exercise edge cases, permissions, errors, and rollback paths.
 - Record what passed, failed, and was not checked.
 
-Use when:
-
-- The change is user-facing, risky, cross-cutting, or release-bound.
-
+Use when: the change is user-facing, risky, cross-cutting, or release-bound.
+<!-- meta-framework-facet:v1:end roles.qa -->
+<!-- meta-framework-facet:v1:start roles.security -->
 ## Security And Risk Agent
 
 Purpose: inspect trust boundaries and harmful failure modes.
@@ -179,10 +180,9 @@ Responsibilities:
 - Create or review threat model cards for security-sensitive changes.
 - Recommend mitigations with severity.
 
-Use when:
-
-- The task touches auth, permissions, sensitive data, external input, payments, production operations, agent tools, or dependency updates.
-
+Use when: the task touches auth, permissions, sensitive data, external input, payments,
+production operations, agent tools, or dependency updates.
+<!-- meta-framework-facet:v1:end roles.security -->
 ## Documentarian
 
 Purpose: keep user and developer knowledge accurate.
@@ -196,11 +196,12 @@ Responsibilities:
 Use when:
 
 - Behavior, setup, commands, architecture, or workflow changes.
-
+<!-- meta-framework-facet:v1:start delegation.control -->
 ## Decomposition Rules
 
-Root `AGENTS.md` supplies standing authorization; task-level decomposition remains a
-separate decision with no minimum worker count. Keep work primary when it is small,
+Delegation requires standing repository or task authority; neither this role nor a
+harness adapter grants it. Task-level decomposition remains a separate decision with no
+minimum worker count. Keep work primary when it is small,
 tightly coupled, shares mutable canonical files, or costs more to coordinate than to
 complete. Keep at most one primary implementation task active by default. Delegate only
 an independently useful, non-overlapping result; a separate delegated task also requires
@@ -215,7 +216,8 @@ trigger. Decompose only when it improves speed, quality, or focus:
 - Integrate through the root orchestrator.
 - Keep at most three child workers active by default. Integrate or close work before
   adding more unless project policy sets a different evidence-based cap.
-
+<!-- meta-framework-facet:v1:end delegation.control -->
+<!-- meta-framework-facet:v1:start capacity.guard -->
 ## Usage Capacity Guard
 
 The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
@@ -223,28 +225,22 @@ running, or quota-suspended. Use package-owned authoritative probes, never estim
 `npm run --silent meta -- quota --harness codex`, or use `claude` for Claude Code. The
 package owns acquisition only; exclusively exit zero plus `disposition: "proceed"` is safe.
 
-- Read every advertised window—five-hour, weekly, each model-scoped window, and monthly
-  when present—before each spawn or resume, after a worker result, and at least every five
-  minutes while any child is active. Consumed is `100 - remaining` when only remaining
-  capacity is reported.
-- A cutoff only prevents accidentally crossing a hard limit—which terminates the
-  orchestrator session—so it rises with window length: **95%** five-hour, **98%** weekly
-  (including any model-scoped weekly), **99%** monthly. A scoped or provider-named window
-  takes its duration group's cutoff; a real limit error is a 100% reading, and a failed,
-  malformed, or unknown required reading is treated the same as at-cutoff.
-- Apply each window's cutoff independently. If any window is at or above its cutoff, start
-  or resume no child; ask active children to checkpoint and suspend at the next safe
-  boundary, then preserve their state and output. A response that explicitly omits a
-  window means it is not applicable; do not guess or ask the product owner to monitor it.
-- Before waiting, record the reading time, per-window consumed percentages, reset times,
-  limiting windows, worker states, next safe action, and wake method; never persist
-  account or billing data. Set one wake-up for the latest reset when limiting windows have
-  authoritative resets and a wait facility exists, else poll every five minutes; re-read
-  every window on wake and keep waiting while any is at or above its cutoff or unknown.
-- Resume existing workers when the harness supports it; otherwise use the replacement
-  rules below. A quota wait is an operational pause, not **Blocked**, **Needs
-  verification**, or task completion.
-
+- Read every advertised five-hour, weekly, model-scoped, and monthly window before each
+  spawn or resume, after a worker result, and at least every five minutes while a child
+  is active. Consumed is `100 - remaining` when only remaining capacity is reported.
+- Apply each window independently at **95%** five-hour, **98%** weekly or model-scoped
+  weekly, and **99%** monthly. Treat a real limit error as 100%, and a failed, malformed,
+  or unknown required reading as at-cutoff. An explicitly omitted window is not
+  applicable; never guess or ask the product owner to monitor it.
+- At or above any cutoff, start or resume no child. Ask active children to checkpoint and
+  suspend at the next safe boundary, then preserve their state and output.
+- Before waiting, record the reading time, consumed percentages, reset times, limiting
+  windows, worker states, next safe action, and wake method without account or billing
+  data. Wake at the latest authoritative limiting reset when possible; otherwise poll
+  every five minutes. Re-read every window before resuming and prefer existing handles.
+- A quota wait is an operational pause, not **Blocked**, **Needs verification**, or task
+  completion. Use the replacement rules below only when a prior worker cannot resume.
+<!-- meta-framework-facet:v1:end capacity.guard -->
 ## Parallel Integration And Recovery
 
 Before starting a worker, make its assignment and shared context durable and visible in
@@ -269,7 +265,7 @@ merely to satisfy parallelism.
   to redo or revert, checks, and handoff format.
 - A stop or redirect stales output only for affected tasks. Unrelated task arrival does
   not stale a worker. Halt affected workers and review later output before integration.
-
+<!-- meta-framework-facet:v1:start handoff.result -->
 ## Handoff Format
 
 Use this format when assigning or returning work:
@@ -294,6 +290,6 @@ Use this format when assigning or returning work:
 - Risks:
 - Follow-up:
 ```
-
+<!-- meta-framework-facet:v1:end handoff.result -->
 Add a durable project-specific role only after repeated use justifies it; keep its purpose,
 triggers, inputs, boundaries, loop, verification, and output in the canonical agent file.

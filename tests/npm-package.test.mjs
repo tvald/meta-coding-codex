@@ -109,6 +109,26 @@ test('package policy rejects missing or drifting provider probe metadata', () =>
   }
 });
 
+test('package policy rejects missing or drifting prompt compiler metadata', () => {
+  const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
+  const mutations = [
+    (candidate) => { delete candidate.metaFramework.promptCompiler; },
+    (candidate) => { candidate.metaFramework.promptCompiler.version = '2.0.0'; },
+    (candidate) => { candidate.metaFramework.promptCompiler.envelopeVersions = [2]; },
+    (candidate) => { candidate.metaFramework.promptCompiler.promptFormatVersions = [2]; },
+    (candidate) => { candidate.metaFramework.promptCompiler.registrySchemaVersions = [2]; },
+    (candidate) => { candidate.metaFramework.promptCompiler.profiles.reverse(); },
+    (candidate) => { candidate.metaFramework.promptCompiler.harnesses = ['portable']; },
+    (candidate) => { candidate.metaFramework.promptCompiler.unreviewed = true; },
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(manifest);
+    mutate(candidate);
+    assert.throws(() => validateManifest(candidate),
+      /prompt compiler compatibility metadata differs from the runtime contract/);
+  }
+});
+
 test('package audit proves exact inventory and byte reproducibility', () => {
   const result = run(process.execPath, ['scripts/check-npm-package.mjs'], { cwd: sourceRoot });
   assert.equal(result.status, 0, result.stderr);

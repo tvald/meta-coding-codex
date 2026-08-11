@@ -19,6 +19,12 @@ Usage:
   meta-framework version [--json]
   meta-framework tasks --version
   meta-framework tasks COMMAND [OPTIONS]
+  meta-framework agent-prompt --version
+  meta-framework agent-prompt --profile PROFILE [--harness HARNESS]
+  meta-framework docs --version
+  meta-framework docs TOPIC
+  meta-framework explain --version
+  meta-framework explain FACET
   meta-framework quota --version
   meta-framework quota --harness HARNESS
   meta-framework capability --version
@@ -36,6 +42,11 @@ function failRuntime(error) {
   process.exitCode = 1;
 }
 
+function failUnexpected(prefix = 'meta-framework') {
+  process.stderr.write(`${prefix}: INTERNAL_ERROR: package runtime failed\n`);
+  process.exitCode = 1;
+}
+
 function failFrameworkData(error, prefix) {
   const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
     error.code : 'INTERNAL_ERROR';
@@ -45,6 +56,16 @@ function failFrameworkData(error, prefix) {
   process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
   process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 9 ?
     error.exitCode : 1;
+}
+
+function failPromptCompiler(error, prefix) {
+  const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
+    error.code : 'INTERNAL_ERROR';
+  const safeMessage = typeof error?.message === 'string' && error.message.length <= 512 &&
+    !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069\ufeff]/u.test(error.message) ?
+    error.message : 'prompt compiler failed';
+  process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
+  process.exitCode = error?.exitCode === 2 ? 2 : 1;
 }
 
 function parseProbeOptions(tokens, names) {
@@ -59,6 +80,19 @@ function parseProbeOptions(tokens, names) {
     values[option] = value;
   }
   return tokens.length === names.length * 2 && names.every((name) => Object.hasOwn(values, name)) ? values : null;
+}
+
+function parsePromptOptions(tokens) {
+  if (tokens.length !== 2 && tokens.length !== 4) return null;
+  const values = {};
+  for (let index = 0; index < tokens.length; index += 2) {
+    const option = tokens[index];
+    const value = tokens[index + 1];
+    if (!['--profile', '--harness'].includes(option) || typeof value !== 'string' || value.startsWith('--') ||
+        Object.hasOwn(values, option) || !/^[a-z][a-z0-9-]{0,63}$/u.test(value)) return null;
+    values[option] = value;
+  }
+  return Object.hasOwn(values, '--profile') ? values : null;
 }
 
 function probeVersion(packageRuntime) {
@@ -116,6 +150,9 @@ try {
   const taskCompatibility = packageRuntime.taskCompatibility;
   const args = process.argv.slice(2);
   if (args[0] === 'tasks') frameworkDataErrorPrefix = 'meta-framework tasks';
+  else if (['agent-prompt', 'docs', 'explain'].includes(args[0])) {
+    frameworkDataErrorPrefix = `meta-framework ${args[0]}`;
+  }
 
   if (args.length === 0 || (args.length === 1 && ['--help', '-h', 'help'].includes(args[0]))) {
     printHelp();
@@ -151,6 +188,31 @@ try {
       programName: 'meta-framework tasks',
       errorPrefix: 'meta-framework tasks',
     });
+  } else if (['agent-prompt', 'docs', 'explain'].includes(args[0]) &&
+      args.length === 2 && args[1] === '--version') {
+    const { promptCompilerVersionEnvelope } = await import('../lib/prompt-compiler.mjs');
+    process.stdout.write(promptCompilerVersionEnvelope(packageRuntime));
+  } else if (args[0] === 'agent-prompt') {
+    const options = parsePromptOptions(args.slice(1));
+    if (options === null) {
+      fail('invalid agent-prompt command; run --help');
+    } else {
+      const { compileAgentPrompt } = await import('../lib/prompt-compiler.mjs');
+      process.stdout.write(compileAgentPrompt(
+        packageRuntime,
+        options['--profile'],
+        options['--harness'] ?? 'portable',
+      ));
+    }
+  } else if (['docs', 'explain'].includes(args[0])) {
+    if (args.length !== 2 || args[1].startsWith('--')) {
+      fail(`invalid ${args[0]} command; run --help`);
+    } else {
+      const compiler = await import('../lib/prompt-compiler.mjs');
+      process.stdout.write(args[0] === 'docs' ?
+        compiler.retrieveDocument(packageRuntime, args[1]) :
+        compiler.explainFacet(packageRuntime, args[1]));
+    }
   } else if (['quota', 'capability'].includes(args[0]) && args.length === 2 && args[1] === '--version') {
     probeVersion(packageRuntime);
   } else if (args[0] === 'quota') {
@@ -182,5 +244,6 @@ try {
 } catch (error) {
   if (error instanceof RuntimeRootError) failRuntime(error);
   else if (error?.name === 'FrameworkDataError') failFrameworkData(error, frameworkDataErrorPrefix);
-  else fail('package runtime is unavailable or invalid');
+  else if (error?.name === 'PromptCompilerError') failPromptCompiler(error, frameworkDataErrorPrefix);
+  else failUnexpected(frameworkDataErrorPrefix);
 }

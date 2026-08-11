@@ -13,6 +13,19 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-11: Adopt Deterministic Agent Prompt Views
+
+- Status: Adopted.
+- Evidence: T-0027 all-profile snapshots, packed parity, mutation and filesystem suite,
+  exact package audit, and independent Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added 30 one-owner marked facets, five complete role profiles, narrow
+  Codex/Claude adapters, deterministic digest provenance, and bounded `docs`/`explain`.
+- Success signal: Source and installed clients produce identical attributable prompts
+  without package-path discovery, client state, provider data, or runtime synthesis.
+- Review or sunset trigger: Owner/profile drift, digest ambiguity, unsafe lookup,
+  harness semantic divergence, authority expansion, or output-budget exhaustion.
+
 ## 2026-08-11: Adopt Package-Owned Provider Probes
 
 - Status: Adopted.

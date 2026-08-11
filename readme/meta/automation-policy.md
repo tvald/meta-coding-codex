@@ -43,43 +43,35 @@ immediately and preserve it through interruptions. Do not create a commit for un
 intake merely to persist it; that requires separate explicit user direction or
 repository authority. At completion, stage only the selected task's record and owned
 files. Intake does not mark a task complete or grant gated external authority.
-
+<!-- meta-framework-facet:v1:start changes.commit -->
 ## Local Commit Completion
 
-A completed task that changes files in a Git repository must end with a local commit.
-The agent does this without asking for separate approval after implementation and
-verification are complete. Include that task's structured result update in the same
-commit. Adjacent task records or satisfied dependencies do not justify bundling
-unrelated implementations.
+A completed task that changes files in a Git repository must end with a local commit,
+without a separate approval after implementation and verification. Include the task's
+structured result update, but never bundle unrelated implementations merely because
+their records are adjacent or their dependencies are satisfied.
 
 Use this sequence:
 
-1. Inspect repository status and the working diff, including knowledge or framework
-   edits made late in the task. Run any checks those late edits require.
-2. Select only files or hunks owned by the current task. Use explicit paths or another
-   demonstrably task-scoped staging method. Never use convenience or blanket staging
-   that could absorb unrelated user or concurrent-agent work.
-3. Inspect the staged diff for scope, correctness, secrets, generated files, and other
-   material that should not be committed.
-4. Create a local commit with a clear message, using the repository's convention or the
-   default in [development-standards.md](development-standards.md#git-and-change-management).
-5. Inspect the resulting `HEAD` and repository status. Include the commit hash in the
-   final response.
+1. Inspect status and the working diff; run checks required by late edits.
+2. Stage only task-owned files or hunks using explicit paths or another demonstrably
+   scoped method. Never blanket-stage unrelated user or concurrent-agent work.
+3. Inspect the staged diff for scope, correctness, secrets, and generated files.
+4. Create one clear local commit using the repository convention.
+5. Inspect `HEAD` and status, then report the commit hash.
 
-Do not commit when the user explicitly says not to, repository instructions prohibit
-commits, the directory is not a Git repository, or a concrete technical or safety
-blocker prevents a clean task-scoped commit. Pre-existing unrelated changes are not a
-blocker when the task changes can be isolated, but they must be preserved and must not
-be described as a clean worktree.
+Do not commit when the user or repository prohibits it, the directory is not a Git
+repository, or a concrete technical or safety blocker prevents a scoped commit.
+Preserve isolatable unrelated changes and never describe their presence as a clean
+worktree.
 
-If an exception applies or any task-owned change remains uncommitted, the task is not
-cleanly complete. The final response must name the uncommitted files and the exact
-exception or blocker instead of claiming complete delivery.
+If task-owned changes remain uncommitted, do not claim clean completion; name the files
+and exact exception or blocker.
 
-This authority covers creating new local task commits only. It does not authorize
-amending commits, rebasing, resetting, creating or switching branches, pushing,
-releasing, deploying, or otherwise rewriting or publishing history.
-
+This authority covers new local task commits only, never amend, rebase, reset, branch
+changes, push, release, deploy, history rewrite, or publication.
+<!-- meta-framework-facet:v1:end changes.commit -->
+<!-- meta-framework-facet:v1:start authority.boundaries -->
 ## Stop Or Ask First
 
 Agents must stop or ask before:
@@ -110,7 +102,7 @@ Task capture or selection never grants authority for an external, destructive,
 privileged, or otherwise approval-gated action. Persist an approval's source, status,
 action, boundary, and task ID/revision. A revision change requires revalidation before
 the approval can authorize work.
-
+<!-- meta-framework-facet:v1:end authority.boundaries -->
 ## User Interrupt Handling
 
 Follow [resumption-protocol.md](resumption-protocol.md#delivered-message-semantics), which
