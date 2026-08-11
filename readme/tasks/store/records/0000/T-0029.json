@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0029",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Provide thin Codex AGENTS.md and Claude CLAUDE.md bootstraps plus clean client initialization without copying reusable framework policy",
+  "authority": {
+    "reference": "User instruction, 2026-08-11 via umbrella T-0023",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0027"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "harness",
+    "onboarding"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Design the stable bootstrap text and initializer, wire explicit root and delegated profiles, preserve client-owned project state, and verify clean Codex and Claude startup flows",
+  "details": [
+    {
+      "label": "Umbrella brief",
+      "path": "readme/tasks/0023-npm-package-delivery-brief.md"
+    }
+  ],
+  "completion": null
+}

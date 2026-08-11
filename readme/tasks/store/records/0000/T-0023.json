@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0023",
+  "recordVersion": 4,
+  "taskRevision": 4,
+  "outcome": "Deliver the meta framework as an immutable npm package with retained canonical long-form documentation, local npm-script execution, derived agent prompts, package-owned task tooling, thin harness bootstraps, and locked extensions",
+  "authority": {
+    "reference": "User instructions and architecture clarifications, 2026-08-11",
+    "acceptedDate": "2026-08-11"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0024",
+    "T-0025",
+    "T-0026",
+    "T-0027",
+    "T-0028",
+    "T-0029",
+    "T-0030",
+    "T-0031",
+    "T-0032"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "npm-package",
+    "agent-prompt",
+    "framework-distribution",
+    "documentation"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Complete the architecture and implementation subtasks documented in the umbrella brief, preserving canonical documentation and derived-profile provenance, then run the aggregate clean-client verification gate",
+  "details": [
+    {
+      "label": "Umbrella brief",
+      "path": "readme/tasks/0023-npm-package-delivery-brief.md"
+    }
+  ],
+  "completion": null
+}
