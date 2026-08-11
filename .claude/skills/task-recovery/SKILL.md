@@ -6,6 +6,7 @@ description: Recover a targeted task after interruption, restart, approval wait,
 # Task Recovery
 
 Read and follow the canonical
-[task-recovery skill](../../../.agents/skills/task-recovery/SKILL.md) in full. That file
-is the sole maintained workflow source. If it is absent, unsafe, or cannot be read, stop
-and report the discovery failure; do not reconstruct its procedure here.
+[task-recovery skill](../../../.agents/skills/task-recovery/SKILL.md) in full. That
+source-only file is the sole maintained adapter workflow. If it is absent, unsafe, or
+cannot be read, stop and report the discovery failure; do not reconstruct its procedure
+or copy either skill into a client repository.

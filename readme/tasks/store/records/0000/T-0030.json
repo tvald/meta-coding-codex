@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0030",
-  "recordVersion": 1,
+  "recordVersion": 5,
   "taskRevision": 1,
   "outcome": "Retire ZIP and curl delivery, vendored framework reconciliation, in-client framework editing, and obsolete update guidance in favor of immutable npm dependency replacement",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0025",
     "T-0026",
@@ -24,12 +24,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Remove or supersede obsolete packaging and installer surfaces, reconcile process and decision owners, and document npm installation, startup, issue reporting, and version replacement",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "Retirement 7/7, focused 18/18, package 55/55, full 93/93, exact 52-file package audit, diff check, and independent Architect, Security, QA, and Reviewer gates passed; warning-free staged doctor is the commit gate"
+  }
 }

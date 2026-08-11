@@ -8,7 +8,7 @@ action, and result.
 
 - Task ID:
 - Task store: `readme/tasks/store/` through
-  `node readme/meta/framework-data/cli.mjs task get <ID>`
+  `npm run --ignore-scripts --silent meta -- tasks task get <ID>`
 - Brief or acceptance source:
 - Started:
 - Last updated:

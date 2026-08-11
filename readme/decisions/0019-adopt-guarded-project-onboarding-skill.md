@@ -14,7 +14,10 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where this decision
+  prescribed copying provider skill bundles into clients and installing them through one
+  collision transaction. The conservative onboarding procedure remains package-owned
+  canonical guidance.
 
 ## Context
 

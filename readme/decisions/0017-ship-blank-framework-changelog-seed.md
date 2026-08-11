@@ -18,7 +18,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where installed
+  clients receive no mutable framework changelog seed and never edit package files. The
+  source repository's project-side framework history remains current.
 
 ## Context
 

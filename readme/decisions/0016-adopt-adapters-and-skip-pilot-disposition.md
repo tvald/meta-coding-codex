@@ -15,7 +15,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where copied
+  client adapter files and a root Claude import are normal delivery surfaces. Canonical
+  role semantics and this repository's skip-Pilot policy remain current.
 
 ## Context
 

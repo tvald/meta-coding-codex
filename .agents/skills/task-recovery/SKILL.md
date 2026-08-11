@@ -6,10 +6,11 @@ description: Recover a specific task safely after interruption, restart, approva
 # Task Recovery
 
 Reconstruct one targeted task from bounded evidence without guessing ownership or
-repeating uncertain effects. Read the canonical
-[resumption protocol](../../../readme/meta/resumption-protocol.md) completely before
-acting. It owns recovery policy; this skill supplies execution order and a result
-contract, not a second state parser.
+repeating uncertain effects. Load the canonical policy with
+`npm run --ignore-scripts --silent meta -- docs resumption-protocol` before acting. A
+source-repository session may read the corresponding local owner. The policy owns
+recovery semantics; this source-only skill supplies execution order and a result
+contract, not a second state parser or a client-installed copy.
 
 ## Establish The Recovery Target
 
@@ -17,10 +18,10 @@ contract, not a second state parser.
    invoking or newly delivered user message by target and intent before tool use; an
    explicit pause, cancel, supersession, or redirect takes precedence over continuation.
    Do not use this skill for normal task selection or general orchestration.
-2. Run `node readme/meta/framework-data/cli.mjs doctor`. On integrity failure, emit no
-   partial task interpretation; return `reconcile` with the named error and required
-   repair. A busy lock may be inspected with `lock inspect`; never infer owner death or
-   recover it from PID, host, or age.
+2. Run `npm run --ignore-scripts --silent meta -- tasks doctor`. On integrity failure,
+   emit no partial task interpretation; return `reconcile` with the named error and
+   required repair. A busy lock may be inspected through the same `tasks lock inspect`
+   surface; never infer owner death or recover it from PID, host, or age.
 3. Run bounded `startup` exactly as shown below. Use the explicit user-targeted task ID
    when present; otherwise use only a unique returned `primaryTask`. If neither exists,
    return `reconcile` with a null target and propose returning to the Root loop without
@@ -28,10 +29,10 @@ contract, not a second state parser.
 4. Run, sequentially, with the actual `T-NNNN`:
 
    ```sh
-   node readme/meta/framework-data/cli.mjs startup --limit 20 --max-bytes 32768
-   node readme/meta/framework-data/cli.mjs task get T-NNNN --max-bytes 131072
-   node readme/meta/framework-data/cli.mjs task context T-NNNN --max-bytes 32768
-   node readme/meta/framework-data/cli.mjs task deps T-NNNN --direction ancestors --limit 50 --max-bytes 32768
+   npm run --ignore-scripts --silent meta -- tasks startup --limit 20 --max-bytes 32768
+   npm run --ignore-scripts --silent meta -- tasks task get T-NNNN --max-bytes 131072
+   npm run --ignore-scripts --silent meta -- tasks task context T-NNNN --max-bytes 32768
+   npm run --ignore-scripts --silent meta -- tasks task deps T-NNNN --direction ancestors --limit 50 --max-bytes 32768
    ```
 
    Require the read-only query digests to agree; restart reconciliation if they do not.
@@ -114,22 +115,22 @@ condition; do not convert it to Done.
 
 ## Load Conditional Owners Only When Needed
 
-- For live workers, replacement, isolated worktrees, or integration, load only
-  [Parallel Integration And Recovery](../../../readme/meta/agent-definitions.md#parallel-integration-and-recovery).
+- For live workers, replacement, isolated worktrees, or integration, load only the
+  `parallel-integration-and-recovery` section of the package-owned agent definitions.
 - For `needs_verification`, load the applicable gate in
-  [quality system](../../../readme/meta/quality-system.md) and no unrelated quality
-  sections.
+  `npm run --ignore-scripts --silent meta -- docs quality-system` and no unrelated
+  quality sections.
 - For approval waits or consequential external effects, load the applicable approval
-  boundary in [automation policy](../../../readme/meta/automation-policy.md). Match the
-  approval's task, semantic revision, source, action, boundary, and current status.
+  boundary in `npm run --ignore-scripts --silent meta -- docs automation-policy`. Match
+  the approval's task, semantic revision, source, action, boundary, and current status.
   Missing, pending, denied, expired, wrong-boundary, stale, or ambiguous "go ahead"
   approval means wait.
-- For delegated work or capacity suspension, load the
-  [Usage Capacity Guard](../../../readme/meta/agent-definitions.md#usage-capacity-guard)
-  and the current harness's quota-monitor skill. Obtain a fresh authoritative reading
-  before every resume or replacement. A successfully omitted window is not advertised
-  and is not applicable; an error, malformed response, missing result, or applicable
-  window without a finite percentage is unknown capacity and stops delegated work.
+- For delegated work or capacity suspension, load the `usage-capacity-guard` section of
+  the package-owned agent definitions and run the current harness's normalized quota
+  command. Obtain a fresh authoritative reading before every resume or replacement. A
+  successfully omitted window is not advertised and is not applicable; an error,
+  malformed response, missing result, or applicable window without a finite percentage
+  is unknown capacity and stops delegated work.
 - If structured scheduling is paused, continue no task and resume no worker until
   authoritative guidance clears the pause through the CLI.
 

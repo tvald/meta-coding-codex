@@ -88,6 +88,13 @@ task mutation.
 - A busy store remains unchanged until the known live owner finishes. Inspect and
   recover a stale lock only through the exact-token task CLI protocol after establishing
   that no owner is live. Never infer owner death from age, PID, or host.
+- A client containing a pre-npm copied framework loads
+  `npm run --ignore-scripts --silent meta -- docs copied-client-transition`. That
+  guidance requires a reviewed snapshot, per-file provenance and whole-byte matches, a
+  dry run, and a recoverable boundary. It supplies no cleanup executable. Never infer
+  ownership from a path, name, directory, mode, digest, or matching bytes alone; never
+  recursively remove a copied tree. Modified, unproved, linked, mixed-version, or
+  same-named client content stops for maintainer review.
 - `source_repository` is final for this initializer. Framework-source sessions use the
   source root instructions and repository-pinned development CLI; they do not initialize
   the source repository as a client.

@@ -17,6 +17,9 @@ Superseded by:
 
 - [Decision 0016](0016-adopt-adapters-and-skip-pilot-disposition.md) promotes the adapters
   from Pilot to Adopted and skips the Pilot disposition repository-wide.
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where copied
+  provider-discovery files and a client `CLAUDE.md` import are replaced by package-owned
+  profiles and independent thin bootstraps. Canonical role ownership remains.
 
 ## Context
 

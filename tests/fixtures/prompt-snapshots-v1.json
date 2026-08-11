@@ -12,16 +12,16 @@
     "sha256": "ed3851dbfe40cb63b7cec1820b9b2e3a15a40853fa8519b57be81167f152812c"
   },
   "qa:claude": {
-    "bytes": 13161,
-    "sha256": "d00280a2b0aea637430f418403cc39a65f399cfb39d072717ada642f322b6d77"
+    "bytes": 13163,
+    "sha256": "6d4078498482114ef00dc2d51ae1afbaaf7458843e010e22513ea3802199e045"
   },
   "qa:codex": {
-    "bytes": 13160,
-    "sha256": "9f68a50b9bb66fb353b655386ea6d332268e3c9e3a70805cfffaf5d75c44f17b"
+    "bytes": 13162,
+    "sha256": "4d5a4824da309d0bc696eaeb4ec3066a7325b785802d3b247c695ac66c33cc5d"
   },
   "qa:portable": {
-    "bytes": 13163,
-    "sha256": "375cee75da51a2bc404a2a278ccbe6f2157b75122420386ac8d7220e221ef83b"
+    "bytes": 13165,
+    "sha256": "74af8db936f42ce0982d067460a28405e061a01092b86e3570a4c908e4236e70"
   },
   "reviewer:claude": {
     "bytes": 13454,
@@ -36,16 +36,16 @@
     "sha256": "a3ccf9134ee2742772f1d366541915e0eb2cfb48cb9b9a04e5d2e8b47ba78bcc"
   },
   "root:claude": {
-    "bytes": 31164,
-    "sha256": "c5ccef0aa729d6281f3257eae0a8ee651d0a6caf6b4215d0c941649a42c49656"
+    "bytes": 31155,
+    "sha256": "6d39e8a32e3f972008ef68970f9ca8b2dfecf0b5461a4fce2b00ea4e68816bf6"
   },
   "root:codex": {
-    "bytes": 31156,
-    "sha256": "4c9a19c7cd3b74ce5b755b16e44cf2ec844a8c37b9604ae19dd782ef7b0534ee"
+    "bytes": 31147,
+    "sha256": "f0dd15a9a68302b1336d66de58e97f86956aa86a1b1f977326e7c04e1d912ffb"
   },
   "root:portable": {
-    "bytes": 27928,
-    "sha256": "f8b3c0643c7e1dd788a6ff295f7fadab5c7756901016527854b720510cb459a9"
+    "bytes": 27919,
+    "sha256": "be0e62ac456202d60cd9b20941fb80bc4a71ade57d0ae11646ce367818e9e26d"
   },
   "security:claude": {
     "bytes": 14659,

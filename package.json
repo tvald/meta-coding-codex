@@ -76,10 +76,6 @@
     "meta-framework": "bin/meta-framework.mjs"
   },
   "files": [
-    ".agents/skills/",
-    ".claude/agents/",
-    ".claude/skills/",
-    ".codex/agents/",
     "bin/",
     "lib/",
     "package-files.json",

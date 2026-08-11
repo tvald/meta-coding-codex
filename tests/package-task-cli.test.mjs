@@ -124,7 +124,8 @@ function makeInstalledClient(workRoot, name = 'client') {
   mkdirSync(join(clientRoot, 'readme', 'tasks'), { recursive: true });
   writeFileSync(join(clientRoot, 'readme', 'README.md'), clientCursor());
   writeFileSync(join(clientRoot, 'readme', 'tasks', 'README.md'),
-    '# Task Store\n\nUse `npm run --silent meta -- tasks doctor` and `npm run --silent meta -- tasks startup`.\n');
+    '# Task Store\n\nUse `npm run --ignore-scripts --silent meta -- tasks doctor` and ' +
+    '`npm run --ignore-scripts --silent meta -- tasks startup`.\n');
   return {
     clientRoot,
     cache,
@@ -134,7 +135,7 @@ function makeInstalledClient(workRoot, name = 'client') {
 }
 
 function meta(client, args, expectedStatus = 0, cwd = client.clientRoot, extraEnvironment = {}) {
-  const result = run('npm', ['run', '--silent', 'meta', '--', ...args], {
+  const result = run('npm', ['run', '--ignore-scripts', '--silent', 'meta', '--', ...args], {
     cwd,
     env: { ...npmEnvironment(client.cache), ...extraEnvironment },
   });
@@ -175,9 +176,7 @@ test('packed task CLI uses package resources and mutates only the client Git roo
     assert.equal(doctor.checks.find(({ id }) => id === 'template_inventory').details.count, 12);
     assert.deepEqual(doctor.checks.find(({ id }) => id === 'framework_changelog').details, {
       sourceRepository: false,
-      activePath: 'readme/meta/framework-changelog.md',
-      lines: 30,
-      entries: 0,
+      activePath: null,
     });
     const hostileGit = join(client.clientRoot, 'node_modules', '.bin', 'git');
     const gitSentinel = join(workRoot, 'client-git-ran');
@@ -599,7 +598,7 @@ test('installed package cannot enter source mode through a nested Git repository
     mkdirSync(join(client.packageRoot, 'readme', 'tasks'), { recursive: true });
     writeFileSync(join(client.packageRoot, 'readme', 'README.md'), clientCursor());
     writeFileSync(join(client.packageRoot, 'readme', 'tasks', 'README.md'),
-      '# Task Store\n\nUse `npm run --silent meta -- tasks doctor`.\n');
+      '# Task Store\n\nUse `npm run --ignore-scripts --silent meta -- tasks doctor`.\n');
     const before = treeDigest(client.packageRoot);
     const binary = run(process.execPath, [client.binary, 'tasks', 'init'], { cwd: client.packageRoot });
     assert.equal(binary.status, 1);

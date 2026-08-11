@@ -21,6 +21,9 @@ Superseded by:
 - [Decision 0005](0005-pilot-optional-agent-adapters.md), only where the package
   boundary excludes a Claude entrypoint bridge and optional vendor-native agent
   adapters.
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where copying
+  `readme/meta/` and merging a packaged root instruction are replaced by an immutable
+  dependency and thin generated bootstraps. Reusable/project-state separation remains.
 
 ## Context
 

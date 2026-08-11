@@ -1,60 +1,67 @@
 ---
 name: project-onboarding
-description: Safely onboard or re-onboard the portable framework in a Git repository. Use for first framework entry, greenfield or established-project onboarding, missing or partial project cursor/task state, legacy task catalogs, path collisions, or an explicit major-change onboarding refresh.
+description: Safely onboard or re-onboard the immutable framework package in a Git repository. Use for first framework entry, greenfield or established-project onboarding, missing or partial project cursor/task state, legacy task catalogs, copied-client transition, path collisions, or an explicit major-change onboarding refresh.
 ---
 
 # Project Onboarding
 
-Use the repository's installed framework as the trust root and execute its onboarding
-policy without creating a second parser or policy owner. Read
-[the canonical onboarding procedure](../../../readme/meta/onboarding.md) completely
-before acting. Load `knowledge-ingestion.md` only at its ingestion phase and load a
-template only when creating that artifact.
+Use the exact local npm dependency as the runtime trust root and execute its onboarding
+policy without creating a second parser or policy owner. From the physical client Git
+root, load `npm run --ignore-scripts --silent meta -- docs onboarding` completely before
+acting. A source-repository session may read the corresponding local policy owner but
+still uses the source `meta` npm script for these public commands.
 
 ## Establish Authority And Preflight
 
-1. Confirm explicit framework-onboarding intent, the Git root, applicable root
-   instructions, and `readme/meta/README.md`. A delegated agent reports findings to its
-   orchestrator and does not initialize shared state unless that ownership was assigned.
-2. Stop for review if the installed skill, framework CLI, or schemas have unknown
-   provenance or appear locally replaced. Do not substitute another parser or tool.
+1. Confirm explicit framework-onboarding intent, the physical Git root, applicable root
+   instructions, exact dependency alias and lockfile, and exact local `meta` script. A
+   delegated agent reports findings to its orchestrator and does not initialize shared
+   state unless that ownership was assigned.
+2. Stop for review if the package, lock, command, or schemas have unknown provenance or
+   appear locally replaced. Do not substitute a global binary, `npx`, network fetch,
+   inherited executable, package-path invocation, parser, or tool.
 3. Run exactly:
 
    ```sh
-   node readme/meta/framework-data/cli.mjs preflight
+   npm run --ignore-scripts --silent meta -- project --version
+   npm run --ignore-scripts --silent meta -- project preflight
    ```
 
-   Accept only exit-zero, well-formed JSON with `compatible: true` and one disposition
-   listed below. Unsupported Node, native Windows, missing Git, schema mismatch, invalid
+   Accept only exit-zero, well-formed JSON with the expected compatibility version and
+   one disposition listed below. Unsupported Node, unavailable `/proc/self/fd`, native
+   Windows, network filesystems, missing Git, unsafe roots, schema mismatch, invalid
    output, or an unknown disposition is a stop, not a fallback opportunity.
 
 ## Follow The Exact Disposition
 
-- `ready_to_initialize`: run `node readme/meta/framework-data/cli.mjs init` once.
-- `valid_current_store`: do not install or initialize. Run `doctor` and `startup`;
-  continue at repository inventory only for an explicit major-change re-onboarding.
-- `uninitialized`: inventory the fixed paths and repository first. With explicit
-  onboarding authority, create only absent recognized cursor and task-entrypoint files
-  from their installed templates, preserve established files, rerun `preflight`, and
-  initialize only after it returns `ready_to_initialize`.
-- `legacy_format1`: use the canonical explicit catalog/archive migration path. Dry-run,
-  review transformations and source hashes, then apply only with the reviewed expected
-  digest. Never migrate through a read or infer missing history.
-- `partial`: stop and report which required artifact is absent, recognized, or
-  ambiguous. Resume only after the Root or owner authorizes the canonical creation or
-  collision procedure; rerun `preflight` before any initialization.
-- `prepared`, `collision`, `malformed`, or `busy`: stop without overwriting, cleaning,
-  recovering, relocating, or reinterpreting state. Follow the canonical recovery or
-  collision procedure and obtain any required owner decision.
+- `fresh`, `ready_to_initialize`, or `ready_to_add_bootstraps`: run
+  `npm run --ignore-scripts --silent meta -- project init` once. Preserve its success
+  envelope as session evidence.
+- `valid_current_project`: `project init` is an idempotent no-op, but no write is needed.
+  Continue at task doctor/startup; repeat inventory only for explicit re-onboarding.
+- `legacy_format1`: use the canonical explicit migration dry run, reviewed source hashes
+  and transformations, and expected-digest apply path. Never migrate through `project
+  init`, a read, or inferred history.
+- copied package policy or provider bundles: load
+  `npm run --ignore-scripts --silent meta -- docs copied-client-transition`. That
+  guidance is not a cleanup executable; unproved, modified, linked, mixed, or
+  same-named client paths remain untouched.
+- `partial`, `prepared`, `bootstrap_collision`, another document collision, `malformed`,
+  `busy`, unsafe, or `source_repository`: stop without overwriting, cleaning,
+  recovering, relocating, or reinterpreting state. Follow the named onboarding,
+  recovery, or collision procedure and obtain any required owner decision before
+  rerunning preflight.
 
-Only the Root Orchestrator performs semantic task mutations, and every task-store read
-or mutation goes through `node readme/meta/framework-data/cli.mjs`.
+Only the Root Orchestrator performs semantic task mutations, and every installed-client
+task-store read or mutation goes through
+`npm run --ignore-scripts --silent meta -- tasks ...`.
 
 Immediately after `init` or an approved migration, and before repository inventory, the
-Root captures onboarding through `node readme/meta/framework-data/cli.mjs task add`. An
-explicit major-change refresh in a valid current store starts with the same task capture.
-A delegated agent hands off at this boundary: assigned file initialization does not
-confer Root-only semantic task mutation.
+Root captures onboarding through
+`npm run --ignore-scripts --silent meta -- tasks task add`. An explicit major-change
+refresh in a valid current project starts with the same task capture. A delegated agent
+hands off at this boundary: assigned file initialization does not confer Root-only
+semantic task mutation.
 
 ## Inventory And Derive Commands
 
@@ -81,13 +88,13 @@ Apply the canonical knowledge-ingestion process and seed only useful project-own
 artifacts. Preserve established instruction and documentation owners; link rather than
 copy. Moving a published or externally referenced contract requires an owner decision.
 
-Prove cold-start recovery with:
+Prove cold-start recovery with the actual onboarding task ID:
 
 ```sh
-node readme/meta/framework-data/cli.mjs doctor
-node readme/meta/framework-data/cli.mjs startup
-node readme/meta/framework-data/cli.mjs task candidates
-node readme/meta/framework-data/cli.mjs task context T-NNNN
+npm run --ignore-scripts --silent meta -- tasks doctor
+npm run --ignore-scripts --silent meta -- tasks startup --limit 20 --max-bytes 32768
+npm run --ignore-scripts --silent meta -- tasks task candidates --max-bytes 32768
+npm run --ignore-scripts --silent meta -- tasks task context T-NNNN --max-bytes 32768
 ```
 
 Use the actual onboarding task ID for `T-NNNN`. Completion requires bounded evidence

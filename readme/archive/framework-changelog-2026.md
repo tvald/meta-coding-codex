@@ -224,3 +224,25 @@
   model-scoped, and monthly windows without credential material entering the conversation.
 - Review or sunset trigger: Any credential leak, dropped window, missed cutoff, endpoint
   schema change, or a second copy of the reader.
+
+## 2026-08-05: Reconcile Downstream Framework Changes And Ship A Changelog Seed
+
+- Status: Revised; individual imported groups were Adopted, Revised, or Rejected under
+  the source repository's skip-Pilot policy.
+- Evidence: Product-owner instructions through T-0016@r2, two downstream failure signals
+  transferred into the task note, an independent Reviewer audit, exact 36-entry package
+  and installer inventories, reproducible archives, and positive and negative install
+  fixtures; see [Decision 0017](../decisions/0017-ship-blank-framework-changelog-seed.md).
+- Change: Added the blank meta-path changelog seed and kept upstream framework-development
+  state project-side; adopted a repository-backed auxiliary-memory rule, a collision-safe
+  ~20-row task-catalog budget with concise cells, and context-triggered decision review;
+  rejected the foreign task schema, KB projection, worker-write, and intermediate-commit
+  rules. Extended package and installer validation so local changelog entries cannot
+  enter a clean installation.
+- Success signal: A fresh install contains one blank, self-describing changelog seed;
+  producer, consumer, and CI-derived inventories agree; foreign state and populated-seed
+  mutations fail before destination mutation; upstream task and audit history remains in
+  project-side records.
+- Review or sunset trigger: A populated seed ships or installs, producer/consumer
+  inventory diverges, the source-versus-consumer state boundary confuses an adopter, or
+  the 20-row catalog trigger overwrites or obscures archived task history.

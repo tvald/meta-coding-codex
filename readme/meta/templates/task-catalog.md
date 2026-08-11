@@ -9,27 +9,27 @@ second state owner.
 Run from the repository root:
 
 ```sh
-node readme/meta/framework-data/cli.mjs doctor
-node readme/meta/framework-data/cli.mjs startup
+npm run --ignore-scripts --silent meta -- tasks doctor
+npm run --ignore-scripts --silent meta -- tasks startup
 ```
 
 Use bounded queries for discovery and recovery:
 
 ```sh
-node readme/meta/framework-data/cli.mjs task list
-node readme/meta/framework-data/cli.mjs task get T-0001
-node readme/meta/framework-data/cli.mjs task context T-0001
-node readme/meta/framework-data/cli.mjs task deps T-0001
-node readme/meta/framework-data/cli.mjs task candidates
+npm run --ignore-scripts --silent meta -- tasks task list
+npm run --ignore-scripts --silent meta -- tasks task get T-0001
+npm run --ignore-scripts --silent meta -- tasks task context T-0001
+npm run --ignore-scripts --silent meta -- tasks task deps T-0001
+npm run --ignore-scripts --silent meta -- tasks task candidates
 ```
 
-Use `node readme/meta/framework-data/cli.mjs --help` for semantic mutation commands,
+Use `npm run --ignore-scripts --silent meta -- tasks --help` for semantic mutation commands,
 required optimistic-concurrency values, migration, initialization, pause, and export.
 
 If a crashed process leaves a cooperative lock, inspect it with
-`node readme/meta/framework-data/cli.mjs lock inspect`. Recover only after establishing
+`npm run --ignore-scripts --silent meta -- tasks lock inspect`. Recover only after establishing
 that no owner is live, using the exact observed token with
-`node readme/meta/framework-data/cli.mjs lock recover --expected-token TOKEN
+`npm run --ignore-scripts --silent meta -- tasks lock recover --expected-token TOKEN
 --confirm-owner-not-live`; an incomplete owner write reports the token `incomplete`.
 Never infer owner death from lock age, PID, or host.
 

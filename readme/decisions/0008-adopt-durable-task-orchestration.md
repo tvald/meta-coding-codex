@@ -17,7 +17,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where onboarding
+  imports reusable templates or a portable startup instruction. Client-owned task
+  state, durable intake, lifecycle, and bounded recovery remain current.
 
 ## Context
 

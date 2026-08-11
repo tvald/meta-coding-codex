@@ -20,7 +20,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where the task
+  runtime is pinned under a copied `readme/meta/` tree and updates require core-file
+  reconciliation. Task semantics, schemas, bounds, locks, and atomic writes remain.
 
 ## Context
 

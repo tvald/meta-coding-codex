@@ -1,10 +1,10 @@
 # AI Coding Meta-Framework
 
-This directory is the self-contained, reusable entrypoint for a portable framework core
-that gives coding agents an operating loop, durable project memory, risk-scaled quality
-gates, and explicit autonomy boundaries. Policy remains Markdown; the required
-repository-pinned task data boundary uses dependency-free Node.js 22+ and Git. Optional
-declarative harness adapters may expose selected roles without becoming framework policy.
+This directory is the self-contained policy entrypoint for an immutable npm framework
+package that gives coding agents an operating loop, durable project memory, risk-scaled
+quality gates, and explicit autonomy boundaries. Policy remains Markdown; the required
+task data boundary uses dependency-free Node.js 22+ and Git. Optional declarative source
+harness adapters may expose selected roles without becoming framework policy.
 
 Every primary harness session and every delegated agent reads this file before task
 work in source mode. An installed client instead loads the applicable compiled agent
@@ -82,6 +82,11 @@ is part of the installed contract. The only generated harness surfaces are root
 `implementer`, `reviewer`, `qa`, or `security` and loads that non-root profile; a worker
 does not infer its role or inherit root authority.
 
+Source-repository discovery bundles under `.agents/`, `.codex/`, and `.claude/` support
+maintainers in this checkout only. They are excluded from the npm tarball and are never
+installed or copied into a client; installed agents receive the equivalent reviewed
+semantics through canonical documents, facets, and explicit profiles.
+
 Quota and capability inspection run through normalized package commands governed by
 [agent-definitions.md](agent-definitions.md#usage-capacity-guard). Provider protocol and
 credential mechanics remain behind the package adapter and never surface credentials,
@@ -102,7 +107,8 @@ remain [onboarding.md](onboarding.md) and
   memory store for durable project knowledge. Detail and rationale:
   [knowledge-management.md](knowledge-management.md#repository-is-the-only-memory-store).
 - Agents maintain process memory; product owners make consequential product decisions.
-- Repeated failures improve the system, with every local framework edit auditable.
+- Repeated failures improve the system, with every source-framework edit auditable and
+  every installed-package fix delivered by version replacement.
 
 ## Process Map
 
@@ -111,6 +117,8 @@ remain [onboarding.md](onboarding.md) and
 - [workflow-routing.md](workflow-routing.md): single route table and escalation triggers.
 - [onboarding.md](onboarding.md): cold-start inventory, command derivation, ingestion,
   state initialization, and cold-start proof.
+- [copied-client-transition.md](copied-client-transition.md): conservative one-time
+  retirement of provenance-proven pre-npm copies without touching client-owned state.
 - [knowledge-ingestion.md](knowledge-ingestion.md): source trust, synthesis, acceptance
   criteria, and conflict handling.
 - [knowledge-management.md](knowledge-management.md): canonical artifacts, budgets,
@@ -211,3 +219,11 @@ record only useful client-owned knowledge. For greenfield work, record product a
 technology choices as decisions rather than pretending to derive them. For an
 established project, preserve existing instruction and documentation owners and resolve
 reported collisions deliberately.
+
+Clients update or roll back by replacing the exact alias and lockfile together and
+reinstalling with lifecycle scripts disabled. They never patch package bytes, maintain a
+client framework changelog, or reconcile one package version into another. A client
+that still contains a reviewed pre-npm copy uses
+[copied-client-transition.md](copied-client-transition.md); ambiguous or modified paths
+remain client-owned until a maintainer resolves them. Framework defects are reported
+upstream and accepted fixes arrive in a new immutable package version.

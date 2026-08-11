@@ -16,7 +16,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), which retires the
+  public curl-to-shell invocation and replaces copied-core installation with an exact
+  locked npm dependency.
 
 ## Context
 

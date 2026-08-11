@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -42,13 +41,18 @@ test("task-recovery has one maintained workflow and a complete bounded contract"
     fs.readFile(CANONICAL, "utf8"), fs.readFile(CLAUDE, "utf8"), fs.readFile(METADATA, "utf8"),
   ]);
   assert.match(canonical, /^---\nname: task-recovery\ndescription: .+\n---\n/u);
-  assert.match(canonical, /\.\.\/\.\.\/\.\.\/readme\/meta\/resumption-protocol\.md/u);
+  assert.match(canonical, /npm run --ignore-scripts --silent meta -- docs resumption-protocol/u);
   for (const command of [
-    "startup --limit 20 --max-bytes 32768",
-    "task get T-NNNN --max-bytes 131072",
-    "task context T-NNNN --max-bytes 32768",
-    "task deps T-NNNN --direction ancestors --limit 50 --max-bytes 32768",
-  ]) assert.match(canonical, new RegExp(command.replaceAll(" ", "\\s+"), "u"));
+    "tasks doctor",
+    "tasks startup --limit 20 --max-bytes 32768",
+    "tasks task get T-NNNN --max-bytes 131072",
+    "tasks task context T-NNNN --max-bytes 32768",
+    "tasks task deps T-NNNN --direction ancestors --limit 50 --max-bytes 32768",
+  ]) {
+    const exactInvocation = `npm run --ignore-scripts --silent meta -- ${command}`;
+    assert.match(canonical, new RegExp(exactInvocation.replaceAll(" ", "\\s+"), "u"));
+  }
+  assert.doesNotMatch(canonical, /tasks doctor[^\n`]*--max-bytes/u);
   for (const disposition of [
     "continue", "retry_proven_safe", "verify", "wait_approval", "wait_capacity",
     "resume_worker", "propose_replacement", "redirect", "reconcile", "paused",
@@ -61,6 +65,9 @@ test("task-recovery has one maintained workflow and a complete bounded contract"
     "conservative precedence", "provider locator", "no original handle interface", "harness output cap",
   ]) assert.match(canonical, new RegExp(guard, "iu"));
   assert.match(canonical, /missing or silent\s+worker/iu);
+  assert.doesNotMatch(canonical, /node readme\/meta\/framework-data\/cli\.mjs/u);
+  assert.doesNotMatch(canonical, /(?:\.\.\/)+readme\/meta\//u);
+  assert.doesNotMatch(canonical, /^\s*(?:\$\s*)?(?:npx\s+|npm (?:install|i)\s+[^\n]*-g\b|npm exec --global\b)/mu);
   const finalRevalidation = canonical.slice(canonical.indexOf("## Revalidate Before Returning A Proposal"));
   for (const evidence of ["task context", "task deps", "linked task note", "dependency status"]) {
     assert.match(finalRevalidation, new RegExp(evidence.replaceAll(" ", "\\s+"), "u"));
@@ -91,16 +98,4 @@ test("recovery scenario fixtures select one conservative disposition", async () 
   assert.equal(byId["commit-before-task-close"].checkpoint, "commit_present");
   assert.equal(byId["lost-mutation-receipt"].canonicalState, "advanced");
   assert.equal(byId["unrelated-new-task"].messageScope, "unrelated");
-});
-
-test("installer inventory includes each task-recovery discovery file exactly once", () => {
-  const result = spawnSync("bash", [path.join(ROOT, "scripts", "install-core.sh"),
-    "--print-expected-inventory"], { cwd: ROOT, encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
-  const entries = result.stdout.trim().split("\n");
-  for (const entry of [
-    ".agents/skills/task-recovery/SKILL.md",
-    ".agents/skills/task-recovery/agents/openai.yaml",
-    ".claude/skills/task-recovery/SKILL.md",
-  ]) assert.equal(entries.filter((candidate) => candidate === entry).length, 1);
 });
