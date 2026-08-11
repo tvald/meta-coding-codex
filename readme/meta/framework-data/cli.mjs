@@ -417,7 +417,10 @@ async function boundedDirectoryNames(directory, limit, label, { missingIsEmpty =
   return names;
 }
 
-async function preflight(context, frameworkRoot) {
+export async function preflightTaskStore(context, frameworkRoot, { lockHeld = false, readOnly = false } = {}) {
+  if (typeof lockHeld !== "boolean" || typeof readOnly !== "boolean" || (lockHeld && readOnly)) {
+    fail("CLI_USAGE", "task-store preflight lock options are invalid");
+  }
   const major = Number(process.versions.node.split(".")[0]);
   if (!Number.isInteger(major) || major < 22) fail("NODE_UNSUPPORTED", "Node.js 22 or newer is required");
   if (process.platform === "win32") fail("PLATFORM_UNSUPPORTED", "native Windows filesystems are not supported");
@@ -539,7 +542,8 @@ async function preflight(context, frameworkRoot) {
     } else if (cursor.kind === "recognized" && entrypoint.kind === "recognized" &&
         entrypoint.heading === "# Task Store" &&
         (entrypoint.text.includes("node readme/meta/framework-data/cli.mjs") ||
-          entrypoint.text.includes("npm run --silent meta -- tasks"))) {
+          entrypoint.text.includes("npm run --silent meta -- tasks") ||
+          entrypoint.text.includes("npm run --ignore-scripts --silent meta -- tasks"))) {
       disposition = "ready_to_initialize";
     } else if (entrypoint.kind === "recognized" || cursor.kind === "recognized") disposition = "partial";
     else disposition = "uninitialized";
@@ -549,11 +553,14 @@ async function preflight(context, frameworkRoot) {
     issue = "unsafe-store-root";
   } else {
     try {
-      const loaded = await withLock(context, () => loadStore(context));
+      const loaded = lockHeld || readOnly
+        ? await loadStore(context)
+        : await withLock(context, () => loadStore(context));
       integrity = "valid";
       const staticEntrypoint = entrypoint.kind === "recognized" && entrypoint.heading === "# Task Store" &&
         (entrypoint.text.includes("node readme/meta/framework-data/cli.mjs") ||
-          entrypoint.text.includes("npm run --silent meta -- tasks"));
+          entrypoint.text.includes("npm run --silent meta -- tasks") ||
+          entrypoint.text.includes("npm run --ignore-scripts --silent meta -- tasks"));
       if (cursor.kind === "recognized" && staticEntrypoint) disposition = "valid_current_store";
       else {
         disposition = "partial";
@@ -1249,12 +1256,12 @@ async function dispatch(argv, context, frameworkRoot, { programName } = {}) {
   const [command, ...rest] = argv;
   if (command === "preflight") {
     parseArguments(rest);
-    return preflight(context, frameworkRoot);
+    return preflightTaskStore(context, frameworkRoot);
   }
   if (command === "init") {
     parseArguments(rest);
     return withLock(context, async () => {
-      const readiness = await preflight(context, frameworkRoot);
+      const readiness = await preflightTaskStore(context, frameworkRoot, { lockHeld: true });
       if (readiness.disposition !== "ready_to_initialize") {
         fail("INITIALIZATION_UNSAFE", "init requires recognized static project and task-store entrypoints", 4);
       }

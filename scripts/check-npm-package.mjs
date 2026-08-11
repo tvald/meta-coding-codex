@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
 import { PROVIDER_PROBE_COMPATIBILITY } from '../lib/provider-contract.mjs';
 import { PROMPT_COMPILER_COMPATIBILITY } from '../lib/prompt-contract.mjs';
+import { PROJECT_INIT_COMPATIBILITY } from '../lib/project-contract.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -126,6 +127,23 @@ export function validateManifest(candidate = manifest) {
       JSON.stringify(promptCompatibility.harnesses) ===
         JSON.stringify(PROMPT_COMPILER_COMPATIBILITY.harnesses),
     'prompt compiler compatibility metadata differs from the runtime contract',
+  );
+  const projectCompatibility = candidate.metaFramework?.projectInit;
+  const projectCompatibilityKeys = projectCompatibility !== null &&
+    typeof projectCompatibility === 'object' && !Array.isArray(projectCompatibility) ?
+    Object.keys(projectCompatibility).sort() : [];
+  const expectedProjectCompatibilityKeys = Object.keys(PROJECT_INIT_COMPATIBILITY).sort();
+  assert(
+    projectCompatibilityKeys.length === expectedProjectCompatibilityKeys.length &&
+      projectCompatibilityKeys.every((key, index) => key === expectedProjectCompatibilityKeys[index]) &&
+      projectCompatibility.version === PROJECT_INIT_COMPATIBILITY.version &&
+      JSON.stringify(projectCompatibility.envelopeVersions) ===
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.envelopeVersions) &&
+      JSON.stringify(projectCompatibility.bootstrapVersions) ===
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.bootstrapVersions) &&
+      JSON.stringify(projectCompatibility.stateTemplateVersions) ===
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.stateTemplateVersions),
+    'project initializer compatibility metadata differs from the runtime contract',
   );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
   assert(candidate.scripts?.meta === 'node ./bin/meta-framework.mjs', 'unexpected source meta command');

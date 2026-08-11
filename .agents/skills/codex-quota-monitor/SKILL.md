@@ -8,7 +8,7 @@ description: Invoke the package-owned Codex quota probe and apply the canonical 
 Use the immutable package command as the sole Codex telemetry adapter:
 
 ```sh
-npm run --silent meta -- quota --harness codex
+npm run --ignore-scripts --silent meta -- quota --harness codex
 ```
 
 The command owns App Server discovery, initialization, full rate-limit reading,
@@ -25,7 +25,7 @@ resumption only through the canonical
 For native delegation availability, use the separate bounded probe:
 
 ```sh
-npm run --silent meta -- capability --harness codex --name delegation
+npm run --ignore-scripts --silent meta -- capability --harness codex --name delegation
 ```
 
 An enabled provider surface does not grant project authority, prove safe quota, expand

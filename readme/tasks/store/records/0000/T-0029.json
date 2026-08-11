@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0029",
-  "recordVersion": 1,
+  "recordVersion": 5,
   "taskRevision": 1,
   "outcome": "Provide thin Codex AGENTS.md and Claude CLAUDE.md bootstraps plus clean client initialization without copying reusable framework policy",
   "authority": {
     "reference": "User instruction, 2026-08-11 via umbrella T-0023",
     "acceptedDate": "2026-08-11"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0027"
   ],
@@ -21,12 +21,16 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Design the stable bootstrap text and initializer, wire explicit root and delegated profiles, preserve client-owned project state, and verify clean Codex and Claude startup flows",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "Umbrella brief",
       "path": "readme/tasks/0023-npm-package-delivery-brief.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-11",
+    "repositoryChanged": true,
+    "evidence": "Thin Codex/Claude bootstraps and guarded Linux client initializer shipped; focused 13/13, task 36/36, prompt 8/8, package 55/55, full 88/88, exact 66-file package audit, warning-free unstaged doctor/diff, and independent Architect, Security, QA, Reviewer passes"
+  }
 }

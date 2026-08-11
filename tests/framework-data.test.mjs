@@ -654,6 +654,15 @@ test("doctor enforces framework sentinels, links, budgets, templates, maintenanc
     assert.ok(json(root, ["doctor"], 1).value.errors.some((error) => error.code === "DOCTOR_HARD_BUDGET"));
     await fs.writeFile(cursor, originalCursor.replace("2026-09-10", "2026-08-11"));
     assert.ok(json(root, ["doctor"]).value.warnings.some((warning) => warning.code === "DOCTOR_MAINTENANCE_DUE"));
+    await fs.writeFile(cursor, originalCursor.replace(
+      "- Last maintenance pass: 2026-08-11\n- Legacy repository-changing completion baseline: 0\n- Next trigger: 2026-09-10 or 10 repository-changing completions",
+      "- Last maintenance pass: Not yet run\n- Next trigger: First onboarding completion",
+    ));
+    const initializerBaseline = json(root, ["doctor"]).value;
+    assert.equal(initializerBaseline.ok, true);
+    assert.ok(initializerBaseline.warnings.some((warning) => warning.code === "DOCTOR_MAINTENANCE_DUE"));
+    assert.deepEqual(initializerBaseline.checks.find(({ id }) => id === "maintenance_cadence").details.reasons,
+      ["onboarding_baseline_uninitialized"]);
     await fs.writeFile(cursor, originalCursor);
 
     const template = path.join(root, "readme", "meta", "templates", "standards.md");

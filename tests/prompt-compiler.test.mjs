@@ -246,6 +246,9 @@ test('every profile and harness is deterministic, bounded, attributable, and sem
         normalize(codexSections.get('harness.delegation')));
       assert.equal(claudeSections.get('capacity.guard'), codexSections.get('capacity.guard'));
       for (const sections of [claudeSections, codexSections]) {
+        assert.match(sections.get('harness.delegation'),
+          /agent-prompt --profile PROFILE --harness (?:claude|codex)/u);
+        assert.match(sections.get('harness.delegation'), /Never infer a profile, inherit `root`/u);
         assert.doesNotMatch(sections.get('harness.delegation'),
           /AGENTS\.md|CLAUDE\.md|node_modules|credential|access token|provider protocol/iu);
       }

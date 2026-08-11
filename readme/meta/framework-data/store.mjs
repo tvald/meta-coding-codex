@@ -34,6 +34,7 @@ const ALLOWED_DETAIL_ROOTS = [
   "readme/incidents/",
 ];
 const REPOSITORY_CONTEXTS = new WeakSet();
+const RECOVERY_RETAINED_LOCKS = new WeakSet();
 
 function gitOutput(args, cwd) {
   try {
@@ -682,10 +683,13 @@ export async function acquireLock(context) {
     await syncDirectory(context.commonDir).catch(() => {});
     fail("LOCK_FAILED", "framework-data lock ownership cannot be recorded", 5);
   }
-  return {
+  const lock = {
     token,
     lockDirectory,
     ownerFile,
+    preserveForRecovery() {
+      RECOVERY_RETAINED_LOCKS.add(lock);
+    },
     async release() {
       let parsed;
       try {
@@ -699,6 +703,7 @@ export async function acquireLock(context) {
       await syncDirectory(context.commonDir).catch(() => fail("LOCK_OWNERSHIP", "framework-data lock removal cannot be synchronized", 5));
     },
   };
+  return lock;
 }
 
 function validateLockOwner(value, text) {
@@ -844,15 +849,17 @@ export async function withLock(context, operation) {
   const lock = await acquireLock(context);
   let operationError;
   try {
-    return await operation();
+    return await operation(lock);
   } catch (error) {
     operationError = error;
     throw error;
   } finally {
-    try {
-      await lock.release();
-    } catch (releaseError) {
-      if (!operationError) throw releaseError;
+    if (!RECOVERY_RETAINED_LOCKS.has(lock)) {
+      try {
+        await lock.release();
+      } catch (releaseError) {
+        if (!operationError) throw releaseError;
+      }
     }
   }
 }

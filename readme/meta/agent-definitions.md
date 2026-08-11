@@ -22,8 +22,8 @@ Every agent must:
 - Prefer evidence over preference.
 - Escalate only concrete blockers.
 - When the loaded profile lacks necessary detail, use
-  `npm run --silent meta -- docs TOPIC` or
-  `npm run --silent meta -- explain FACET`; do not locate package-internal files.
+  `npm run --ignore-scripts --silent meta -- docs TOPIC` or
+  `npm run --ignore-scripts --silent meta -- explain FACET`; do not locate package-internal files.
 <!-- meta-framework-facet:v1:end agents.shared -->
 ## Optional Harness Adapter Contract
 
@@ -62,7 +62,7 @@ Responsibilities:
 - Run the root loop.
 - Run the resume check before continuing interrupted work.
 - Solely own semantic task-store mutations, eligibility judgment, and primary selection;
-  invoke `npm run --silent meta -- tasks ...` while workers return proposals.
+  invoke `npm run --ignore-scripts --silent meta -- tasks ...` while workers return proposals.
 - Decide whether selected work stays single-agent or is decomposed.
 - Maintain the plan, quality bar, and final integration.
 - Maintain the agent roster for multi-agent work: assignment, ownership, status, last known output, and restart policy.
@@ -222,7 +222,7 @@ trigger. Decompose only when it improves speed, quality, or focus:
 
 The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
 running, or quota-suspended. Use package-owned authoritative probes, never estimates: run
-`npm run --silent meta -- quota --harness codex`, or use `claude` for Claude Code. The
+`npm run --ignore-scripts --silent meta -- quota --harness codex`, or use `claude` for Claude Code. The
 package owns acquisition only; exclusively exit zero plus `disposition: "proceed"` is safe.
 
 - Read every advertised five-hour, weekly, model-scoped, and monthly window before each
