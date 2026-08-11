@@ -21,6 +21,7 @@ results live only in the structured task store.
 | Mutate and normally query canonical task state only through the repository-pinned Node CLI. | [Decision 0018](decisions/0018-adopt-node-structured-task-store.md) |
 | Keep one guarded project-onboarding skill body and preserve same-name cross-harness bundles atomically. | [Decision 0019](decisions/0019-adopt-guarded-project-onboarding-skill.md) |
 | Keep recovery proposal-only, bounded, revision-aware, and conservative about uncertain effects or ownership. | [Decision 0020](decisions/0020-adopt-guarded-task-recovery-skill.md) |
+| Deliver future clients an immutable npm dependency with explicit package/client roots, derived attributable prompts, guarded extensions, and replacement-only updates. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
 
 ## Known Global Dead Ends
 
@@ -41,9 +42,8 @@ results live only in the structured task store.
 
 ## Maintenance Cadence
 
-- Last maintenance pass: 2026-07-30
-- Legacy repository-changing completion baseline: 6 before structured completion metadata
-- Next trigger: 2026-08-29 or 10 repository-changing completions
+- Last maintenance pass: 2026-08-11
+- Next trigger: 2026-09-10 or 10 repository-changing completions
 
 Derive later completion counts from structured task records; do not maintain a duplicate
 counter or completed-task list here.
