@@ -115,3 +115,6 @@ globally paused work.
 Before closing resumed work, confirm that its latest accepted instruction is satisfied,
 stale output was reviewed before use, checks cover both sides of the interruption, and
 the structured record exposes every remaining verification, gate, dependency, or blocker.
+If a recovered `Needs verification` check exposes a defect, the Root returns the task
+directly to `Active` through the canonical
+[task lifecycle](knowledge-management.md#task-lifecycle-and-selection) before repairs.

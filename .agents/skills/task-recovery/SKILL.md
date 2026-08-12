@@ -111,7 +111,10 @@ return `reconcile` and name the missing locator as the unblocking condition.
 Treat missing verification as unfinished. For `needs_verification`, recover the declared
 required checks and propose only safe, current, locally bounded verification. If a
 required check is unavailable, preserve that status and report the exact unblocking
-condition; do not convert it to Done.
+condition; do not convert it to Done. If the check passes, propose the Root-owned close;
+if it exposes an implementation defect, propose a Root-owned checkpoint directly to
+`active` with the freshly revalidated store digest and a defect-focused next action
+before any repair.
 
 ## Load Conditional Owners Only When Needed
 
@@ -146,7 +149,8 @@ condition; do not convert it to Done.
   blocker, or a nonresumable lifecycle state prevents a safe action; name the conflict
   and exact evidence, ownership resolution, blocker, or Root-loop transition required.
 - `verify`: implementation evidence exists but required checks remain; propose only
-  those checks and retain `needs_verification` until they pass.
+  those checks. Retain `needs_verification` while a check is unavailable, propose close
+  after a pass, or propose the direct `active` checkpoint after a defect result.
 - `wait_approval`: the exact current gate lacks a matching granted approval.
 - `wait_capacity`: required telemetry is unknown or any advertised window is at its
   cutoff; propose a Root-owned checkpoint and wait under the capacity guard without

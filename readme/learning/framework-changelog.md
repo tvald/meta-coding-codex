@@ -13,6 +13,22 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-12: Revise Verification Reactivation Lifecycle
+
+- Status: Revised.
+- Evidence: T-0034 counterfactual lifecycle regression, source and packed-client
+  transition matrices, 105-test full suite, reproducible 55-file package audit, and
+  independent Reviewer and QA passes after their initial CAS/next-action findings.
+- Change: Added the one guarded `Needs verification` to `Active` checkpoint path for a
+  runnable delayed check that exposes an implementation defect, while preserving the
+  semantic revision and global task-state invariants. Advanced the additive task CLI
+  compatibility contract to 1.1.0.
+- Success signal: A delayed verification defect can resume repairs without an amendment
+  or terminal close, while other states, paused scheduling, and a competing Active task
+  fail before target-record mutation.
+- Review or sunset trigger: concurrent primaries, bypassed gates or dependencies, lost
+  revision evidence, general checkpoint activation, or another unrepresentable check result.
+
 ## 2026-08-12: Adopt Codex Lifecycle Prompt Injection
 
 - Status: Adopted.
@@ -141,20 +157,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   output, uncertain retry, ownership guesses, or unbounded history reads.
 - Review or sunset trigger: Duplicated effect, overwritten work, false completion,
   provider discovery drift, unbounded context, or demonstrated need for a helper.
-
-## 2026-08-11: Adopt A Guarded Project-Onboarding Skill
-
-- Status: Adopted.
-- Evidence: Product-owner promotion of the T-0017/T-0018 recommendations; T-0021
-  skill-creator validation, 30-test suite, 46-file reproducible package, additive and
-  atomic-collision installer fixtures, forward tests, and independent design/security
-  and final Reviewer/Security/QA passes; see
-  [Decision 0019](../decisions/0019-adopt-guarded-project-onboarding-skill.md).
-- Change: Added one maintained onboarding skill with a thin Claude discovery link,
-  exact preflight disposition handling, command-execution limits, and bounded cold-start
-  proof. Hardened preflight against symlinked documentation ancestors and made same-name
-  cross-harness skill installation an atomic collision bundle.
-- Success signal: A fresh Root completes every onboarding phase, while delegated,
-  colliding, malformed, unsupported, or mixed-origin states stop without unsafe writes.
-- Review or sunset trigger: Missed phase, overwrite, mixed-origin skill, unsafe command,
-  provider discovery drift, or cold-start recovery failure.

@@ -121,6 +121,7 @@ test("version, help, and preflight expose the dependency-free runtime contract",
   try {
     const version = json(root, ["--version"]).value;
     assert.equal(version.package.version, "1.0.0");
+    assert.equal(version.taskCli.version, "1.1.0");
     assert.deepEqual(version.taskCli.readableStoreSchemaVersions, [1]);
     const help = run(root, ["--help"]).stdout;
     assert.match(help, /task add --outcome/u);
@@ -1015,6 +1016,248 @@ test("store operations reject ancestor symlinks and never write outside the repo
   } finally {
     await removeRepository(root);
     await fs.rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("Needs verification reactivates only through an explicit defect checkpoint", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    await fs.writeFile(path.join(root, "readme", "tasks", "approval.md"), "# Approval\n");
+    const pending = json(root, [
+      "task", "add",
+      "--outcome", "Repair a defect found by delayed verification",
+      "--authority-reference", "Test",
+      "--route", "quick_change",
+      "--risk", "high",
+    ]).value.data;
+    const beforePendingReactivation = await fs.readFile(taskPath(root, pending.id));
+    assert.match(run(root, [
+      "task", "checkpoint", pending.id,
+      "--expected-record-version", String(pending.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, pending.id)), beforePendingReactivation);
+
+    const parked = json(root, [
+      "task", "checkpoint", pending.id,
+      "--expected-record-version", String(pending.recordVersion),
+      "--status", "parked",
+    ]).value.data;
+    const beforeParkedReactivation = await fs.readFile(taskPath(root, parked.id));
+    assert.match(run(root, [
+      "task", "checkpoint", parked.id,
+      "--expected-record-version", String(parked.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, parked.id)), beforeParkedReactivation);
+
+    const readyBeforeApproval = json(root, [
+      "task", "checkpoint", parked.id,
+      "--expected-record-version", String(parked.recordVersion),
+      "--status", "ready",
+    ]).value.data;
+    const ready = json(root, [
+      "task", "record-approval", readyBeforeApproval.id,
+      "--expected-record-version", String(readyBeforeApproval.recordVersion),
+      "--id", "A-reactivate",
+      "--status", "granted",
+      "--source", "Test owner",
+      "--action", "Repair a delayed verification defect",
+      "--boundary", "Fixture repository only",
+      "--detail-path", "readme/tasks/approval.md",
+    ]).value.data;
+    const beforeReadyReactivation = await fs.readFile(taskPath(root, ready.id));
+    assert.match(run(root, [
+      "task", "checkpoint", ready.id,
+      "--expected-record-version", String(ready.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, ready.id)), beforeReadyReactivation);
+
+    const selected = json(root, [
+      "task", "select", ready.id,
+      "--expected-record-version", String(ready.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+    ]).value.data;
+    const beforeActiveReactivation = await fs.readFile(taskPath(root, selected.id));
+    assert.match(run(root, [
+      "task", "checkpoint", selected.id,
+      "--expected-record-version", String(selected.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, selected.id)), beforeActiveReactivation);
+
+    const unverified = json(root, [
+      "task", "checkpoint", selected.id,
+      "--expected-record-version", String(selected.recordVersion),
+      "--status", "needs_verification",
+      "--next-safe-action", "Run the newly available verification gate",
+    ]).value.data;
+    const reactivated = json(root, [
+      "task", "checkpoint", unverified.id,
+      "--expected-record-version", String(unverified.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ]).value.data;
+    assert.equal(reactivated.status, "active");
+    assert.equal(reactivated.recordVersion, unverified.recordVersion + 1);
+    assert.equal(reactivated.taskRevision, unverified.taskRevision);
+    assert.deepEqual(reactivated.gate, unverified.gate);
+    assert.equal(reactivated.nextSafeAction, "Fix the defect exposed by verification");
+
+    const unverifiedAgain = json(root, [
+      "task", "checkpoint", reactivated.id,
+      "--expected-record-version", String(reactivated.recordVersion),
+      "--status", "needs_verification",
+    ]).value.data;
+    const beforeRequiredArguments = await fs.readFile(taskPath(root, unverifiedAgain.id));
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ], 2).stderr, /ARGUMENT_INVALID/u);
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+    ], 2).stderr, /ARGUMENT_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeRequiredArguments);
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion - 1),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+      "--next-safe-action", "Must not be written",
+    ], 4).stderr, /STALE_RECORD/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeRequiredArguments);
+
+    const staleDigest = json(root, ["doctor"]).value.storeDigest;
+    const competing = json(root, [
+      "task", "add",
+      "--outcome", "Competing selected task",
+      "--authority-reference", "Test",
+      "--status", "ready",
+      "--route", "quick_change",
+      "--risk", "low",
+    ]).value.data;
+    const beforeStaleStore = await fs.readFile(taskPath(root, unverifiedAgain.id));
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--expected-store-digest", staleDigest,
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ], 4).stderr, /STALE_STORE/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeStaleStore);
+    const competingActive = json(root, [
+      "task", "select", competing.id,
+      "--expected-record-version", String(competing.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+    ]).value.data;
+    const beforeCompetingConflict = await fs.readFile(taskPath(root, unverifiedAgain.id));
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ], 4).stderr, /STATE_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeCompetingConflict);
+
+    const competingParked = json(root, [
+      "task", "checkpoint", competingActive.id,
+      "--expected-record-version", String(competingActive.recordVersion),
+      "--status", "parked",
+    ]).value.data;
+    const beforeCompetingParkedReactivation = await fs.readFile(taskPath(root, competingParked.id));
+    assert.match(run(root, [
+      "task", "checkpoint", competingParked.id,
+      "--expected-record-version", String(competingParked.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, competingParked.id)), beforeCompetingParkedReactivation);
+    const competingBlocked = json(root, [
+      "task", "checkpoint", competingParked.id,
+      "--expected-record-version", String(competingParked.recordVersion),
+      "--status", "blocked",
+      "--blocker", "Exercise blocked reactivation",
+    ]).value.data;
+    const beforeBlockedReactivation = await fs.readFile(taskPath(root, competingBlocked.id));
+    assert.match(run(root, [
+      "task", "checkpoint", competingBlocked.id,
+      "--expected-record-version", String(competingBlocked.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, competingBlocked.id)), beforeBlockedReactivation);
+    const paused = json(root, [
+      "pause",
+      "--expected-record-version", "1",
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--reason", "Exercise reactivation while paused",
+      "--source", "Test",
+    ]).value.data;
+    const beforePausedConflict = await fs.readFile(taskPath(root, unverifiedAgain.id));
+    assert.match(run(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ], 4).stderr, /STATE_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforePausedConflict);
+
+    json(root, ["resume", "--expected-record-version", String(paused.recordVersion)]);
+    const resumed = json(root, [
+      "task", "checkpoint", unverifiedAgain.id,
+      "--expected-record-version", String(unverifiedAgain.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--status", "active",
+      "--next-safe-action", "Fix the defect exposed by verification",
+    ]).value.data;
+    assert.equal(resumed.status, "active");
+    const closed = json(root, [
+      "task", "close", resumed.id,
+      "--expected-record-version", String(resumed.recordVersion),
+      "--status", "done",
+      "--completed-at", "2026-08-12",
+      "--repository-changed", "false",
+      "--evidence", "Delayed verification defect repaired",
+    ]).value.data;
+    const beforeDoneReactivation = await fs.readFile(taskPath(root, closed.id));
+    assert.match(run(root, [
+      "task", "checkpoint", closed.id,
+      "--expected-record-version", String(closed.recordVersion),
+      "--status", "active",
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(taskPath(root, closed.id)), beforeDoneReactivation);
+    for (const status of ["cancelled", "superseded"]) {
+      const terminalTarget = json(root, [
+        "task", "add",
+        "--outcome", `Exercise ${status} reactivation refusal`,
+        "--authority-reference", "Test",
+      ]).value.data;
+      const terminal = json(root, [
+        "task", "close", terminalTarget.id,
+        "--expected-record-version", String(terminalTarget.recordVersion),
+        "--status", status,
+        "--completed-at", "2026-08-12",
+        "--repository-changed", "false",
+        "--evidence", `${status} fixture`,
+      ]).value.data;
+      const beforeTerminalReactivation = await fs.readFile(taskPath(root, terminal.id));
+      assert.match(run(root, [
+        "task", "checkpoint", terminal.id,
+        "--expected-record-version", String(terminal.recordVersion),
+        "--status", "active",
+      ], 4).stderr, /TRANSITION_INVALID/u);
+      assert.deepEqual(await fs.readFile(taskPath(root, terminal.id)), beforeTerminalReactivation);
+    }
+  } finally {
+    await removeRepository(root);
   }
 });
 
