@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0036",
+  "recordVersion": 3,
+  "taskRevision": 1,
+  "outcome": "Evaluate whether Git commits and history can simplify task CLI state management, identify guards for exceedingly rare or cheaply recoverable scenarios, and recommend a robust lower-complexity design for typical framework-agent work",
+  "authority": {
+    "reference": "Direct user request delivered 2026-08-12",
+    "acceptedDate": "2026-08-12"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "discover",
+  "risk": "medium",
+  "tags": [
+    "framework",
+    "task-store"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [],
+  "completion": {
+    "completedAt": "2026-08-12",
+    "repositoryChanged": false,
+    "evidence": "Reviewed the 4,300-line CLI/store/schema/importer implementation, focused tests, Decision 0018, 17 store-touching commits, and committed task snapshots. Independent reviewer passed doctor sequentially, 29/29 framework-data tests, and git diff --check; parallel read-only doctor/startup reproduced LOCK_BUSY. Disposition: Adopt the typed per-task store, semantic invariants, recordVersion/taskRevision, and atomic record publication; Revise read locking, common-dir lock scope, whole-store mutation digest CAS, orphan-lock recovery, first-shard staging, redundant durability/path checks, linked-detail validation, and importer lifetime; Reject Git as live transactional state because unfinished state is intentionally uncommitted and commits collapse transitions. Use Git for scoped completion audit, conflicts, and targeted restore only."
+  }
+}
