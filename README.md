@@ -2,8 +2,8 @@
 
 `@tvald/meta-framework` is an immutable npm package for repository-backed AI-assisted
 development. It supplies bounded agent profiles, long-form operating guidance, a
-structured task CLI, provider probes, and guarded prompt extensions without copying its
-reusable policy into the client repository.
+structured task CLI, provider probes, guarded prompt extensions, and optional Codex
+lifecycle prompt injection without copying reusable policy into the client repository.
 
 The package requires Node.js 22 or newer and npm 10 or newer. Its canonical process
 index is [`readme/meta/README.md`](readme/meta/README.md). The accepted package boundary
@@ -51,12 +51,27 @@ npm run --ignore-scripts --silent meta -- project preflight
 npm run --ignore-scripts --silent meta -- project init
 ```
 
-These v1 project commands accept no additional flags or positional arguments and emit
-one bounded JSON object on success. `preflight` is read-only. `init` may proceed only for
+The argument-free portable commands above accept no flags or positional arguments and emit one
+bounded JSON object on success. `preflight` is read-only. `init` may proceed only for
 `fresh`, `ready_to_initialize`, or `ready_to_add_bootstraps`; it is an idempotent success
 for `valid_current_project`. It refuses source-package repositories, legacy stores,
 partial or prepared state, malformed state, unsafe paths, active locks, and bootstrap or
 documentation collisions instead of merging, migrating, or repairing them implicitly.
+
+For a trusted Codex project, explicitly review and install the optional lifecycle
+integration after the portable project is current:
+
+```sh
+npm run --ignore-scripts --silent meta -- project preflight --harness codex
+npm run --ignore-scripts --silent meta -- project init --harness codex
+```
+
+This separate mode creates only `.codex/hooks.json` and the four exact custom-agent
+files `meta_implementer.toml`, `meta_reviewer.toml`, `meta_qa.toml`, and
+`meta_security.toml`. It preserves `.codex/config.toml` and unrelated files. Existing,
+changed, linked, malformed, stale, or same-name targets are reported and refused rather
+than overwritten or merged. An exact-plus-absent framework prefix may be completed
+safely after interruption.
 
 Syntax errors exit 2, refused or unsafe initialization exits 4, an active cooperative
 lock exits 5, and other runtime failures exit 1. A failed command writes no success
@@ -79,8 +94,10 @@ A successful clean initialization creates only:
 
 The initializer never copies `readme/meta/`, prompts, roles, templates, adapters,
 skills, decisions, quality evidence, framework changelogs, provider settings, caches, or
-source-project facts. It does not create `.codex/` or `.claude/`. Package policy remains
-inside the immutable dependency; mutable project facts remain in the client repository.
+source-project facts. The portable operation does not create `.codex/` or `.claude/`;
+only the explicit Codex integration mode creates the five mechanics files described
+above. Package policy remains inside the immutable dependency; mutable project facts
+remain in the client repository.
 
 Existing canonical bootstraps and valid state documents are preserved byte for byte.
 An existing instruction file without its one exact, harness-specific bootstrap block—or
@@ -90,18 +107,43 @@ should be merged.
 
 ## Start An Agent
 
-The generated `AGENTS.md` selects the Codex root profile and `CLAUDE.md` selects the
-Claude root profile through the checked-in local npm command. A primary session follows
-the complete emitted instructions, reads the client cursor and task entrypoint, then
-runs:
+In a trusted project with the reviewed Codex integration, `SessionStart` injects the
+current compiled root profile for startup, resume, clear, and compaction. The generated
+`AGENTS.md` recognizes that envelope and does not duplicate-load it. Automatic source
+hooks invoke `node "$(git rev-parse --show-toplevel)/bin/meta-framework.mjs"`;
+installed-client hooks use the equivalent fixed dependency path below that Git root.
+The quoted root keeps subdirectory sessions and repository names containing shell
+metacharacters safe while bypassing mutable client npm scripts. `meta hook` remains the
+public CLI. If hooks are disabled, untrusted, or administratively restricted,
+`AGENTS.md` uses the checked-in local `agent-prompt` fallback and stops on failure.
+Claude continues to load its root profile through `CLAUDE.md`.
+
+The adapter is live-tested only against the versions in `meta hook --version` (currently
+Codex 0.147.0). It does not inspect the running Codex version. Treat another version as
+unverified: review it before enabling the integration, or revert/disable the optional
+Codex integration files so the `AGENTS.md` fallback remains authoritative.
+
+A primary session then reads the client cursor and task entrypoint and runs:
 
 ```sh
 npm run --ignore-scripts --silent meta -- tasks doctor
 npm run --ignore-scripts --silent meta -- tasks startup
 ```
 
-A delegated assignment must name exactly one non-root profile and the applicable
-harness. The worker loads only that profile:
+A Codex delegated assignment passes exactly one custom-agent name as `agent_type`.
+Project-level exact `SubagentStart` matchers load only the corresponding fixed profile:
+
+| Custom agent | Compiled profile |
+| --- | --- |
+| `meta_implementer` | `implementer` |
+| `meta_reviewer` | `reviewer` |
+| `meta_qa` | `qa` |
+| `meta_security` | `security` |
+
+Do not use built-in, unprefixed, or inferred names for these roles. Each standalone
+manifest sets `[agents] enabled = false` and also tells the specialist not to delegate.
+For a harness without this accepted lifecycle adapter, the worker uses the portable
+explicit command:
 
 ```sh
 npm run --ignore-scripts --silent meta -- agent-prompt --profile implementer --harness codex
@@ -135,6 +177,7 @@ npm install --package-lock-only --ignore-scripts --save-exact \
 npm ci --ignore-scripts
 npm run --ignore-scripts --silent meta -- project --version
 npm run --ignore-scripts --silent meta -- project preflight
+npm run --ignore-scripts --silent meta -- project preflight --harness codex
 ```
 
 Review the complete manifest and lockfile change before installation. The dependency is
@@ -149,6 +192,12 @@ If `project preflight` reports `fresh`, `ready_to_initialize`,
 idempotent success. Never run initialization after any refused, unsafe, busy, malformed,
 legacy, partial, prepared, or collision disposition.
 
+If Codex integration preflight reports `ready_to_add_codex_integration` or
+`ready_to_complete_codex_integration`, review the target inventory and run
+`project init --harness codex`. `valid_current_codex_integration` is idempotent. A
+client-owned, stale, malformed, linked, or colliding target requires explicit maintainer
+reconciliation; do not delete or replace it based on a marker or matching path alone.
+
 After initialization is complete, verify the client task state:
 
 ```sh
@@ -161,6 +210,14 @@ Roll back package code by restoring both the prior manifest and prior lockfile, 
 startup checks above. After a data migration or mutation unsupported by the older
 package, use an explicit reverse migration when one exists or repair forward; restoring
 package code alone is not a data rollback.
+
+Disable or roll back the Codex mechanics by reverting only the reviewed five `.codex`
+integration files through Git. Never remove an existing collision or unrelated Codex
+configuration. Trust the project and approve changed hook hashes only after reviewing
+the exact checked-in command. The root hook and four fixed-profile agent hooks are five
+distinct definitions, so review and approve every changed hash; trusting one does not
+approve the others. `allow_managed_hooks_only` or disabled hooks intentionally leave
+the `AGENTS.md` fallback active.
 
 Clients that previously received the framework through the retired copied-core
 installer must not delete same-named paths merely because they resemble old framework

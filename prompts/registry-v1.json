@@ -272,7 +272,8 @@
       "order": 250,
       "templateVariables": [
         "HARNESS",
-        "NATIVE_SURFACE"
+        "NATIVE_SURFACE",
+        "PROFILE_LOADING"
       ]
     },
     {
@@ -383,7 +384,8 @@
       ],
       "templateVariables": {
         "HARNESS": "claude",
-        "NATIVE_SURFACE": "Claude Code agents"
+        "NATIVE_SURFACE": "Claude Code agents",
+        "PROFILE_LOADING": "Require the child to load that profile with `npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness claude`."
       }
     },
     {
@@ -395,7 +397,8 @@
       ],
       "templateVariables": {
         "HARNESS": "codex",
-        "NATIVE_SURFACE": "Codex subagents"
+        "NATIVE_SURFACE": "Codex subagents",
+        "PROFILE_LOADING": "Select respectively `meta_implementer`, `meta_reviewer`, `meta_qa`, or `meta_security`; each project-level exact matcher loads its fixed profile."
       }
     },
     {

@@ -19,8 +19,7 @@ Only exit zero with capability `disposition: "enabled"` and quota `disposition:
 "proceed"` permits delegation. Otherwise follow the capacity and recovery facets. Use
 the native surface only for root-authorized bounded assignments; never use another
 delegation mechanism. Each assignment must name one of
-`implementer`, `reviewer`, `qa`, or `security` and require the child to load it with
-`npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness {{HARNESS}}`.
+`implementer`, `reviewer`, `qa`, or `security`. {{PROFILE_LOADING}}
 Never infer a profile, inherit `root`, broaden it, or use global, `npx`, network, or
 package-path fallback.
 <!-- meta-framework-facet:v1:end harness.delegation -->

@@ -40,7 +40,8 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0022](0022-adopt-codex-hook-prompt-injection.md) for optional installed-client
+  Codex hooks/agents; the portable five-path initializer remains.
 
 ## Context
 
@@ -176,8 +177,8 @@ Neutral or follow-up:
 ## Implementation And Compatibility
 
 - Source harness discovery bundles remain in `.agents/`, `.codex/`, and `.claude/` for
-  maintainers but outside the npm tarball. Clients receive canonical documents, compiled
-  facets, explicit profiles, and thin generated bootstraps, not discovery bundles.
+  maintainers but outside the npm tarball. Decision 0022 permits the guarded five-file
+  Codex integration; no provider bundle or semantic policy is copied wholesale.
 - Clients have no package-local framework changelog. Source edits stay in
   `readme/learning/framework-changelog.md`; upstream fixes arrive through exact manifest
   and lockfile replacement.
@@ -192,8 +193,7 @@ Neutral or follow-up:
 
 ## Confidence
 
-Confidence: High for the package/client boundary, local invocation, and normalized provider
-adapters; Medium for the unpublished registry identity until release evidence exists.
+Confidence: High for package/client boundaries, local invocation, and provider adapters; Medium for the unpublished registry identity.
 
 Why:
 

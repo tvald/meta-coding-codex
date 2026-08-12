@@ -3,9 +3,12 @@
   "files": [
     "README.md",
     "bin/meta-framework.mjs",
+    "lib/codex-integration.mjs",
     "lib/extension-contract.mjs",
     "lib/extension-loader.mjs",
     "lib/git-environment.mjs",
+    "lib/hook-adapters.mjs",
+    "lib/hook-contract.mjs",
     "lib/project-contract.mjs",
     "lib/project-initializer.mjs",
     "lib/prompt-compiler.mjs",

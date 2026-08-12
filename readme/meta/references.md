@@ -26,8 +26,11 @@ These sources influenced the framework. Agents should use current primary source
 - OpenAI Codex docs, "Custom instructions with AGENTS.md": use layered, concise repository guidance. https://developers.openai.com/codex/guides/agents-md
 - OpenAI Codex docs, "Best practices": frame prompts with goal, context, constraints, and done criteria; use reusable guidance and verification loops. https://developers.openai.com/codex/learn/best-practices
 - OpenAI, "Subagents": project-scoped custom Codex agents, configuration layers,
-  sandbox controls, and multi-agent coordination (checked 2026-07-10):
-  https://learn.chatgpt.com/docs/agent-configuration/subagents
+  sandbox controls, exact custom names, and multi-agent coordination (checked
+  2026-08-12): https://learn.chatgpt.com/docs/agent-configuration/subagents?surface=app#app-custom-agents
+- OpenAI, "Hooks": project trust, synchronous lifecycle commands, structured stop
+  output, and full additional-context controls (checked 2026-08-12):
+  https://learn.chatgpt.com/docs/hooks
 - OpenAI, "Build skills": repo-scoped reusable Codex workflows, progressive
   disclosure, optional resources, and `.agents/skills` discovery (checked 2026-08-11):
   https://learn.chatgpt.com/docs/build-skills

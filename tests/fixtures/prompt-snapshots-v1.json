@@ -36,12 +36,12 @@
     "sha256": "a3ccf9134ee2742772f1d366541915e0eb2cfb48cb9b9a04e5d2e8b47ba78bcc"
   },
   "root:claude": {
-    "bytes": 31155,
-    "sha256": "6d39e8a32e3f972008ef68970f9ca8b2dfecf0b5461a4fce2b00ea4e68816bf6"
+    "bytes": 31162,
+    "sha256": "4594e325c04f2a9b64ecbaee4323c21f1ac8362104d9be6046883b82d74f8493"
   },
   "root:codex": {
-    "bytes": 31147,
-    "sha256": "f0dd15a9a68302b1336d66de58e97f86956aa86a1b1f977326e7c04e1d912ffb"
+    "bytes": 31164,
+    "sha256": "29cc2a8f841ec992ef2100d850e10fce67e250a30cdae094e17d701a01283bda"
   },
   "root:portable": {
     "bytes": 27919,

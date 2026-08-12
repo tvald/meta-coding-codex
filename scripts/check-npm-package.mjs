@@ -10,6 +10,7 @@ import { TASK_COMPATIBILITY } from '../lib/task-compatibility.mjs';
 import { PROVIDER_PROBE_COMPATIBILITY } from '../lib/provider-contract.mjs';
 import { PROMPT_COMPILER_COMPATIBILITY } from '../lib/prompt-contract.mjs';
 import { PROJECT_INIT_COMPATIBILITY } from '../lib/project-contract.mjs';
+import { HOOK_ADAPTER_COMPATIBILITY } from '../lib/hook-contract.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -202,8 +203,32 @@ export function validateManifest(candidate = manifest) {
       JSON.stringify(projectCompatibility.bootstrapVersions) ===
         JSON.stringify(PROJECT_INIT_COMPATIBILITY.bootstrapVersions) &&
       JSON.stringify(projectCompatibility.stateTemplateVersions) ===
-        JSON.stringify(PROJECT_INIT_COMPATIBILITY.stateTemplateVersions),
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.stateTemplateVersions) &&
+      JSON.stringify(projectCompatibility.optionalHarnesses) ===
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.optionalHarnesses) &&
+      JSON.stringify(projectCompatibility.codexIntegrationConfigVersions) ===
+        JSON.stringify(PROJECT_INIT_COMPATIBILITY.codexIntegrationConfigVersions),
     'project initializer compatibility metadata differs from the runtime contract',
+  );
+  const hookCompatibility = candidate.metaFramework?.hookAdapter;
+  const hookCompatibilityKeys = hookCompatibility !== null && typeof hookCompatibility === 'object' &&
+    !Array.isArray(hookCompatibility) ? Object.keys(hookCompatibility).sort() : [];
+  const expectedHookCompatibilityKeys = Object.keys(HOOK_ADAPTER_COMPATIBILITY).sort();
+  assert(
+    hookCompatibilityKeys.length === expectedHookCompatibilityKeys.length &&
+      hookCompatibilityKeys.every((key, index) => key === expectedHookCompatibilityKeys[index]) &&
+      hookCompatibility.version === HOOK_ADAPTER_COMPATIBILITY.version &&
+      JSON.stringify(hookCompatibility.envelopeVersions) ===
+        JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.envelopeVersions) &&
+      JSON.stringify(hookCompatibility.hookEventSchemaVersions) ===
+        JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.hookEventSchemaVersions) &&
+      JSON.stringify(hookCompatibility.integrationConfigVersions) ===
+        JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.integrationConfigVersions) &&
+      JSON.stringify(hookCompatibility.harnesses) === JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.harnesses) &&
+      JSON.stringify(hookCompatibility.profiles) === JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.profiles) &&
+      JSON.stringify(hookCompatibility.testedCodexVersions) ===
+        JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.testedCodexVersions),
+    'hook adapter compatibility metadata differs from the runtime contract',
   );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
   assert(candidate.scripts?.meta === 'node ./bin/meta-framework.mjs', 'unexpected source meta command');

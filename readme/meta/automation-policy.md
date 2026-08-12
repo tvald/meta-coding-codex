@@ -36,6 +36,12 @@ Agents may do these without asking when they are relevant to the current task:
   reset-aligned waits or polls under the
   [usage capacity guard](agent-definitions.md#usage-capacity-guard).
 
+Project-scoped hook configuration is executable policy, not inert documentation.
+Installing or changing `.codex/hooks.json` or custom-agent configuration requires the
+same accepted scope, diff review, collision preservation, least authority, and
+verification as other agent-tool permission changes. A trusted project, reviewed hook
+hash, or enabled hook does not authorize work beyond the task and repository boundary.
+
 ## Task Intake Persistence
 
 The Root Orchestrator may persist newly delivered instructions through

@@ -74,18 +74,20 @@ semantic completion.
 
 Provider-neutral profiles and narrow provider mechanics remain package-owned. Clients
 select them explicitly with
-`npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness HARNESS`; no client
-copy of `.codex/agents/`, `.claude/agents/`, framework skills, prompts, roles, or policy
-is part of the installed contract. The only generated harness surfaces are root
-`AGENTS.md` and `CLAUDE.md` bootstrap blocks. Each selects the matching harness and the
-`root` profile for a primary session. A delegated assignment names exactly one of
-`implementer`, `reviewer`, `qa`, or `security` and loads that non-root profile; a worker
-does not infer its role or inherit root authority.
+`npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE --harness HARNESS`.
+The optional accepted Codex integration instead runs the package-owned
+`meta hook --harness codex --profile PROFILE` adapter from one project hook file and
+four thin project custom-agent manifests. These files contain mechanics, exact
+`agent_type` matchers, and a static prompt-envelope guard, not semantic role policy. A
+delegated assignment names exactly one of `implementer`, `reviewer`, `qa`, or `security`,
+maps it to the exact corresponding `meta_` custom agent, and never infers a role or
+inherits root authority.
 
 Source-repository discovery bundles under `.agents/`, `.codex/`, and `.claude/` support
-maintainers in this checkout only. They are excluded from the npm tarball and are never
-installed or copied into a client; installed agents receive the equivalent reviewed
-semantics through canonical documents, facets, and explicit profiles.
+maintainers in this checkout and remain excluded from the npm tarball. Installed clients
+may opt into byte-equivalent package templates only through guarded
+`project preflight/init --harness codex`; no provider directory is copied wholesale.
+Installed agents receive semantics through canonical facets and compiled profiles.
 
 Quota and capability inspection run through normalized package commands governed by
 [agent-definitions.md](agent-definitions.md#usage-capacity-guard). Provider protocol and
@@ -183,12 +185,12 @@ define exactly
 network fetch, or an inherited executable. Install with lifecycle scripts disabled or
 with an equivalently reviewed project allowlist.
 
-The v1 initializer supports local Linux filesystems only and requires usable
+The current initializer supports local Linux filesystems only and requires usable
 `/proc/self/fd` descriptor paths for anchored transaction mutations. Other platforms,
 network filesystems, or an unavailable descriptor surface fail closed before a write.
 
 The project-initializer contract is versioned independently. From the physical client
-Git root, run these argument-free v1 commands in order:
+Git root, run these argument-free portable commands in order:
 
 ```sh
 npm run --ignore-scripts --silent meta -- project --version
@@ -212,6 +214,31 @@ instruction files contain one bounded harness-specific bootstrap each. Existing 
 blocks and recognized client state are preserved byte for byte; any noncanonical,
 malformed, duplicate, or wrong-harness marker at an existing instruction path is a
 collision, not an invitation to rewrite or create a companion file.
+
+After that portable state is current, a maintainer may opt into trusted-project Codex
+prompt injection:
+
+```sh
+npm run --ignore-scripts --silent meta -- project preflight --harness codex
+npm run --ignore-scripts --silent meta -- project init --harness codex
+```
+
+This mode owns only `.codex/hooks.json` and the exact `meta_implementer`,
+`meta_reviewer`, `meta_qa`, and `meta_security` agent manifests. It preserves unrelated
+Codex configuration and refuses client-owned, stale, malformed, linked, and colliding
+targets without overwrite or merge. Exact current files are preserved, and an
+exact-plus-absent interrupted prefix may be completed through the same anchored
+transaction. Hook-disabled, untrusted, managed-only, and operator-disabled unverified
+versions use the `AGENTS.md` fallback; a delegated manifest with missing or mismatched
+injected context stops before tool work. Codex trusts the root and four agent hook definitions
+independently even though they share one `hooks.json`, so maintainers review and approve
+all five exact command hashes. Every custom-agent layer disables its own multi-agent
+tools as a mechanical nested-delegation boundary. Source and installed-client hooks use
+a quoted `git rev-parse --show-toplevel` result to resolve their fixed local binary from
+any repository subdirectory. They never dispatch through a mutable client npm script.
+The adapter does not detect the running Codex version: versions absent from
+`hook --version` are unverified and require explicit review or operator disablement to
+use the fallback.
 
 After initialization, follow [onboarding.md](onboarding.md): load the root profile,
 create an onboarding task through the package task CLI, inventory the repository, and

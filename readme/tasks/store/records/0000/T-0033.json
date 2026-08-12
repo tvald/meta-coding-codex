@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0033",
+  "recordVersion": 13,
+  "taskRevision": 6,
+  "outcome": "Automatically inject repository-pinned framework prompts into Codex root and exact meta-prefixed delegated agents through the extensible meta hook --harness codex --profile PROFILE lifecycle adapter, using project-level exact agent_type matchers on the supported Codex release while preserving immutable package ownership, least-authority profiles, collision-safe client delivery, and a minimal AGENTS.md fallback.",
+  "authority": {
+    "reference": "Decision 0022 revised by live Codex 0.144.1 and 0.147.0 compatibility evidence under user authorization to proceed with T-0033",
+    "acceptedDate": "2026-08-12"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "codex",
+    "hooks",
+    "agent-prompts",
+    "custom-agents",
+    "security"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Brief",
+      "path": "readme/tasks/0033-codex-hook-agent-prompt-injection-brief.md"
+    },
+    {
+      "label": "Working notes",
+      "path": "readme/tasks/0033-codex-hook-agent-prompt-injection-notes.md"
+    },
+    {
+      "label": "Decision",
+      "path": "readme/decisions/0022-adopt-codex-hook-prompt-injection.md"
+    },
+    {
+      "label": "Quality record",
+      "path": "readme/quality/2026-08-12-codex-hook-prompt-injection.md"
+    },
+    {
+      "label": "Threat model",
+      "path": "readme/threat-models/2026-08-12-codex-hook-prompt-injection.md"
+    }
+  ],
+  "completion": {
+    "completedAt": "2026-08-12",
+    "repositoryChanged": true,
+    "evidence": "Frozen r6 passed npm test 104/104, focused hook/compiler/initializer/package checks, reproducible 55-file package audit, task-store doctor, diff check, Codex 0.147.0 exact four-agent and nested-cwd live probes, and independent Reviewer plus Security gates with no remaining findings."
+  }
+}
