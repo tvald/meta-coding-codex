@@ -281,3 +281,17 @@
   colliding, malformed, unsupported, or mixed-origin states stop without unsafe writes.
 - Review or sunset trigger: Missed phase, overwrite, mixed-origin skill, unsafe command,
   provider discovery drift, or cold-start recovery failure.
+
+## 2026-08-11: Adopt A Guarded Task-Recovery Skill
+
+- Status: Adopted.
+- Evidence: Product-owner promotion of T-0017/T-0018 findings; T-0022 bounded scenario,
+  package, installer, forward, and independent gates; see
+  [Decision 0020](../decisions/0020-adopt-guarded-task-recovery-skill.md).
+- Change: Added one proposal-only recovery skill with a thin Claude link, finite
+  dispositions, bounded task/Git evidence, and conservative revision, effect, approval,
+  worker, verification, and capacity handling.
+- Success signal: Interrupted work yields one evidence-backed safe action without stale
+  output, uncertain retry, ownership guesses, or unbounded history reads.
+- Review or sunset trigger: Duplicated effect, overwritten work, false completion,
+  provider discovery drift, unbounded context, or demonstrated need for a helper.

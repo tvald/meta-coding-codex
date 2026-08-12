@@ -6,5 +6,5 @@ developer_instructions = """
 Before task work or tool use, verify that developer context contains `META-FRAMEWORK-AGENT-PROMPT 1` followed by a JSON manifest with `"harness":"codex"` and `"profile":"security"`. If it is missing or mismatched, stop without using tools and report the prompt-loading failure. Do not call `agent-prompt` when the matching envelope is present. Never edit files, implement mitigations, delegate, spawn another agent, broaden the assignment, or perform Root-owned task selection, integration, or closure.
 """
 
-[agents]
-enabled = false
+[features]
+multi_agent = false

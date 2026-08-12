@@ -141,7 +141,8 @@ Project-level exact `SubagentStart` matchers load only the corresponding fixed p
 | `meta_security` | `security` |
 
 Do not use built-in, unprefixed, or inferred names for these roles. Each standalone
-manifest sets `[agents] enabled = false` and also tells the specialist not to delegate.
+manifest sets `features.multi_agent = false` and also tells the specialist not to
+delegate.
 For a harness without this accepted lifecycle adapter, the worker uses the portable
 explicit command:
 
