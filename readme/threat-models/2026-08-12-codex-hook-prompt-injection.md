@@ -23,7 +23,7 @@
 | Existing `.codex` files are overwritten or merged | Client policy loss or malicious mixed hook | High | Read-only preflight, exclusive fixed inventory, collision refusal | Mitigated and tested |
 | Path link/race redirects installation | Arbitrary client/outside write | High | Validated physical root and guarded descriptor transaction | Mitigated and tested |
 | Package update leaves incompatible config | Old dispatch binds to new prompt contract | Medium | Versioned compatibility and exact preflight | Mitigated by replacement/rollback matrix |
-| Specialist recursively delegates | Authority and WIP controls are bypassed | Medium | Per-agent `[agents] enabled = false`, static prohibition, and parent policy | Provider behavior remains version-coupled |
+| Specialist recursively delegates | Authority and WIP controls are bypassed | Medium | Per-agent `features.multi_agent = false`, static prohibition, and parent policy | Provider behavior remains version-coupled |
 
 ## Mitigations
 
@@ -55,8 +55,9 @@
 ## Residual Risk
 
 - Accepted risk: `SubagentStart continue: false` does not stop a child. Thin manifest
-  guards stop tool work on a missing/mismatched envelope, while `[agents] enabled =
-  false` mechanically removes nested delegation on the supported release.
+  guards stop tool work on a missing/mismatched envelope, while
+  `features.multi_agent = false` mechanically removes nested delegation on the
+  supported release.
 - Accepted operational constraint: the root and four delegated hook definitions use
   distinct commands and therefore distinct Codex trust hashes; maintainers must review
   and trust all five definitions in the shared hook file.

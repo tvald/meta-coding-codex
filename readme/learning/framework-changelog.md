@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-12: Revise Codex Child-Agent Disablement
+
+- Status: Revised.
+- Evidence: T-0035 reproduced four `AgentRoleToml` deserialization failures on Codex
+  0.144.1; current Codex configuration documents `features.multi_agent` as the stable
+  collaboration-tool flag; see
+  [Decision 0023](../decisions/0023-revise-codex-child-agent-disablement.md).
+- Change: Replaced the per-manifest `[agents] enabled = false` table with
+  `features.multi_agent = false` while retaining the static no-delegation guard.
+- Success signal: All four manifests load without warnings and delegated profiles still
+  lack multi-agent tools on the supported exact-dispatch release.
+- Review or sunset trigger: malformed-role warnings, a child collaboration tool, or a
+  provider change to feature flags or standalone-agent layering.
+
 ## 2026-08-12: Revise Verification Reactivation Lifecycle
 
 - Status: Revised.
@@ -143,17 +157,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   fail before client mutation.
 - Review or sunset trigger: Package/client path confusion, package mutation, manifest or
   schema drift, bypassed lock integrity, unsafe Git discovery, or task CLI regression.
-
-## 2026-08-11: Adopt A Guarded Task-Recovery Skill
-
-- Status: Adopted.
-- Evidence: Product-owner promotion of T-0017/T-0018 findings; T-0022 bounded scenario,
-  package, installer, forward, and independent gates; see
-  [Decision 0020](../decisions/0020-adopt-guarded-task-recovery-skill.md).
-- Change: Added one proposal-only recovery skill with a thin Claude link, finite
-  dispositions, bounded task/Git evidence, and conservative revision, effect, approval,
-  worker, verification, and capacity handling.
-- Success signal: Interrupted work yields one evidence-backed safe action without stale
-  output, uncertain retry, ownership guesses, or unbounded history reads.
-- Review or sunset trigger: Duplicated effect, overwritten work, false completion,
-  provider discovery drift, unbounded context, or demonstrated need for a helper.

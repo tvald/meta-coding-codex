@@ -182,7 +182,8 @@ test('source and client Codex adapters bind fixed profiles through immutable ent
     assert.match(actual, new RegExp(`name = "meta_${profile === 'qa' ? 'qa' : profile}"`, 'u'));
     assert.ok(actual.includes(`\`"profile":"${profile}"\``), relative);
     assert.match(actual, /delegate, spawn another agent/u);
-    assert.match(actual, /\[agents\]\nenabled = false\n$/u);
+    assert.match(actual, /\[features\]\nmulti_agent = false\n$/u);
+    assert.doesNotMatch(actual, /\[agents\]/u);
     assert.doesNotMatch(actual, /\[\[hooks\.|command =|additionalContextLimit/u);
     assert.doesNotMatch(actual, /META-FRAMEWORK-FACET/u);
     assert.ok(Buffer.byteLength(actual, 'utf8') < 2_048);

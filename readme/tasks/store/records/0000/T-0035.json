@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0035",
+  "recordVersion": 6,
+  "taskRevision": 2,
+  "outcome": "Make the four framework-owned Codex custom-agent manifests schema-valid so Codex loads each meta_ role without startup warnings while preserving exact profile binding and nested-delegation restrictions.",
+  "authority": {
+    "reference": "User request on 2026-08-12; revision 2 links the required high-risk quality record after reproducing the parser failure",
+    "acceptedDate": "2026-08-12"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [
+    "codex",
+    "custom-agents",
+    "regression"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Quality record",
+      "path": "readme/quality/2026-08-12-codex-agent-manifest-schema-compatibility.md"
+    }
+  ],
+  "completion": {
+    "completedAt": "2026-08-12",
+    "repositoryChanged": true,
+    "evidence": "Reproduced four AgentRoleToml failures on Codex 0.144.1; schema-compatible feature flag then produced strict App Server startup without role warnings, 22/22 focused tests, 66/66 package tests, 105/105 full tests, exact 55-file package audit, task-store doctor, and focused permission/diff review."
+  }
+}

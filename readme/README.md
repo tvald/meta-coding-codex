@@ -29,7 +29,7 @@ results live only in the structured task store.
 | Keep source-only harness skill bodies aligned with package-owned onboarding and recovery policy; never copy discovery bundles into clients. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
 | Keep recovery proposal-only, bounded, revision-aware, and conservative about uncertain effects or ownership. | [Decision 0020](decisions/0020-adopt-guarded-task-recovery-skill.md) |
 | Deliver future clients an immutable npm dependency with explicit package/client roots, derived attributable prompts, guarded extensions, and replacement-only updates. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
-| Use fixed-profile Codex lifecycle hooks and exact `meta_` custom agents only through collision-safe, opt-in client integration; preserve the portable fallback. | [Decision 0022](decisions/0022-adopt-codex-hook-prompt-injection.md) |
+| Use fixed-profile Codex lifecycle hooks and exact `meta_` custom agents only through collision-safe, opt-in client integration; preserve the portable fallback and disable child multi-agent tools with the schema-compatible feature flag. | [Decisions 0022](decisions/0022-adopt-codex-hook-prompt-injection.md) and [0023](decisions/0023-revise-codex-child-agent-disablement.md) |
 
 ## Known Global Dead Ends
 
