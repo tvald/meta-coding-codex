@@ -100,6 +100,14 @@ coherent change boundaries. Arrival order breaks only an immaterial tie.
 first, then pause; select nothing until authoritative guidance resumes it. A blocked or
 unverified task blocks its dependents, not independent eligible work.
 
+When a previously unavailable required check becomes runnable, run it while the task is
+`Needs verification`. A passing check permits `Done`; an unavailable check retains
+`Needs verification`; and a check that exposes an implementation defect returns the
+same task directly to `Active` through `task checkpoint --status active` with a
+current expected store digest and an explicit defect-focused next action. This is the
+only checkpoint path to `Active`. It preserves the semantic task revision and remains
+subject to pause, dependency, approval, and one-Active-task invariants.
+
 ## Structured Store Contract
 
 Use `npm run --ignore-scripts --silent meta -- tasks ...` from the physical client

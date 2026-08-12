@@ -148,6 +148,10 @@ flake rules, review order, and item-scoped completion statuses.
 A failing required check keeps that task open and blocks its dependents. If a required
 check is genuinely impossible, record the exact check, reason, and unblocking condition
 and use `Needs verification`, not `Done`.
+If a check later runs from `Needs verification` and exposes an implementation defect,
+return the task directly to `Active` through the lifecycle path in
+[knowledge management](knowledge-management.md#task-lifecycle-and-selection) before
+repairing it.
 
 ## 8. Record
 

@@ -63,6 +63,7 @@ test("task-recovery has one maintained workflow and a complete bounded contract"
     "Never automatically stash", "fresh authoritative reading", "Immediately before returning the proposal",
     "never shell-interpolate", "this skill performed no mutation", "proposal-only", "Do not broadly enumerate processes",
     "conservative precedence", "provider locator", "no original handle interface", "harness output cap",
+    "checkpoint directly to\\s+`active`",
   ]) assert.match(canonical, new RegExp(guard, "iu"));
   assert.match(canonical, /missing or silent\s+worker/iu);
   assert.doesNotMatch(canonical, /node readme\/meta\/framework-data\/cli\.mjs/u);

@@ -94,7 +94,7 @@ Commands:
   task select ID --expected-record-version N --expected-store-digest DIGEST
       [--next-safe-action TEXT]
   task checkpoint ID --expected-record-version N --status STATUS
-      [--next-safe-action TEXT] [--blocker TEXT]
+      [--expected-store-digest DIGEST] [--next-safe-action TEXT] [--blocker TEXT]
   task close ID --expected-record-version N --status done|cancelled|superseded
       --completed-at DATE --repository-changed true|false --evidence TEXT
   export [task-list filters] [--limit N] [--max-bytes N] [--cursor CURSOR]
@@ -1082,6 +1082,7 @@ async function taskSelectCommand(context, tokens) {
 async function taskCheckpointCommand(context, tokens) {
   const { values, positionals } = parseArguments(tokens, { positionals: 1, options: {
     "expected-record-version": "value",
+    "expected-store-digest": "value",
     status: "value",
     "next-safe-action": "value",
     blocker: "value",
@@ -1090,7 +1091,7 @@ async function taskCheckpointCommand(context, tokens) {
   parseTaskId(id);
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
   const status = required(values, "status");
-  if (!["pending", "ready", "parked", "blocked", "needs_verification"].includes(status)) {
+  if (!["pending", "ready", "active", "parked", "blocked", "needs_verification"].includes(status)) {
     fail("ARGUMENT_INVALID", "checkpoint status is not a supported nonterminal state", 2);
   }
   if (status === "blocked" && !values.blocker) fail("ARGUMENT_INVALID", "blocked checkpoint requires --blocker", 2);
@@ -1098,6 +1099,19 @@ async function taskCheckpointCommand(context, tokens) {
   return withLock(context, async () => {
     const loaded = await loadStore(context);
     const current = mutableTask(loaded, id, expected);
+    if (status === "active" && current.status !== "needs_verification") {
+      fail("TRANSITION_INVALID", "Active checkpoint requires a Needs verification task", 4);
+    }
+    const expectedDigest = status === "active" ? required(values, "expected-store-digest") : null;
+    const nextSafeAction = status === "active" ? required(values, "next-safe-action") :
+      values["next-safe-action"] ?? current.nextSafeAction;
+    if (expectedDigest !== null) assertExpectedDigest(loaded, expectedDigest);
+    if (status === "active" && loaded.control.pause !== null) {
+      fail("STATE_INVALID", "paused scheduling cannot reactivate a task", 4);
+    }
+    if (status === "active" && activeTask(loaded.tasks) !== null) {
+      fail("STATE_INVALID", "another task is already Active", 4);
+    }
     if (status === "needs_verification" && !["active", "needs_verification"].includes(current.status)) {
       fail("TRANSITION_INVALID", "Needs verification requires an Active task", 4);
     }
@@ -1113,8 +1127,8 @@ async function taskCheckpointCommand(context, tokens) {
       status,
       gate: status === "blocked" ? { kind: "blocker", summary: values.blocker } :
         task.gate.kind === "blocker" ? { kind: "none" } : task.gate,
-      nextSafeAction: values["next-safe-action"] ?? task.nextSafeAction,
-    }));
+      nextSafeAction,
+    }), { expectedDigest });
     return taskMutationReceipt(next, id);
   });
 }

@@ -264,3 +264,20 @@
   pre-claim writer cannot corrupt canonical state.
 - Review or sunset trigger: lost task data, unbounded query/context growth, broken lock
   recovery, platform durability demand, migration ambiguity, or direct-edit incidents.
+
+## 2026-08-11: Adopt A Guarded Project-Onboarding Skill
+
+- Status: Adopted.
+- Evidence: Product-owner promotion of the T-0017/T-0018 recommendations; T-0021
+  skill-creator validation, 30-test suite, 46-file reproducible package, additive and
+  atomic-collision installer fixtures, forward tests, and independent design/security
+  and final Reviewer/Security/QA passes; see
+  [Decision 0019](../decisions/0019-adopt-guarded-project-onboarding-skill.md).
+- Change: Added one maintained onboarding skill with a thin Claude discovery link,
+  exact preflight disposition handling, command-execution limits, and bounded cold-start
+  proof. Hardened preflight against symlinked documentation ancestors and made same-name
+  cross-harness skill installation an atomic collision bundle.
+- Success signal: A fresh Root completes every onboarding phase, while delegated,
+  colliding, malformed, unsupported, or mixed-origin states stop without unsafe writes.
+- Review or sunset trigger: Missed phase, overwrite, mixed-origin skill, unsafe command,
+  provider discovery drift, or cold-start recovery failure.

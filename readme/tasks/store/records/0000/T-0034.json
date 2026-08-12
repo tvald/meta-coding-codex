@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0034",
+  "recordVersion": 5,
+  "taskRevision": 2,
+  "outcome": "Resolve the task-store lifecycle gap where a Needs verification task cannot return to Active after a runnable verification gate discovers an implementation defect.",
+  "authority": {
+    "reference": "User instruction on 2026-08-12 to execute T-0034 after T-0033 exposed ARGUMENT_INVALID for checkpoint status active",
+    "acceptedDate": "2026-08-12"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [
+    "task-store",
+    "lifecycle"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Quality record",
+      "path": "readme/quality/2026-08-12-task-store-verification-reactivation.md"
+    }
+  ],
+  "completion": {
+    "completedAt": "2026-08-12",
+    "repositoryChanged": true,
+    "evidence": "Counterfactual reproduced ARGUMENT_INVALID; corrected global/record CAS and explicit-action lifecycle passed focused source and packed-client matrices, npm test 105/105, reproducible 55-file package audit, doctor, diff check, and independent Reviewer plus QA repeat gates."
+  }
+}

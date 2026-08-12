@@ -161,7 +161,7 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       taskCli: {
-        version: '1.0.0',
+        version: '1.1.0',
         envelopeVersions: [1],
         readableStoreSchemaVersions: [1],
         writableStoreSchemaVersions: [1],
@@ -219,15 +219,52 @@ test('packed task CLI uses package resources and mutates only the client Git roo
     ]).value.data;
     assert.equal(selected.status, 'active');
     assert.equal(metaJson(client, ['tasks', 'startup']).value.data.primaryTask.id, added.id);
+    assert.match(meta(client, [
+      'tasks', 'task', 'checkpoint', added.id,
+      '--expected-record-version', String(selected.recordVersion),
+      '--status', 'active',
+    ], 4).stderr, /TRANSITION_INVALID/u);
     const checkpointed = metaJson(client, [
       'tasks', 'task', 'checkpoint', added.id,
       '--expected-record-version', String(selected.recordVersion),
+      '--status', 'needs_verification',
+      '--next-safe-action', 'Run the delayed fixture check',
+    ]).value.data;
+    const checkpointDigest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
+    const addedRecordPath = join(client.clientRoot, 'readme', 'tasks', 'store',
+      'records', '0000', `${added.id}.json`);
+    metaJson(client, [
+      'tasks', 'task', 'add',
+      '--outcome', 'Advance the store before reactivation',
+      '--authority-reference', 'T-0034 fixture',
+    ]);
+    const beforeStaleReactivation = readFileSync(addedRecordPath);
+    assert.match(meta(client, [
+      'tasks', 'task', 'checkpoint', added.id,
+      '--expected-record-version', String(checkpointed.recordVersion),
+      '--expected-store-digest', checkpointDigest,
+      '--status', 'active',
+      '--next-safe-action', 'Must not be written',
+    ], 4).stderr, /STALE_STORE/u);
+    assert.deepEqual(readFileSync(addedRecordPath), beforeStaleReactivation);
+    const reactivated = metaJson(client, [
+      'tasks', 'task', 'checkpoint', added.id,
+      '--expected-record-version', String(checkpointed.recordVersion),
+      '--expected-store-digest', metaJson(client, ['tasks', 'doctor']).value.storeDigest,
+      '--status', 'active',
+      '--next-safe-action', 'Fix the delayed fixture defect',
+    ]).value.data;
+    assert.equal(reactivated.status, 'active');
+    assert.equal(reactivated.taskRevision, checkpointed.taskRevision);
+    const rechecked = metaJson(client, [
+      'tasks', 'task', 'checkpoint', added.id,
+      '--expected-record-version', String(reactivated.recordVersion),
       '--status', 'needs_verification',
       '--next-safe-action', 'Close the fixture',
     ]).value.data;
     const closed = metaJson(client, [
       'tasks', 'task', 'close', added.id,
-      '--expected-record-version', String(checkpointed.recordVersion),
+      '--expected-record-version', String(rechecked.recordVersion),
       '--status', 'done',
       '--completed-at', '2026-08-11',
       '--repository-changed', 'false',
@@ -301,9 +338,23 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--status', 'needs_verification',
       '--next-safe-action', 'Close the target',
     ]).value.data;
+    const targetReactivated = metaJson(client, [
+      'tasks', 'task', 'checkpoint', target.id,
+      '--expected-record-version', String(targetCheckpointed.recordVersion),
+      '--expected-store-digest', metaJson(client, ['tasks', 'doctor']).value.storeDigest,
+      '--status', 'active',
+      '--next-safe-action', 'Fix the approved target defect',
+    ]).value.data;
+    assert.deepEqual(targetReactivated.gate, targetCheckpointed.gate);
+    const targetRechecked = metaJson(client, [
+      'tasks', 'task', 'checkpoint', target.id,
+      '--expected-record-version', String(targetReactivated.recordVersion),
+      '--status', 'needs_verification',
+      '--next-safe-action', 'Close the target',
+    ]).value.data;
     assert.equal(metaJson(client, [
       'tasks', 'task', 'close', target.id,
-      '--expected-record-version', String(targetCheckpointed.recordVersion),
+      '--expected-record-version', String(targetRechecked.recordVersion),
       '--status', 'done',
       '--completed-at', '2026-08-11',
       '--repository-changed', 'false',
@@ -417,7 +468,7 @@ test('task help and version are rootless while data commands report bounded Git 
     assert.equal(help.stderr, '');
     const version = run(process.execPath, [client.binary, 'tasks', '--version'], { cwd: outside });
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(JSON.parse(version.stdout).taskCli.version, '1.0.0');
+    assert.equal(JSON.parse(version.stdout).taskCli.version, '1.1.0');
     const internalHelp = run(process.execPath, [
       join(client.packageRoot, 'readme', 'meta', 'framework-data', 'cli.mjs'), '--help',
     ], { cwd: outside });

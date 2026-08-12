@@ -324,6 +324,10 @@ function validateTaskTransition(current, next) {
       current.status !== "active" && current.status !== "needs_verification") {
     fail("TRANSITION_INVALID", "Needs verification can only be entered from Active");
   }
+  if (next.status === "active" &&
+      current.status !== "ready" && current.status !== "needs_verification") {
+    fail("TRANSITION_INVALID", "Active can only be entered from Ready or Needs verification");
+  }
   if (current.gate.kind === "approval" && next.taskRevision === current.taskRevision &&
       next.gate.kind !== "approval") {
     fail("TRANSITION_INVALID", "checkpointing or closing cannot erase approval evidence");
