@@ -34,24 +34,29 @@ and capability adapters; they are not independent role definitions.
 An adapter may contain only:
 
 - the vendor-required agent name and a narrow trigger description;
-- least-privilege tool, sandbox, or permission settings that do not widen the parent's
-  authority; and
-- concise instructions to read this file and the relevant canonical process owner.
+- least-privilege tool, sandbox, or permission settings that do not widen parent
+  authority;
+- concise instructions that bind and verify the package-compiled profile before work; and
+- an exact package-owned project hook matcher when the accepted provider adapter requires it.
 
-Adapters do not copy full responsibilities, pin models, configure MCP servers or hooks,
-enable recursive delegation, bypass approvals, own integration, or write shared project
-knowledge. Omitting all adapters leaves the core framework behavior unchanged.
+Adapters do not copy responsibilities, pin models, configure MCP servers, dispatch from
+provider event data, enable recursive delegation, bypass approvals, own integration, or
+write shared knowledge. Omitting them leaves portable behavior unchanged.
 
-Three adopted optional adapters map bounded, independently useful roles:
+Four adopted Codex adapters map exact collision-resistant names to portable profiles:
 
 | Adapter Name | Canonical Role | Write Boundary |
 | --- | --- | --- |
-| `reviewer` | [Reviewer](#reviewer) | Read-only default and no-write instruction; reports findings to the Root Orchestrator |
-| `verifier` | [QA And Verification Agent](#qa-and-verification-agent) | Runs declared checks; does not edit source and reports command-created artifacts |
-| `security-reviewer` | [Security And Risk Agent](#security-and-risk-agent) | Read-only default and no-write instruction; returns findings and proposed record updates |
+| `meta_implementer` | [Implementer](#implementer) | Workspace-write within the explicit assignment |
+| `meta_reviewer` | [Reviewer](#reviewer) | Read-only; reports findings to the Root Orchestrator |
+| `meta_qa` | [QA And Verification Agent](#qa-and-verification-agent) | Workspace-write for normal declared check artifacts; no source edits |
+| `meta_security` | [Security And Risk Agent](#security-and-risk-agent) | Read-only; returns findings and proposed record updates |
 
-The Root Orchestrator applies the decomposition rules, assigns ownership, and integrates
-results; native discovery never mandates delegation.
+The project hook file owns one fixed `SubagentStart` profile command for each exact
+`agent_type`. Every Codex manifest disables its child multi-agent tools, and its static
+guard also stops work without the matching envelope and prohibits delegation.
+
+The Root Orchestrator assigns, integrates, and applies decomposition rules; discovery never mandates delegation.
 <!-- meta-framework-facet:v1:start roles.root -->
 ## Root Orchestrator
 

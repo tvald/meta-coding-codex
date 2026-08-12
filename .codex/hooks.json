@@ -1,0 +1,69 @@
+{
+  "description": "meta-framework-codex-integration:v1",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/bin/meta-framework.mjs\" hook --harness codex --profile root",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading the repository-pinned Meta Framework root profile"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "^meta_implementer$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/bin/meta-framework.mjs\" hook --harness codex --profile implementer",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading the repository-pinned Meta Framework implementer profile"
+          }
+        ]
+      },
+      {
+        "matcher": "^meta_qa$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/bin/meta-framework.mjs\" hook --harness codex --profile qa",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading the repository-pinned Meta Framework QA profile"
+          }
+        ]
+      },
+      {
+        "matcher": "^meta_reviewer$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/bin/meta-framework.mjs\" hook --harness codex --profile reviewer",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading the repository-pinned Meta Framework reviewer profile"
+          }
+        ]
+      },
+      {
+        "matcher": "^meta_security$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/bin/meta-framework.mjs\" hook --harness codex --profile security",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading the repository-pinned Meta Framework security profile"
+          }
+        ]
+      }
+    ]
+  }
+}

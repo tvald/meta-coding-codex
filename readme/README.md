@@ -10,6 +10,7 @@ projection or history log.
 - Startup query: `node readme/meta/framework-data/cli.mjs startup`
 - Package prompt and bounded reference views:
   `npm run --ignore-scripts --silent meta -- agent-prompt --profile PROFILE`,
+  `npm run --ignore-scripts --silent meta -- hook --harness codex --profile PROFILE`,
   `npm run --ignore-scripts --silent meta -- docs TOPIC`, and
   `npm run --ignore-scripts --silent meta -- explain FACET`
 - Locked data-only extension contract:
@@ -28,6 +29,7 @@ results live only in the structured task store.
 | Keep source-only harness skill bodies aligned with package-owned onboarding and recovery policy; never copy discovery bundles into clients. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
 | Keep recovery proposal-only, bounded, revision-aware, and conservative about uncertain effects or ownership. | [Decision 0020](decisions/0020-adopt-guarded-task-recovery-skill.md) |
 | Deliver future clients an immutable npm dependency with explicit package/client roots, derived attributable prompts, guarded extensions, and replacement-only updates. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
+| Use fixed-profile Codex lifecycle hooks and exact `meta_` custom agents only through collision-safe, opt-in client integration; preserve the portable fallback. | [Decision 0022](decisions/0022-adopt-codex-hook-prompt-injection.md) |
 
 ## Known Global Dead Ends
 

@@ -13,6 +13,18 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-12: Adopt Codex Lifecycle Prompt Injection
+
+- Status: Adopted.
+- Evidence: T-0033 hook/compiler, collision/recovery, packed-client, live Codex, and
+  independent gate evidence; see [Decision 0022](../decisions/0022-adopt-codex-hook-prompt-injection.md).
+- Change: Added a versioned hook adapter, project-level exact lifecycle matchers, four
+  nested-disabled `meta_` custom agents, and opt-in guarded client delivery.
+- Success signal: Current package profiles reach root and exact delegated developer
+  context without a model-initiated load, overwrite, prompt spill, or role inference.
+- Review or sunset trigger: provider schema/trust drift, wrong or missing profile,
+  escaped write, collision overwrite, or mechanical nested-delegation support.
+
 ## 2026-08-11: Verify The Immutable NPM Release Candidate
 
 - Status: Adopted.

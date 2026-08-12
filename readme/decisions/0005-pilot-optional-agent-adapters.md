@@ -20,6 +20,9 @@ Superseded by:
 - [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), where copied
   provider-discovery files and a client `CLAUDE.md` import are replaced by package-owned
   profiles and independent thin bootstraps. Canonical role ownership remains.
+- [Decision 0022](0022-adopt-codex-hook-prompt-injection.md), for Codex agent names,
+  fixed lifecycle hooks, and opt-in guarded installed-client delivery. Historical pilot
+  evidence and the remaining Claude adapter disposition are unchanged.
 
 ## Context
 

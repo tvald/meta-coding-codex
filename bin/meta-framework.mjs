@@ -23,8 +23,12 @@ Usage:
   meta-framework project --version
   meta-framework project preflight
   meta-framework project init
+  meta-framework project preflight --harness codex
+  meta-framework project init --harness codex
   meta-framework agent-prompt --version
   meta-framework agent-prompt --profile PROFILE [--harness HARNESS]
+  meta-framework hook --version
+  meta-framework hook --harness HARNESS --profile PROFILE
   meta-framework docs --version
   meta-framework docs TOPIC
   meta-framework explain --version
@@ -139,6 +143,8 @@ function projectVersion(packageRuntime) {
       envelopeVersions: [...compatibility.envelopeVersions],
       bootstrapVersions: [...compatibility.bootstrapVersions],
       stateTemplateVersions: [...compatibility.stateTemplateVersions],
+      optionalHarnesses: [...compatibility.optionalHarnesses],
+      codexIntegrationConfigVersions: [...compatibility.codexIntegrationConfigVersions],
     },
   })}\n`);
 }
@@ -185,6 +191,18 @@ async function promptExtensions(packageRuntime) {
   return resolveLockedPromptExtensions(clientRuntime);
 }
 
+async function boundedStdin(maxBytes) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of process.stdin) {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += bytes.length;
+    if (size > maxBytes) throw new Error('hook input exceeds its bound');
+    chunks.push(bytes);
+  }
+  return Buffer.concat(chunks, size);
+}
+
 let frameworkDataErrorPrefix = 'meta-framework';
 try {
   const packageRuntime = readPackageRuntimeIdentity(import.meta.url);
@@ -193,7 +211,7 @@ try {
   const args = process.argv.slice(2);
   if (args[0] === 'tasks') frameworkDataErrorPrefix = 'meta-framework tasks';
   else if (args[0] === 'project') frameworkDataErrorPrefix = 'meta-framework project';
-  else if (['agent-prompt', 'docs', 'explain'].includes(args[0])) {
+  else if (['agent-prompt', 'hook', 'docs', 'explain'].includes(args[0])) {
     frameworkDataErrorPrefix = `meta-framework ${args[0]}`;
   }
 
@@ -218,13 +236,17 @@ try {
     })}\n`);
   } else if (args[0] === 'project' && args.length === 2 && args[1] === '--version') {
     projectVersion(packageRuntime);
-  } else if (args[0] === 'project' && args.length === 2 && ['preflight', 'init'].includes(args[1])) {
+  } else if (args[0] === 'project' && [2, 4].includes(args.length) &&
+      ['preflight', 'init'].includes(args[1]) &&
+      (args.length === 2 || (args[2] === '--harness' && args[3] === 'codex'))) {
     const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
     const context = await repositoryContext();
     const runtime = validateClientRuntimeRoots({ packageRuntime, context });
     const initializer = await import('../lib/project-initializer.mjs');
+    const projectOptions = args.length === 4 ? { harness: args[3] } : undefined;
     const result = args[1] === 'preflight' ?
-      await initializer.preflightProject(runtime) : await initializer.initializeProject(runtime);
+      await initializer.preflightProject(runtime, projectOptions) :
+      await initializer.initializeProject(runtime, projectOptions);
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } else if (args[0] === 'project') {
     process.stderr.write('meta-framework project: ARGUMENT_INVALID: invalid project command; run --help\n');
@@ -262,6 +284,28 @@ try {
         options['--harness'] ?? 'portable',
         knownPrompt ? await promptExtensions(packageRuntime) : null,
       ));
+    }
+  } else if (args[0] === 'hook' && args.length === 2 && args[1] === '--version') {
+    const { hookVersionEnvelope } = await import('../lib/hook-adapters.mjs');
+    process.stdout.write(hookVersionEnvelope(packageRuntime));
+  } else if (args[0] === 'hook') {
+    const options = parseProbeOptions(args.slice(1), ['--harness', '--profile']);
+    const knownHook = options !== null &&
+      packageRuntime.hookAdapterCompatibility.harnesses.includes(options['--harness']) &&
+      packageRuntime.hookAdapterCompatibility.profiles.includes(options['--profile']);
+    if (!knownHook) {
+      fail('invalid or unsupported hook command; run --help');
+    } else {
+      const hooks = await import('../lib/hook-adapters.mjs');
+      try {
+        const input = await boundedStdin(hooks.HOOK_ADAPTER_LIMITS.inputBytes);
+        const extensions = await promptExtensions(packageRuntime);
+        process.stdout.write(hooks.compileCodexHookPrompt(
+          packageRuntime, options['--profile'], input, extensions,
+        ));
+      } catch {
+        process.stdout.write(hooks.codexHookFailure(options['--profile']));
+      }
     }
   } else if (['docs', 'explain'].includes(args[0])) {
     if (args.length !== 2 || args[1].startsWith('--')) {

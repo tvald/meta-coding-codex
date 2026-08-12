@@ -286,6 +286,18 @@ function invoke(client, args, extraEnvironment = {}) {
   });
 }
 
+function invokeHook(client, profile, source = 'startup') {
+  const event = profile === 'root'
+    ? { hook_event_name: 'SessionStart', source }
+    : { hook_event_name: 'SubagentStart', agent_type: `meta_${profile}` };
+  return run(process.execPath,
+    [client.binary, 'hook', '--harness', 'codex', '--profile', profile], {
+      cwd: client.root,
+      input: JSON.stringify(event),
+      env: { ...process.env, DO_NOT_LEAK_ENVIRONMENT: 'extension-secret' },
+    });
+}
+
 function invokeSource(args) {
   return run(process.execPath, [sourceBinary, ...args], { cwd: sourceRoot });
 }
@@ -422,6 +434,12 @@ test('ordered extensions compose deterministically across profiles and harnesses
     assert.equal(first.status, 0, first.stderr);
     assert.equal(second.status, 0, second.stderr);
     assert.equal(first.stdout, second.stdout, `${profile}:${harness}`);
+    if (harness === 'codex') {
+      const hook = invokeHook(client, profile);
+      assert.equal(hook.status, 0, hook.stderr);
+      assert.equal(hook.stderr, '');
+      assert.equal(hook.stdout, first.stdout, `hook:${profile}`);
+    }
     assert.ok(Buffer.byteLength(first.stdout) <= 65_536);
     assert.doesNotMatch(first.stdout, /node_modules|https:\/\/|DO_NOT_LEAK|extension-secret/u);
     const parsed = parsePrompt(first.stdout);
@@ -585,6 +603,15 @@ test('maximum facet and inventory boundaries succeed exactly at their declared l
     assert.ok(Buffer.byteLength(extensionBody) > 371);
     assert.ok(Buffer.byteLength(extensionBody) <= 8_192);
     assert.ok(Buffer.byteLength(facetResult.stdout) <= 65_536);
+
+    const maximumCodexPrompt = invoke(facetMaximum,
+      ['agent-prompt', '--profile', 'root', '--harness', 'codex']);
+    const maximumCodexHook = invokeHook(facetMaximum, 'root', 'compact');
+    assert.equal(maximumCodexPrompt.status, 0, maximumCodexPrompt.stderr);
+    assert.equal(maximumCodexHook.status, 0, maximumCodexHook.stderr);
+    assert.equal(maximumCodexHook.stdout, maximumCodexPrompt.stdout);
+    assert.ok(Buffer.byteLength(maximumCodexHook.stdout) > 30_000);
+    assert.ok(Buffer.byteLength(maximumCodexHook.stdout) <= 65_536);
 
     const inventoryMaximum = cloneClient('inventory-maximum');
     setAllowlist(inventoryMaximum, [reviewName]);

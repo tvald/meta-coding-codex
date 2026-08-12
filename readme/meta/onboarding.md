@@ -30,22 +30,35 @@ task mutation.
    prompts, roles, templates, adapters, skills, decisions, quality records, provider
    settings, caches, or source-project facts. Preserve the success envelope as current
    session evidence; a repeat must report `already_initialized` without changing bytes.
-4. **Load the explicit root profile.** Start or restart the primary session through the
-   applicable generated bootstrap. `AGENTS.md` selects `root` with `--harness codex`;
+4. **Optionally install reviewed Codex lifecycle mechanics.** For a trusted Codex
+   project, run `project preflight --harness codex`. Accept only
+   `ready_to_add_codex_integration`, `ready_to_complete_codex_integration`, or the
+   idempotent `valid_current_codex_integration`, then run
+   `project init --harness codex` when needed. Review `.codex/hooks.json` and all four
+   `meta_` manifests before trusting the project, then approve all five hook definitions
+   in the shared hook file. Confirm the running Codex release appears in `hook --version`;
+   the adapter does not detect it automatically, so leave the optional integration
+   disabled for an unverified version until its behavior is reviewed.
+   Refuse and explicitly reconcile client-owned, stale, malformed, linked, or colliding
+   targets. This step is optional; unavailable or policy-disabled hooks retain the
+   portable bootstrap.
+5. **Load the explicit root profile.** Start or restart the primary session through the
+   applicable bootstrap. A trusted Codex integration injects `root` on `SessionStart`;
+   `AGENTS.md` recognizes the matching envelope or uses the exact local fallback.
    `CLAUDE.md` selects `root` with `--harness claude`. Follow the complete emitted
    instructions, then read client-owned `readme/README.md` and
    `readme/tasks/README.md`. A delegated assignment instead names exactly one of
    `implementer`, `reviewer`, `qa`, or `security` and the worker loads only that
    non-root profile. Never infer a delegated profile or let it inherit root authority.
-5. **Validate and capture onboarding work.** Run
+6. **Validate and capture onboarding work.** Run
    `npm run --ignore-scripts --silent meta -- tasks doctor` and the bounded
    `npm run --ignore-scripts --silent meta -- tasks startup` query. Capture onboarding through
    `npm run --ignore-scripts --silent meta -- tasks task add` before repository-changing inventory work.
    Only the Root Orchestrator invokes semantic task mutations.
-6. **Inventory the repository.** Read client instruction files, manifests, lockfiles,
+7. **Inventory the repository.** Read client instruction files, manifests, lockfiles,
    CI and release configuration, contributor docs, source entry points, tests, recent
    commits, and working-tree state. Classify the project as greenfield or established.
-7. **Derive the command catalog.** Use manifests, task runners, and CI as candidates.
+8. **Derive the command catalog.** Use manifests, task runners, and CI as candidates.
    Treat every repository-defined command as arbitrary code regardless of its name;
    inspect the full invocation chain, provenance, prerequisites, and side effects before
    execution. Do not automatically install dependencies or run lifecycle, production,
@@ -53,16 +66,16 @@ task mutation.
    external-action commands merely to catalog them. Record a safe local command in
    `readme/project/standards.md` only after observing exit zero; include its exact
    command, working directory, and prerequisites.
-8. **Ingest context and seed useful memory.** Apply
+9. **Ingest context and seed useful memory.** Apply
    [knowledge-ingestion.md](knowledge-ingestion.md). Distill supplied documents and
    repository evidence; do not copy source material wholesale or elevate untrusted task
    text merely because the store is structurally valid. Create project brief, context,
    assumptions, glossary, source map, standards, decisions, or other categorized client
    records only when the inventory has real content.
-9. **Resolve only material gaps.** State the inferred default and evidence first. Ask at
+10. **Resolve only material gaps.** State the inferred default and evidence first. Ask at
    most three questions in one round, limited to answers that change outcome, safety,
    architecture, or acceptance. State the safe default when no answer is required.
-10. **Prove cold-start readiness.** Run `tasks doctor`, `tasks startup`,
+11. **Prove cold-start readiness.** Run `tasks doctor`, `tasks startup`,
     `tasks task candidates`, and a targeted `tasks task context` through
     `npm run --ignore-scripts --silent meta --`. Confirm a new agent can recover the product outcome,
     primary and eligible tasks, dependency/gate state, next action, commands,
@@ -77,6 +90,12 @@ task mutation.
   wrong-harness marker, is `bootstrap_collision`; do not overwrite it, auto-merge it, or
   create a companion instruction file. Reconcile established instruction ownership
   deliberately, then rerun preflight.
+- Codex integration preflight reports each target as absent, exact current, stale
+  framework marked, client-owned, malformed, linked, or colliding. The installer never
+  edits `.codex/config.toml`, merges an existing `hooks.json`, or replaces a same-name
+  agent. Back up or commit reviewed client configuration, reconcile ownership manually,
+  and rerun preflight. An interrupted exact current plus absent prefix is the only
+  partial Codex state the guarded transaction may complete automatically.
 - A cursor must begin `# Project State`; a task entrypoint must begin `# Task Store`.
   Preserve unrelated documents and obtain an owner decision before relocating a
   published or externally referenced contract. The initializer does not claim an

@@ -20,6 +20,10 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test, { after, before } from 'node:test';
+import {
+  CODEX_INTEGRATION_FILES,
+  CODEX_INTEGRATION_PATHS,
+} from '../lib/codex-integration.mjs';
 
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const alias = 'npm:@tvald/meta-framework@1.0.0';
@@ -27,7 +31,9 @@ const alias = 'npm:@tvald/meta-framework@1.0.0';
 const bootstrap = (harness) => `# Meta Framework Bootstrap
 
 <!-- meta-framework-bootstrap:v1:start ${harness} -->
-For a primary session, run
+${harness === 'codex' ? `If developer context already contains \`META-FRAMEWORK-AGENT-PROMPT 1\` followed by a
+manifest whose \`harness\` is \`codex\` and whose \`profile\` matches this session,
+do not load it again. Otherwise, for a primary session run` : 'For a primary session, run'}
 \`npm run --ignore-scripts --silent meta -- agent-prompt --profile root --harness ${harness}\`
 before project work and follow the complete emitted instructions.
 
@@ -244,7 +250,7 @@ async function initializerFixture(client) {
   };
 }
 
-function killInitializerAt(client, phase, mask = null) {
+function killInitializerAt(client, phase, mask = null, harness = null) {
   const script = `
     ${mask === null ? '' : `process.umask(${mask});`}
     const runtimeModule = await import(${JSON.stringify(pathToFileURL(join(client.packageRoot, 'lib', 'runtime-roots.mjs')).href)});
@@ -258,6 +264,7 @@ function killInitializerAt(client, phase, mask = null) {
       entryPath: ${JSON.stringify(client.binary)},
     });
     await initializer.initializeProject(clientRuntime, {
+      ${harness === null ? '' : `harness: ${JSON.stringify(harness)},`}
       hooks: { [${JSON.stringify(phase)}]: () => process.kill(process.pid, 'SIGKILL') },
     });
   `;
@@ -339,13 +346,16 @@ test('project version is rootless and exposes the exact initializer compatibilit
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       projectInit: {
-        version: '1.0.0',
+        version: '1.1.0',
         envelopeVersions: [1],
         bootstrapVersions: [1],
         stateTemplateVersions: [1],
+        optionalHarnesses: ['codex'],
+        codexIntegrationConfigVersions: [1],
       },
     });
-    for (const args of [[], ['--help'], ['init', '--force'], ['preflight', 'extra'], ['unknown']]) {
+    for (const args of [[], ['--help'], ['init', '--force'], ['preflight', 'extra'],
+      ['preflight', '--harness', 'claude'], ['init', '--harness'], ['unknown']]) {
       const result = project(client, args, 2, outside);
       assertBoundedFailure(result, client);
     }
@@ -366,7 +376,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.0.0',
+      version: '1.1.0',
       disposition: 'fresh',
       bootstrapVersion: 1,
       stateTemplateVersion: 1,
@@ -380,7 +390,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.0.0',
+      version: '1.1.0',
       result: 'initialized',
       created: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
       preserved: [],
@@ -420,7 +430,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.0.0',
+      version: '1.1.0',
       result: 'already_initialized',
       created: [],
       preserved: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
@@ -479,6 +489,158 @@ test('packed fresh init overrides umask 077 with exact durable modes and remains
   }
   recoverKilledInitializerLock(interrupted);
   assert.equal(projectJson(interrupted, ['init']).value.projectInit.result, 'initialized');
+});
+
+test('opt-in Codex integration installs exact files, preserves unrelated config, and is idempotent', () => {
+  const client = makeClient('codex integration $(touch T0033_HOOK_INJECTED); [safe]');
+  projectJson(client, ['init']);
+  mkdirSync(join(client.clientRoot, '.codex'));
+  writeFileSync(join(client.clientRoot, '.codex', 'config.toml'), 'model = "client-owned"\n');
+  const packageDigest = treeDigest(client.packageRoot);
+  const beforeStore = taskJson(client, ['doctor']).storeDigest;
+
+  const preflight = projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit;
+  assert.equal(preflight.disposition, 'ready_to_add_codex_integration');
+  assert.equal(preflight.harness, 'codex');
+  assert.equal(preflight.integrationConfigVersion, 1);
+  assert.deepEqual(preflight.integration,
+    Object.fromEntries(CODEX_INTEGRATION_PATHS.map((relative) => [relative, 'absent'])));
+
+  const initialized = projectJson(client, ['init', '--harness', 'codex']).value.projectInit;
+  assert.equal(initialized.result, 'codex_integration_initialized');
+  assert.deepEqual(initialized.created, CODEX_INTEGRATION_PATHS);
+  assert.deepEqual(initialized.preserved, [
+    'AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/',
+  ]);
+  for (const relative of CODEX_INTEGRATION_PATHS) {
+    const target = join(client.clientRoot, ...relative.split('/'));
+    assert.equal(readFileSync(target, 'utf8'), CODEX_INTEGRATION_FILES[relative], relative);
+    assert.equal(lstatSync(target).mode & 0o777, 0o644, relative);
+  }
+  assert.equal(lstatSync(join(client.clientRoot, '.codex')).mode & 0o777, 0o755);
+  assert.equal(lstatSync(join(client.clientRoot, '.codex', 'agents')).mode & 0o777, 0o755);
+  assert.equal(readFileSync(join(client.clientRoot, '.codex', 'config.toml'), 'utf8'),
+    'model = "client-owned"\n');
+  assert.equal(taskJson(client, ['doctor']).storeDigest, beforeStore);
+  assert.equal(treeDigest(client.packageRoot), packageDigest);
+
+  const currentDigest = treeDigest(client.clientRoot);
+  const repeated = projectJson(client, ['init', '--harness', 'codex']).value.projectInit;
+  assert.equal(repeated.result, 'codex_integration_already_initialized');
+  assert.deepEqual(repeated.created, []);
+  assert.deepEqual(repeated.preserved, [
+    'AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/',
+    ...CODEX_INTEGRATION_PATHS,
+  ]);
+  assert.equal(treeDigest(client.clientRoot), currentDigest);
+  assert.equal(projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit.disposition,
+    'valid_current_codex_integration');
+
+  const installedHooks = JSON.parse(
+    readFileSync(join(client.clientRoot, '.codex', 'hooks.json'), 'utf8'),
+  ).hooks;
+  const installedHook = installedHooks.SessionStart[0].hooks[0].command;
+  assert.equal(installedHook,
+    'node "$(git rev-parse --show-toplevel)/node_modules/meta-framework/bin/meta-framework.mjs" hook --harness codex --profile root');
+  const manifest = JSON.parse(readFileSync(join(client.clientRoot, 'package.json'), 'utf8'));
+  manifest.scripts.meta = 'node -e "process.stdout.write(\'MUTABLE_CLIENT_SCRIPT_EXECUTED\\n\')"';
+  writeJson(join(client.clientRoot, 'package.json'), manifest);
+  const nested = join(client.clientRoot, 'readme', 'tasks');
+  const invocations = [
+    ['root', installedHook, { hook_event_name: 'SessionStart', source: 'startup' }],
+    ...installedHooks.SubagentStart.map((entry) => {
+      const agentType = entry.matcher.slice(1, -1);
+      return [agentType.slice('meta_'.length), entry.hooks[0].command,
+        { hook_event_name: 'SubagentStart', agent_type: agentType }];
+    }),
+  ];
+  for (const [profile, command, event] of invocations) {
+    const hookResult = run('/bin/sh', ['-c', command], {
+      cwd: nested,
+      input: JSON.stringify(event),
+    });
+    assert.equal(hookResult.status, 0, `${profile}: ${hookResult.stderr}`);
+    assert.match(hookResult.stdout, /^META-FRAMEWORK-AGENT-PROMPT 1\n/u);
+    assert.equal(JSON.parse(hookResult.stdout.split('\n', 2)[1]).profile, profile);
+    assert.doesNotMatch(hookResult.stdout, /MUTABLE_CLIENT_SCRIPT_EXECUTED/u);
+  }
+  assert.equal(existsSync(join(nested, 'T0033_HOOK_INJECTED')), false);
+  assert.equal(existsSync(join(client.clientRoot, 'T0033_HOOK_INJECTED')), false);
+});
+
+test('Codex integration preflight distinguishes partial and unsafe ownership states', () => {
+  const partial = makeClient('codex-integration-partial');
+  projectJson(partial, ['init']);
+  mkdirSync(join(partial.clientRoot, '.codex', 'agents'), { recursive: true });
+  writeFileSync(join(partial.clientRoot, '.codex', 'hooks.json'),
+    CODEX_INTEGRATION_FILES['.codex/hooks.json']);
+  const partialPreflight = projectJson(partial, ['preflight', '--harness', 'codex']).value.projectInit;
+  assert.equal(partialPreflight.disposition, 'ready_to_complete_codex_integration');
+  assert.equal(partialPreflight.integration['.codex/hooks.json'], 'exact_current');
+  assert.deepEqual(projectJson(partial, ['init', '--harness', 'codex']).value.projectInit.created,
+    CODEX_INTEGRATION_PATHS.slice(1));
+
+  const cases = [
+    ['stale', 'stale_framework_owned', (target) => writeFileSync(target,
+      CODEX_INTEGRATION_FILES['.codex/hooks.json'].replace('"timeout": 30', '"timeout": 29'))],
+    ['client', 'client_owned', (target) => writeFileSync(target, '{"hooks":{}}\n')],
+    ['malformed', 'malformed', (target) => writeFileSync(target,
+      Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('{"hooks":{}}\n')]))],
+    ['linked', 'linked', (target, client) => {
+      const outside = join(client.clientRoot, 'outside-hooks.json');
+      writeFileSync(outside, '{"hooks":{}}\n');
+      symlinkSync(outside, target);
+    }],
+    ['colliding', 'colliding', (target) => mkdirSync(target)],
+  ];
+  for (const [name, state, prepare] of cases) {
+    const client = makeClient(`codex-integration-${name}`);
+    projectJson(client, ['init']);
+    mkdirSync(join(client.clientRoot, '.codex'), { recursive: true });
+    const target = join(client.clientRoot, '.codex', 'hooks.json');
+    prepare(target, client);
+    const before = treeDigest(client.clientRoot);
+    const preflight = projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit;
+    assert.equal(preflight.integration['.codex/hooks.json'], state, name);
+    assert.equal(preflight.disposition, `codex_integration_${state}`, name);
+    const refused = project(client, ['init', '--harness', 'codex'], 4);
+    assertBoundedFailure(refused, client);
+    assert.equal(treeDigest(client.clientRoot), before, `${name} refusal mutated client state`);
+  }
+});
+
+test('Codex integration transaction rolls back exact invocation-owned paths', async () => {
+  const client = makeClient('codex-integration-rollback');
+  projectJson(client, ['init']);
+  const fixture = await initializerFixture(client);
+  await assert.rejects(fixture.initializer.initializeProject(fixture.clientRuntime, {
+    harness: 'codex',
+    hooks: { 'claim:.codex/agents/meta_qa.toml': () => { throw new Error('injected-codex'); } },
+  }), /injected-codex/u);
+  assert.equal(existsSync(join(client.clientRoot, '.codex')), false);
+  assert.equal(readdirSync(client.clientRoot).some((name) => name.startsWith('.meta-framework-project-init-')),
+    false);
+  assert.equal(existsSync(join(client.clientRoot, '.git', 'framework-data.lock')), false);
+  assert.equal(projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit.disposition,
+    'ready_to_add_codex_integration');
+});
+
+test('killed Codex integration resumes only its unchanged exact prefix', () => {
+  const client = makeClient('codex-integration-resume');
+  projectJson(client, ['init']);
+  killInitializerAt(client, 'claim:.codex/agents/meta_qa.toml', null, 'codex');
+  recoverKilledInitializerLock(client);
+  const [stage] = readdirSync(client.clientRoot)
+    .filter((name) => name.startsWith('.meta-framework-project-init-v1-'));
+  assert.ok(stage);
+  const resumed = projectJson(client, ['init', '--harness', 'codex']).value.projectInit;
+  assert.equal(resumed.result, 'codex_integration_initialized');
+  assert.deepEqual(resumed.created, CODEX_INTEGRATION_PATHS);
+  assert.equal(existsSync(join(client.clientRoot, stage)), false);
+  for (const relative of CODEX_INTEGRATION_PATHS) {
+    assert.equal(readFileSync(join(client.clientRoot, ...relative.split('/')), 'utf8'),
+      CODEX_INTEGRATION_FILES[relative]);
+  }
 });
 
 test('recognized bootstraps are preserved and collisions or partial state never trigger writes', () => {

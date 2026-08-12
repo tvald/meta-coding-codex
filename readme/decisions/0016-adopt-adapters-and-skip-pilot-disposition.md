@@ -18,6 +18,9 @@ Superseded by:
 - [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where copied
   client adapter files and a root Claude import are normal delivery surfaces. Canonical
   role semantics and this repository's skip-Pilot policy remain current.
+- [Decision 0022](0022-adopt-codex-hook-prompt-injection.md), only for the Codex adapter
+  identities, fixed prompt hooks, and guarded client delivery. Adoption and the
+  repository-wide no-Pilot disposition remain current.
 
 ## Context
 
