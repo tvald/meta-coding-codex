@@ -19,20 +19,12 @@ import {
   safeText,
   shardForTaskId,
   validateControl,
-  validateDetailPath,
   validateTask,
 } from "./schema.mjs";
 import { gitSubprocessEnvironment } from "../../../lib/git-environment.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const STORE_RELATIVE = "readme/tasks/store";
-const ALLOWED_DETAIL_ROOTS = [
-  "readme/tasks/",
-  "readme/decisions/",
-  "readme/quality/",
-  "readme/threat-models/",
-  "readme/incidents/",
-];
 const REPOSITORY_CONTEXTS = new WeakSet();
 const RECOVERY_RETAINED_LOCKS = new WeakSet();
 
@@ -347,24 +339,6 @@ function validateTaskTransition(current, next) {
   }
 }
 
-async function validateDetails(root, tasks) {
-  for (const task of tasks.values()) {
-    const references = [...task.details];
-    if (task.gate.kind === "approval" && task.gate.detailPath !== null) {
-      references.push({ label: "approval detail", path: task.gate.detailPath });
-    }
-    for (const detail of references) {
-      validateDetailPath(detail.path);
-      if (!ALLOWED_DETAIL_ROOTS.some((prefix) => detail.path.startsWith(prefix))) {
-        fail("PATH_UNSAFE", "detail reference is outside the allowed documentation roots");
-      }
-      const target = path.join(root, ...detail.path.split("/"));
-      assertInside(root, target, "detail reference");
-      await lstatRegularWithin(root, target, "detail reference", { maxBytes: 2_000_000 });
-    }
-  }
-}
-
 function computeDigest(controlText, entries) {
   const hash = createHash("sha256");
   hash.update("control.json\0", "utf8");
@@ -397,7 +371,6 @@ function assertProspectiveStoreBytes(loaded, nextBytes) {
 export async function loadStore(context, {
   storeRoot = context.storeRoot,
   checkGit = true,
-  checkDetails = true,
   maxStoreBytes = MAX_STORE_BYTES,
 } = {}) {
   const storeByteLimit = validateStoreByteLimit(maxStoreBytes);
@@ -455,7 +428,6 @@ export async function loadStore(context, {
   }
   const sortedTasks = new Map([...tasks].sort(([left], [right]) => compareTaskIds(left, right)));
   validateState(control, sortedTasks);
-  if (checkDetails) await validateDetails(context.root, sortedTasks);
   await assertOrdinaryDirectoryTree(context.root, storeRoot, "task store");
   digestEntries.sort((left, right) => compareTaskIds(path.basename(left.relative, ".json"), path.basename(right.relative, ".json")));
   return {
@@ -553,7 +525,6 @@ export async function mutateTask(context, loaded, id, expectedVersion, transform
   const prospective = new Map(loaded.tasks);
   prospective.set(id, next);
   validateState(loaded.control, prospective);
-  await validateDetails(context.root, prospective);
   await atomicWriteJson(taskRecordPath(loaded.storeRoot, id), next, { root: context.root });
   return loadStore(context);
 }
@@ -568,7 +539,6 @@ export async function addTask(context, loaded, task) {
   const prospective = new Map(loaded.tasks);
   prospective.set(normalized.id, normalized);
   validateState(loaded.control, prospective);
-  await validateDetails(context.root, prospective);
   const shard = path.dirname(taskRecordPath(loaded.storeRoot, normalized.id));
   const recordsRoot = path.dirname(shard);
   await assertOrdinaryDirectoryTree(context.root, recordsRoot, "task records directory");
@@ -640,7 +610,7 @@ export async function initializeStore(context) {
       pause: null,
     }, "control record"));
     await syncDirectory(stage);
-    await loadStore(context, { storeRoot: stage, checkGit: false, checkDetails: false });
+    await loadStore(context, { storeRoot: stage, checkGit: false });
     await assertOrdinaryDirectoryTree(context.root, tasksParent, "tasks directory");
     const collision = await fs.lstat(context.storeRoot).then(() => true, (error) => error.code === "ENOENT" ? false : Promise.reject(error));
     if (collision) fail("DESTINATION_COLLISION", "task store appeared during initialization", 4);

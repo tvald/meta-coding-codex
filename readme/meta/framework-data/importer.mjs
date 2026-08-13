@@ -568,7 +568,7 @@ export async function applyFormat1Migration(context, prepared, expectedSourceDig
   const stage = path.join(parent, `.framework-data-migration-${randomUUID()}`);
   try {
     await writeStagedStore(stage, prepared);
-    await loadStore(context, { storeRoot: stage, checkGit: false, checkDetails: true });
+    await loadStore(context, { storeRoot: stage, checkGit: false });
     const rechecked = await prepareFormat1Migration(context, catalogPath, archivePaths);
     if (rechecked.sourceDigest !== expectedSourceDigest) fail("STALE_SOURCE", "migration source changed before cutover", 4);
     const collision = await fs.lstat(context.storeRoot).then(() => true, (error) => error.code === "ENOENT" ? false : Promise.reject(error));

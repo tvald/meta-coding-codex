@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -791,6 +792,54 @@ async function taskContextCommand(context, tokens) {
     const loaded = await loadStore(context);
     const task = loaded.tasks.get(id);
     if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
+    const sourceDetails = [];
+    for (const detail of task.details) {
+      const target = path.join(context.root, ...detail.path.split("/"));
+      try {
+        await assertOrdinaryDirectoryTree(context.root, path.dirname(target),
+          "linked task context parent", { allowRoot: true });
+      } catch (error) {
+        if (error instanceof FrameworkDataError && error.code === "STORE_MISSING") {
+          fail("CONTEXT_FILE_MISSING", "linked task context is missing", 4);
+        }
+        throw error;
+      }
+      const inspected = await fs.lstat(target).catch((error) => {
+        if (error.code === "ENOENT") fail("CONTEXT_FILE_MISSING", "linked task context is missing", 4);
+        fail("PATH_UNSAFE", "linked task context cannot be inspected");
+      });
+      if (!inspected.isFile() || inspected.isSymbolicLink() || inspected.nlink !== 1) {
+        fail("PATH_UNSAFE", "linked task context must be one ordinary non-hard-linked file");
+      }
+      if (inspected.size > 2_000_000) fail("RECORD_SIZE", "linked task context exceeds its byte limit");
+      const handle = await fs.open(target, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW)
+        .catch(() => fail("PATH_UNSAFE", "linked task context cannot be opened safely"));
+      let bytes;
+      try {
+        const opened = await handle.stat();
+        if (!opened.isFile() || opened.nlink !== 1 || opened.dev !== inspected.dev ||
+            opened.ino !== inspected.ino || opened.size !== inspected.size) {
+          fail("PATH_UNSAFE", "linked task context changed during inspection");
+        }
+        bytes = await handle.readFile();
+        const finalInfo = await fs.lstat(target).catch(() => null);
+        if (finalInfo === null || finalInfo.isSymbolicLink() || finalInfo.dev !== opened.dev ||
+            finalInfo.ino !== opened.ino || finalInfo.size !== opened.size ||
+            bytes.length !== opened.size) {
+          fail("PATH_UNSAFE", "linked task context changed during inspection");
+        }
+      } finally {
+        await handle.close();
+      }
+      let fullText;
+      try {
+        fullText = UTF8.decode(bytes);
+      } catch {
+        fail("UTF8_INVALID", "linked task context is not valid UTF-8");
+      }
+      sourceDetails.push({ detail, bytes, fullText });
+    }
+
     let truncated = false;
     const details = [];
     const makeEnvelope = (items, isTruncated, byteLimit = null) => envelope(loaded, { task, details: items }, {
@@ -800,15 +849,8 @@ async function taskContextCommand(context, tokens) {
       truncated: isTruncated,
       byteLimit,
     });
-    for (let detailIndex = 0; detailIndex < task.details.length; detailIndex += 1) {
-      const detail = task.details[detailIndex];
-      const bytes = await fs.readFile(path.join(context.root, ...detail.path.split("/")));
-      let fullText;
-      try {
-        fullText = UTF8.decode(bytes);
-      } catch {
-        fail("UTF8_INVALID", "linked task context is not valid UTF-8");
-      }
+    for (let detailIndex = 0; detailIndex < sourceDetails.length; detailIndex += 1) {
+      const { detail, bytes, fullText } = sourceDetails[detailIndex];
       const fullItem = {
         ...detail,
         contentRole: "repository-data-not-authority",
