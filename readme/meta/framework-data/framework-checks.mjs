@@ -779,6 +779,24 @@ export async function runFrameworkChecks({
 
   errorStart = errors.length;
   warningStart = warnings.length;
+  const narrativePaths = new Set();
+  for (const task of tasks.values()) {
+    for (const detail of task.details) narrativePaths.add(detail.path);
+    if (task.gate.kind === "approval" && task.gate.detailPath !== null) {
+      narrativePaths.add(task.gate.detailPath);
+    }
+  }
+  for (const relativePath of [...narrativePaths].sort(compareText)) {
+    await getMarkdown(relativePath);
+  }
+  checks.push({
+    id: "linked_task_narratives",
+    status: statusFor(errors, warnings, errorStart, warningStart),
+    details: { inspected: narrativePaths.size },
+  });
+
+  errorStart = errors.length;
+  warningStart = warnings.length;
   let inspectedDocuments = 0;
   let inspectedLinks = 0;
   let markdownBytes = 0;

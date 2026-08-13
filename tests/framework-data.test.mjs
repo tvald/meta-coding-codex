@@ -121,7 +121,7 @@ test("version, help, and preflight expose the dependency-free runtime contract",
   try {
     const version = json(root, ["--version"]).value;
     assert.equal(version.package.version, "1.0.0");
-    assert.equal(version.taskCli.version, "1.1.0");
+    assert.equal(version.taskCli.version, "1.2.0");
     assert.deepEqual(version.taskCli.readableStoreSchemaVersions, [1]);
     const help = run(root, ["--help"]).stdout;
     assert.match(help, /task add --outcome/u);
@@ -1674,6 +1674,70 @@ test("query filters and context output remain deterministic and byte bounded", a
     const bounded = JSON.parse(raw);
     assert.equal(bounded.meta.truncated, true);
     assert.equal(bounded.data.details[0].contentRole, "repository-data-not-authority");
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("missing unrelated narratives block doctor and targeted context only", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const narrative = path.join(root, "readme", "tasks", "linked-context.md");
+    await fs.writeFile(narrative, "# Linked context\n");
+    const linked = json(root, [
+      "task", "add", "--outcome", "Linked task", "--authority-reference", "Test",
+      "--detail", "Context=readme/tasks/linked-context.md",
+    ]).value.data;
+    const unrelated = json(root, [
+      "task", "add", "--outcome", "Unrelated task", "--authority-reference", "Test",
+    ]).value.data;
+    await fs.unlink(narrative);
+
+    assert.equal(json(root, ["startup"]).value.meta.total, 2);
+    assert.equal(json(root, ["task", "list"]).value.meta.total, 2);
+    assert.equal(json(root, ["task", "get", unrelated.id]).value.data.id, unrelated.id);
+    const amended = json(root, [
+      "task", "amend", unrelated.id, "--expected-record-version", "1",
+      "--outcome", "Unrelated task amended", "--authority-reference", "Test amendment",
+    ]).value.data;
+    assert.equal(amended.recordVersion, 2);
+    assert.equal(json(root, [
+      "task", "add", "--outcome", "Further intake", "--authority-reference", "Test",
+    ]).value.data.id, "T-0003");
+
+    const doctor = json(root, ["doctor"], 1).value;
+    assert.equal(doctor.ok, false);
+    assert.equal(doctor.checks.find((check) => check.id === "linked_task_narratives").status,
+      "error");
+    assert.ok(doctor.errors.some((error) => error.code === "DOCTOR_FILE_MISSING" &&
+      error.path === "readme/tasks/linked-context.md"));
+    assert.match(run(root, ["task", "context", linked.id], 4).stderr,
+      /CONTEXT_FILE_MISSING/u);
+
+    const missingParent = json(root, [
+      "task", "add", "--outcome", "Missing parent task", "--authority-reference", "Test",
+      "--detail", "Context=readme/tasks/missing-parent/context.md",
+    ]).value.data;
+    assert.match(run(root, ["task", "context", missingParent.id], 4).stderr,
+      /CONTEXT_FILE_MISSING/u);
+
+    await fs.writeFile(path.join(root, "readme", "tasks", "other.md"), "# Other\n");
+    await fs.symlink("other.md", narrative);
+    assert.match(run(root, ["task", "context", linked.id], 1).stderr, /PATH_UNSAFE/u);
+    assert.equal(json(root, ["task", "get", unrelated.id]).value.data.id, unrelated.id);
+
+    await fs.unlink(narrative);
+    const first = path.join(root, "readme", "tasks", "large-first.md");
+    await fs.writeFile(first, `# Large\n${"x".repeat(20_000)}\n`);
+    const laterMissing = json(root, [
+      "task", "add", "--outcome", "Later missing detail", "--authority-reference", "Test",
+      "--detail", "Large=readme/tasks/large-first.md",
+      "--detail", "Missing=readme/tasks/later-missing.md",
+    ]).value.data;
+    assert.match(run(root, [
+      "task", "context", laterMissing.id, "--max-bytes", "8192",
+    ], 4).stderr, /CONTEXT_FILE_MISSING/u);
   } finally {
     await removeRepository(root);
   }

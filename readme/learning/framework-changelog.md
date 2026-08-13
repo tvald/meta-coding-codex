@@ -21,8 +21,9 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   independent Reviewer and QA adoption; see
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Change: Kept FileTaskStore as the sole production backend, separated task domain,
-  persistence, and repository responsibilities, simplified disproportionate local
-  guards, and authorized a reference-only SQLite adapter while rejecting S3.
+  persistence, and repository responsibilities, moved linked-narrative existence checks
+  to doctor/targeted context, advanced the additive task CLI contract to 1.2.0, and
+  authorized a reference-only SQLite adapter while rejecting S3.
 - Success signal: FileTaskStore and SQLite satisfy one adapter-neutral conformance suite
   without making SQLite selectable or weakening domain invariants.
 - Review or sunset trigger: conformance exceptions, lost task facts, partial publication,

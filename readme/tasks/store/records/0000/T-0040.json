@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0040",
-  "recordVersion": 3,
+  "recordVersion": 6,
   "taskRevision": 3,
   "outcome": "Move linked-narrative existence validation out of canonical task-store loading and into doctor plus targeted task context, retaining safe path syntax and allow-list validation in task records so an unrelated missing or moved Markdown file cannot block ordinary task queries and mutations and repository-document concerns remain outside persistence adapters",
   "authority": {
     "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order as independently reviewable tasks",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0044"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "After T-0044, move linked-document existence checks to doctor and targeted context and prove an unrelated missing narrative no longer blocks ordinary task operations",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Separated linked-narrative existence from canonical store loading; doctor now reports 51 linked task and approval narratives, targeted context validates every selected-task detail before bounded rendering, and unrelated operations remain available. Reviewer Adopt after two fixes; focused tests, framework-data regression, packed task CLI 8/8, package audit, doctor, links, budgets, and diff check passed; task CLI advanced to 1.2.0"
+  }
 }
