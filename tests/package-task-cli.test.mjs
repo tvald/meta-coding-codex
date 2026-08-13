@@ -161,7 +161,7 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       taskCli: {
-        version: '1.2.0',
+        version: '2.0.0',
         envelopeVersions: [1],
         readableStoreSchemaVersions: [1],
         writableStoreSchemaVersions: [1],
@@ -211,11 +211,9 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--next-safe-action', 'Select the fixture',
     ]).value.data;
     assert.equal(added.id, 'T-0001');
-    const digest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
     const selected = metaJson(client, [
       'tasks', 'task', 'select', added.id,
       '--expected-record-version', String(added.recordVersion),
-      '--expected-store-digest', digest,
     ]).value.data;
     assert.equal(selected.status, 'active');
     assert.equal(metaJson(client, ['tasks', 'startup']).value.data.primaryTask.id, added.id);
@@ -230,7 +228,6 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--status', 'needs_verification',
       '--next-safe-action', 'Run the delayed fixture check',
     ]).value.data;
-    const checkpointDigest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
     const addedRecordPath = join(client.clientRoot, 'readme', 'tasks', 'store',
       'records', '0000', `${added.id}.json`);
     metaJson(client, [
@@ -238,19 +235,9 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--outcome', 'Advance the store before reactivation',
       '--authority-reference', 'T-0034 fixture',
     ]);
-    const beforeStaleReactivation = readFileSync(addedRecordPath);
-    assert.match(meta(client, [
-      'tasks', 'task', 'checkpoint', added.id,
-      '--expected-record-version', String(checkpointed.recordVersion),
-      '--expected-store-digest', checkpointDigest,
-      '--status', 'active',
-      '--next-safe-action', 'Must not be written',
-    ], 4).stderr, /STALE_STORE/u);
-    assert.deepEqual(readFileSync(addedRecordPath), beforeStaleReactivation);
     const reactivated = metaJson(client, [
       'tasks', 'task', 'checkpoint', added.id,
       '--expected-record-version', String(checkpointed.recordVersion),
-      '--expected-store-digest', metaJson(client, ['tasks', 'doctor']).value.storeDigest,
       '--status', 'active',
       '--next-safe-action', 'Fix the delayed fixture defect',
     ]).value.data;
@@ -289,11 +276,9 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--risk', 'low',
       '--next-safe-action', 'Bind dependency and approval',
     ]).value.data;
-    const dependencyDigest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
     const dependent = metaJson(client, [
       'tasks', 'task', 'set-dependencies', target.id,
       '--expected-record-version', String(amended.recordVersion),
-      '--expected-store-digest', dependencyDigest,
       '--depends-on', added.id,
     ]).value.data;
     const approved = metaJson(client, [
@@ -312,11 +297,9 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--status', 'ready',
       '--next-safe-action', 'Select the target',
     ]).value.data;
-    const targetDigest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
     const targetSelected = metaJson(client, [
       'tasks', 'task', 'select', target.id,
       '--expected-record-version', String(readied.recordVersion),
-      '--expected-store-digest', targetDigest,
     ]).value.data;
     const targetRecordPath = join(client.clientRoot, 'readme', 'tasks', 'store',
       'records', '0000', `${target.id}.json`);
@@ -341,7 +324,6 @@ test('packed task CLI uses package resources and mutates only the client Git roo
     const targetReactivated = metaJson(client, [
       'tasks', 'task', 'checkpoint', target.id,
       '--expected-record-version', String(targetCheckpointed.recordVersion),
-      '--expected-store-digest', metaJson(client, ['tasks', 'doctor']).value.storeDigest,
       '--status', 'active',
       '--next-safe-action', 'Fix the approved target defect',
     ]).value.data;
@@ -361,11 +343,9 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       '--evidence', 'Every installed semantic mutation passed',
     ]).value.data.status, 'done');
 
-    const pauseDigest = metaJson(client, ['tasks', 'doctor']).value.storeDigest;
     const paused = metaJson(client, [
       'tasks', 'pause',
       '--expected-record-version', '1',
-      '--expected-store-digest', pauseDigest,
       '--reason', 'Exercise installed pause',
       '--source', 'T-0026 fixture',
     ]).value.data;
@@ -468,7 +448,7 @@ test('task help and version are rootless while data commands report bounded Git 
     assert.equal(help.stderr, '');
     const version = run(process.execPath, [client.binary, 'tasks', '--version'], { cwd: outside });
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(JSON.parse(version.stdout).taskCli.version, '1.2.0');
+    assert.equal(JSON.parse(version.stdout).taskCli.version, '2.0.0');
     const internalHelp = run(process.execPath, [
       join(client.packageRoot, 'readme', 'meta', 'framework-data', 'cli.mjs'), '--help',
     ], { cwd: outside });

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   SCHEMA_VERSION,
   TERMINAL_STATUSES,
+  FrameworkDataError,
   canonicalJson,
   fail,
 } from "./schema.mjs";
@@ -21,7 +22,6 @@ import {
 } from "./task-store.mjs";
 import {
   addTask,
-  assertExpectedDigest,
   assertRepositoryContext,
   initializeStore,
   loadStore,
@@ -204,8 +204,13 @@ export class FileTaskStore {
     return this.#metadata;
   }
 
-  async #loaded({ lockHeld = false, readOnly = false } = {}) {
-    if (lockHeld || readOnly) return loadStore(this.#context);
+  async #loaded({ lockHeld = false } = {}) {
+    if (lockHeld) return loadStore(this.#context);
+    try {
+      return await loadStore(this.#context);
+    } catch (error) {
+      if (!(error instanceof FrameworkDataError)) throw error;
+    }
     return withLock(this.#context, () => loadStore(this.#context));
   }
 
@@ -214,10 +219,9 @@ export class FileTaskStore {
     return loadedSnapshot(loaded, this.#metadata);
   }
 
-  async readConsistent(operation, { readOnly = false } = {}) {
+  async readConsistent(operation) {
     if (typeof operation !== "function") fail("TASK_STORE_CONTRACT", "consistent read operation must be a function");
-    const run = async () => operation(loadedSnapshot(await loadStore(this.#context), this.#metadata));
-    return readOnly ? run() : withLock(this.#context, run);
+    return operation(await this.readSnapshot());
   }
 
   async query(value) {
@@ -255,8 +259,7 @@ export class FileTaskStore {
     }
   }
 
-  async #publishLoaded(loaded, changeSet, { expectedDigest = null, legacyErrors = false } = {}) {
-    if (expectedDigest !== null) assertExpectedDigest(loaded, expectedDigest);
+  async #publishLoaded(loaded, changeSet, { legacyErrors = false } = {}) {
     validatePreconditions(loaded, changeSet, { legacyErrors });
     let committed;
     if (changeSet.changes.create !== null) {
@@ -268,11 +271,11 @@ export class FileTaskStore {
     } else if (changeSet.changes.taskUpdates.length === 1) {
       const task = changeSet.changes.taskUpdates[0];
       committed = await mutateTask(this.#context, loaded, task.id,
-        changeSet.preconditions.target.recordVersion, () => task, { expectedDigest });
+        changeSet.preconditions.target.recordVersion, () => task);
     } else {
       const control = changeSet.changes.controlUpdate;
       committed = await mutateControl(this.#context, loaded,
-        changeSet.preconditions.control.recordVersion, () => control, { expectedDigest });
+        changeSet.preconditions.control.recordVersion, () => control);
     }
     const changedTasks = changeSet.changes.create !== null ?
       [committed.tasks.get(changeSet.changes.create.task.id)] :
@@ -285,11 +288,11 @@ export class FileTaskStore {
     }, this.#metadata.storeId);
   }
 
-  async publish(value, { expectedDigest = null, legacyErrors = false } = {}) {
+  async publish(value, { legacyErrors = false } = {}) {
     const changeSet = normalizeTaskChangeSet(value, this.#metadata.storeId);
     try {
       return await withLock(this.#context, async () => this.#publishLoaded(
-        await loadStore(this.#context), changeSet, { expectedDigest, legacyErrors },
+        await loadStore(this.#context), changeSet, { legacyErrors },
       ));
     } catch (error) {
       if (legacyErrors || error?.code?.startsWith("TASK_STORE_")) throw error;
@@ -297,35 +300,16 @@ export class FileTaskStore {
     }
   }
 
-  async execute(planner, {
-    expectedDigest = null,
-    legacyErrors = false,
-    beforeExpectedDigest = null,
-    afterExpectedDigest = null,
-  } = {}) {
+  async execute(planner, { legacyErrors = false } = {}) {
     if (typeof planner !== "function") fail("TASK_STORE_CONTRACT", "task planner must be a function");
-    if (beforeExpectedDigest !== null && typeof beforeExpectedDigest !== "function") {
-      fail("TASK_STORE_CONTRACT", "pre-publication validator must be a function");
-    }
-    if (afterExpectedDigest !== null && typeof afterExpectedDigest !== "function") {
-      fail("TASK_STORE_CONTRACT", "post-precondition validator must be a function");
-    }
     try {
       return await withLock(this.#context, async () => {
         const loaded = await loadStore(this.#context);
         const snapshot = loadedSnapshot(loaded, this.#metadata);
-        await beforeExpectedDigest?.(snapshot);
-        const resolvedDigest = typeof expectedDigest === "function" ?
-          await expectedDigest(snapshot) : expectedDigest;
-        if (resolvedDigest !== null) assertExpectedDigest(loaded, resolvedDigest);
-        await afterExpectedDigest?.(snapshot);
         const changeSet = normalizeTaskChangeSet(
           await planner(snapshot), this.#metadata.storeId,
         );
-        const receipt = await this.#publishLoaded(loaded, changeSet, {
-          expectedDigest: resolvedDigest,
-          legacyErrors,
-        });
+        const receipt = await this.#publishLoaded(loaded, changeSet, { legacyErrors });
         return Object.freeze({ changeSet, receipt });
       });
     } catch (error) {

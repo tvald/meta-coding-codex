@@ -68,8 +68,12 @@ export async function repositoryContext(cwd = process.cwd()) {
   const commonCandidate = path.isAbsolute(commonReported) ? commonReported : path.resolve(root, commonReported);
   const commonDir = await fs.realpath(commonCandidate).catch(() => fail("GIT_REQUIRED", "Git common directory is unavailable"));
   await assertOrdinaryDirectoryTree(commonDir, commonDir, "Git common directory", { allowRoot: true });
+  const gitReported = gitOutput(["rev-parse", "--git-dir"], root);
+  const gitCandidate = path.isAbsolute(gitReported) ? gitReported : path.resolve(root, gitReported);
+  const gitDir = await fs.realpath(gitCandidate).catch(() => fail("GIT_REQUIRED", "Git worktree directory is unavailable"));
+  await assertOrdinaryDirectoryTree(gitDir, gitDir, "Git worktree directory", { allowRoot: true });
   const storeRoot = path.join(root, ...STORE_RELATIVE.split("/"));
-  const context = Object.freeze({ root, commonDir, storeRoot });
+  const context = Object.freeze({ root, commonDir, gitDir, lockRoot: gitDir, storeRoot });
   REPOSITORY_CONTEXTS.add(context);
   return context;
 }
@@ -380,11 +384,10 @@ export async function atomicWriteJson(file, value, { replacing = true, root = nu
   }
 }
 
-export async function mutateTask(context, loaded, id, expectedVersion, transform, { expectedDigest = null } = {}) {
+export async function mutateTask(context, loaded, id, expectedVersion, transform) {
   const current = loaded.tasks.get(id);
   if (!current) fail("TASK_NOT_FOUND", "task does not exist", 4);
   if (current.recordVersion !== expectedVersion) fail("STALE_RECORD", "task recordVersion is stale", 4);
-  if (expectedDigest !== null && loaded.digest !== expectedDigest) fail("STALE_STORE", "store digest is stale", 4);
   const next = normalizeTask(transform(structuredClone(current)));
   if (next.id !== id) fail("TRANSITION_INVALID", "normal mutation cannot change task ID");
   if (next.recordVersion !== current.recordVersion + 1) fail("TRANSITION_INVALID", "normal mutation must increment recordVersion once");
@@ -448,9 +451,8 @@ export async function addTask(context, loaded, task) {
   return loadStore(context);
 }
 
-export async function mutateControl(context, loaded, expectedVersion, transform, { expectedDigest = null } = {}) {
+export async function mutateControl(context, loaded, expectedVersion, transform) {
   if (loaded.control.recordVersion !== expectedVersion) fail("STALE_RECORD", "control recordVersion is stale", 4);
-  if (expectedDigest !== null && loaded.digest !== expectedDigest) fail("STALE_STORE", "store digest is stale", 4);
   const next = normalizeControl(transform(structuredClone(loaded.control)));
   if (next.recordVersion !== loaded.control.recordVersion + 1) fail("TRANSITION_INVALID", "control mutation must increment recordVersion once");
   const nextControlBytes = Buffer.byteLength(boundedCanonicalJson(next, "control record"), "utf8");
@@ -516,12 +518,21 @@ export async function initializeStore(context, {
   return loadStore(context);
 }
 
+function lockParent(context) {
+  return context.lockRoot;
+}
+
+function lockPath(context) {
+  return path.join(lockParent(context), "framework-data.lock");
+}
+
 export async function acquireLock(context) {
-  const lockDirectory = path.join(context.commonDir, "framework-data.lock");
+  const parent = lockParent(context);
+  const lockDirectory = lockPath(context);
   const ownerFile = path.join(lockDirectory, "owner.json");
   const token = randomUUID();
-  const ownerStage = path.join(context.commonDir, `.framework-data-owner-${token}.tmp`);
-  await assertOrdinaryDirectoryTree(context.commonDir, context.commonDir, "Git common directory", { allowRoot: true });
+  const ownerStage = path.join(parent, `.framework-data-owner-${token}.tmp`);
+  await assertOrdinaryDirectoryTree(parent, parent, "worktree lock parent", { allowRoot: true });
   const owner = {
     token,
     pid: process.pid,
@@ -530,23 +541,23 @@ export async function acquireLock(context) {
   safeText(owner.host, "lock owner host", { max: 256 });
   try {
     await durableWriteExclusive(ownerStage, boundedCanonicalJson(owner, "lock owner"), 0o600);
-    await syncDirectory(context.commonDir);
+    await syncDirectory(parent);
     await fs.mkdir(lockDirectory, { mode: 0o700 });
   } catch (error) {
     await fs.unlink(ownerStage).catch(() => {});
-    await syncDirectory(context.commonDir).catch(() => {});
+    await syncDirectory(parent).catch(() => {});
     if (error.code === "EEXIST") fail("LOCK_BUSY", "framework-data lock is already held", 5);
     fail("LOCK_FAILED", "framework-data lock cannot be acquired", 5);
   }
   try {
     await fs.rename(ownerStage, ownerFile);
     await syncDirectory(lockDirectory);
-    await syncDirectory(context.commonDir);
+    await syncDirectory(parent);
   } catch {
     await fs.unlink(ownerStage).catch(() => {});
     await fs.unlink(ownerFile).catch(() => {});
     await fs.rmdir(lockDirectory).catch(() => {});
-    await syncDirectory(context.commonDir).catch(() => {});
+    await syncDirectory(parent).catch(() => {});
     fail("LOCK_FAILED", "framework-data lock ownership cannot be recorded", 5);
   }
   const lock = {
@@ -566,7 +577,7 @@ export async function acquireLock(context) {
       if (parsed.token !== token) fail("LOCK_OWNERSHIP", "framework-data lock ownership changed", 5);
       await fs.unlink(ownerFile).catch(() => fail("LOCK_OWNERSHIP", "framework-data lock owner cannot be removed", 5));
       await fs.rmdir(lockDirectory).catch(() => fail("LOCK_OWNERSHIP", "framework-data lock directory cannot be removed", 5));
-      await syncDirectory(context.commonDir).catch(() => fail("LOCK_OWNERSHIP", "framework-data lock removal cannot be synchronized", 5));
+      await syncDirectory(parent).catch(() => fail("LOCK_OWNERSHIP", "framework-data lock removal cannot be synchronized", 5));
     },
   };
   return lock;
@@ -591,10 +602,11 @@ function validateLockOwner(value, text) {
 }
 
 async function readLockOwner(context, lockDirectory) {
-  await assertOrdinaryDirectoryTree(context.commonDir, lockDirectory, "framework-data lock");
+  const parent = lockParent(context);
+  await assertOrdinaryDirectoryTree(parent, lockDirectory, "framework-data lock");
   const ownerFile = path.join(lockDirectory, "owner.json");
   const read = await readUtf8File(ownerFile, "framework-data lock owner", {
-    root: context.commonDir,
+    root: parent,
     maxBytes: 4096,
   });
   let parsed;
@@ -607,7 +619,7 @@ async function readLockOwner(context, lockDirectory) {
 }
 
 async function malformedLockOwnerIdentity(context, lockDirectory) {
-  await assertOrdinaryDirectoryTree(context.commonDir, lockDirectory, "framework-data lock");
+  await assertOrdinaryDirectoryTree(lockParent(context), lockDirectory, "framework-data lock");
   const ownerFile = path.join(lockDirectory, "owner.json");
   const info = await fs.lstat(ownerFile).catch(() =>
     fail("LOCK_OWNERSHIP", "framework-data lock owner cannot be inspected", 5));
@@ -626,7 +638,7 @@ function sameIncompleteIdentity(left, right) {
 }
 
 export async function inspectLock(context) {
-  const lockDirectory = path.join(context.commonDir, "framework-data.lock");
+  const lockDirectory = lockPath(context);
   const info = await fs.lstat(lockDirectory).catch((error) => {
     if (error.code === "ENOENT") return null;
     fail("LOCK_OWNERSHIP", "framework-data lock cannot be inspected", 5);
@@ -635,7 +647,7 @@ export async function inspectLock(context) {
   if (!info.isDirectory() || info.isSymbolicLink()) {
     fail("LOCK_OWNERSHIP", "framework-data lock path is unsafe", 5);
   }
-  await assertOrdinaryDirectoryTree(context.commonDir, lockDirectory, "framework-data lock");
+  await assertOrdinaryDirectoryTree(lockParent(context), lockDirectory, "framework-data lock");
   const entries = (await boundedDirectoryEntries(lockDirectory, 2, "framework-data lock"))
     .map((entry) => entry.name);
   if (entries.length === 0) {
@@ -667,8 +679,9 @@ export async function recoverLock(context, expectedToken, { confirmOwnerNotLive 
   if (expectedToken !== observedToken) {
     fail("LOCK_RECOVERY_STALE", "framework-data lock identity changed", 5);
   }
-  const lockDirectory = path.join(context.commonDir, "framework-data.lock");
-  const quarantine = path.join(context.commonDir, `.framework-data-recovery-${randomUUID()}`);
+  const parent = lockParent(context);
+  const lockDirectory = lockPath(context);
+  const quarantine = path.join(parent, `.framework-data-recovery-${randomUUID()}`);
   const rechecked = await inspectLock(context);
   const recheckedToken = rechecked.state === "incomplete" ? "incomplete" : rechecked.owner?.token;
   if (!rechecked.held || recheckedToken !== expectedToken || rechecked.state !== inspected.state ||
@@ -678,7 +691,7 @@ export async function recoverLock(context, expectedToken, { confirmOwnerNotLive 
   }
   try {
     await fs.rename(lockDirectory, quarantine);
-    await syncDirectory(context.commonDir);
+    await syncDirectory(parent);
     const entries = (await boundedDirectoryEntries(quarantine, 2, "quarantined framework-data lock"))
       .map((entry) => entry.name);
     if (inspected.state === "incomplete") {
@@ -703,7 +716,7 @@ export async function recoverLock(context, expectedToken, { confirmOwnerNotLive 
       await fs.unlink(path.join(quarantine, "owner.json"));
     }
     await fs.rmdir(quarantine);
-    await syncDirectory(context.commonDir);
+    await syncDirectory(parent);
     return inspected;
   } catch (error) {
     if (error instanceof Error && error.name === "FrameworkDataError") throw error;
@@ -728,11 +741,4 @@ export async function withLock(context, operation) {
       }
     }
   }
-}
-
-export function assertExpectedDigest(loaded, expected) {
-  if (typeof expected !== "string" || !/^sha256:[0-9a-f]{64}$/u.test(expected)) {
-    fail("ARGUMENT_INVALID", "expected store digest is invalid", 2);
-  }
-  if (loaded.digest !== expected) fail("STALE_STORE", "store digest is stale", 4);
 }

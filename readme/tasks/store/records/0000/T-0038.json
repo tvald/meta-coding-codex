@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0038",
-  "recordVersion": 3,
+  "recordVersion": 6,
   "taskRevision": 3,
   "outcome": "Simplify FileTaskStore concurrency and align it with the future storage port by making ordinary queries and doctor optimistic and lock-free with bounded retry, scoping its exclusive mutation lock to the physical worktree, and removing caller-managed whole-store digest mutation preconditions while retaining backend-internal snapshot tokens, deterministic conditional publication, target and declared read-set recordVersion CAS, and current-state invariant validation",
   "authority": {
     "reference": "User requests delivered 2026-08-13 following T-0036 simplification and T-0041 adapter-feasibility evaluations",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0046"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "After T-0037, implement the accepted FileTaskStore concurrency and storage-port boundary with tests for concurrent reads, same-worktree mutations, linked-worktree independence, stale target and read-set versions, harmless unrelated intake, and retained internal snapshot publication",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Simplified FileTaskStore concurrency with one optimistic validated read and bounded locked retry, per-physical-worktree Git-directory mutation locks, task CLI 2.0 removal of caller store-digest inputs, and precise target/read-set/control/global conditional publication. Independent QA PASS; architecture/FileTaskStore 12/12, framework-data 38/38, package/packed CLI 20/20, reproducible 60-file audit, syntax, doctor, and diff checks passed."
+  }
 }

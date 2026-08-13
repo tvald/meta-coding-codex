@@ -121,11 +121,15 @@ test("version, help, and preflight expose the dependency-free runtime contract",
   try {
     const version = json(root, ["--version"]).value;
     assert.equal(version.package.version, "1.0.0");
-    assert.equal(version.taskCli.version, "1.2.0");
+    assert.equal(version.taskCli.version, "2.0.0");
     assert.deepEqual(version.taskCli.readableStoreSchemaVersions, [1]);
     const help = run(root, ["--help"]).stdout;
     assert.match(help, /task add --outcome/u);
-    assert.match(run(root, ["task", "add", "--help"]).stdout, /--expected-store-digest/u);
+    assert.doesNotMatch(run(root, ["task", "add", "--help"]).stdout, /--expected-store-digest/u);
+    assert.match(run(root, [
+      "task", "select", "T-0001", "--expected-record-version", "1",
+      "--expected-store-digest", `sha256:${"0".repeat(64)}`,
+    ], 2).stderr, /unsupported option/u);
     assert.match(help, /migrate format1/u);
     const preflight = json(root, ["preflight"]).value;
     assert.equal(preflight.compatible, true);
@@ -269,7 +273,7 @@ test("doctor rejects duplicate, unknown, noncanonical, oversized, and unsupporte
   }
 });
 
-test("semantic lifecycle enforces CAS, digest, terminal visibility, filters, pause, and stale cursors", async () => {
+test("semantic lifecycle enforces CAS, terminal visibility, filters, pause, and stale cursors", async () => {
   const root = await makeRepository();
   try {
     json(root, ["init"]);
@@ -290,17 +294,9 @@ test("semantic lifecycle enforces CAS, digest, terminal visibility, filters, pau
 
     const candidates = json(root, ["task", "candidates"]).value;
     assert.equal(candidates.meta.total, 1);
-    const staleDigest = `${"sha256:"}${"0".repeat(64)}`;
-    assert.match(run(root, [
-      "task", "select", "T-0001",
-      "--expected-record-version", "1",
-      "--expected-store-digest", staleDigest,
-    ], 4).stderr, /STALE_STORE/u);
-
     const selected = json(root, [
       "task", "select", "T-0001",
       "--expected-record-version", "1",
-      "--expected-store-digest", candidates.meta.storeDigest,
     ]).value;
     assert.equal(selected.data.status, "active");
     assert.match(run(root, [
@@ -364,11 +360,9 @@ test("semantic lifecycle enforces CAS, digest, terminal visibility, filters, pau
       "task", "list", "--limit", "1", "--cursor", firstPage.meta.nextCursor,
     ], 4).stderr, /CURSOR_STALE/u);
 
-    const beforePause = json(root, ["doctor"]).value;
     const paused = json(root, [
       "pause",
       "--expected-record-version", "1",
-      "--expected-store-digest", beforePause.storeDigest,
       "--reason", "Owner requested a pause",
       "--source", "User instruction",
     ]).value;
@@ -417,7 +411,6 @@ test("recordVersion tracks every write while taskRevision tracks semantic scope"
     ]).value.data;
     const selectedDependency = json(root, [
       "task", "select", dependency.id, "--expected-record-version", "1",
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
     ]).value.data;
     json(root, [
       "task", "close", selectedDependency.id,
@@ -440,7 +433,6 @@ test("recordVersion tracks every write while taskRevision tracks semantic scope"
     const dependencies = json(root, [
       "task", "set-dependencies", amended.id,
       "--expected-record-version", String(amended.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--depends-on", dependency.id,
     ]).value.data;
     assert.deepEqual([dependencies.recordVersion, dependencies.taskRevision], [3, 3]);
@@ -461,7 +453,6 @@ test("recordVersion tracks every write while taskRevision tracks semantic scope"
     assert.deepEqual([ready.recordVersion, ready.taskRevision], [5, 3]);
     const active = json(root, [
       "task", "select", ready.id, "--expected-record-version", String(ready.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
     ]).value.data;
     assert.deepEqual([active.recordVersion, active.taskRevision], [6, 3]);
     const verification = json(root, [
@@ -480,7 +471,6 @@ test("recordVersion tracks every write while taskRevision tracks semantic scope"
 
     const paused = json(root, [
       "pause", "--expected-record-version", "1",
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--reason", "Characterize control revision", "--source", "Test",
     ]).value.data;
     assert.equal(paused.recordVersion, 2);
@@ -514,23 +504,22 @@ test("conditional mutation failures preserve canonical bytes and the current dig
     const pending = json(root, [
       "task", "add", "--outcome", "Pending", "--authority-reference", "Test",
     ]).value.data;
-    const currentDigest = json(root, ["doctor"]).value.storeDigest;
-    // Current behavior only: T-0038 intentionally replaces caller-managed store digests.
-    assert.match(run(root, [
-      "task", "select", selectable.id, "--expected-record-version", "1",
-      "--expected-store-digest", originalDigest,
-    ], 4).stderr, /STALE_STORE/u);
-    assert.deepEqual(await fs.readFile(selectablePath), originalBytes);
-    assert.equal(json(root, ["doctor"]).value.storeDigest, currentDigest);
+    const unrelated = json(root, [
+      "task", "amend", selectable.id, "--expected-record-version", "1",
+      "--outcome", "Selectable after unrelated intake", "--authority-reference", "Test",
+      "--route", "quick_change", "--risk", "low",
+    ]).value.data;
+    assert.equal(unrelated.recordVersion, 2);
+    assert.notDeepEqual(await fs.readFile(selectablePath), originalBytes);
+    const postAmendDigest = json(root, ["doctor"]).value.storeDigest;
 
     const pendingPath = taskPath(root, pending.id);
     const pendingBytes = await fs.readFile(pendingPath);
     assert.match(run(root, [
       "task", "select", pending.id, "--expected-record-version", "1",
-      "--expected-store-digest", currentDigest,
     ], 4).stderr, /TRANSITION_INVALID/u);
     assert.deepEqual(await fs.readFile(pendingPath), pendingBytes);
-    assert.equal(json(root, ["doctor"]).value.storeDigest, currentDigest);
+    assert.equal(json(root, ["doctor"]).value.storeDigest, postAmendDigest);
   } finally {
     await removeRepository(root);
   }
@@ -952,7 +941,6 @@ test("doctor enforces framework sentinels, links, budgets, templates, maintenanc
       .some((warning) => warning.code === "DOCTOR_STAGED_TASK_RECORD"));
     const selected = json(root, [
       "task", "select", closing.id, "--expected-record-version", "1",
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
     ]).value.data;
     const checkpointed = json(root, [
       "task", "checkpoint", closing.id, "--expected-record-version", String(selected.recordVersion),
@@ -1064,12 +1052,12 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
   }
 });
 
-test("Git-common-directory lock blocks concurrent commands without age-based recovery", async () => {
+test("worktree mutation lock permits readers, blocks writers, and retains explicit recovery", async () => {
   const root = await makeRepository();
   try {
     json(root, ["init"]);
-    const common = execFileSync("git", ["rev-parse", "--git-common-dir"], { cwd: root, encoding: "utf8" }).trim();
-    const lock = path.resolve(root, common, "framework-data.lock");
+    const gitDirectory = execFileSync("git", ["rev-parse", "--git-dir"], { cwd: root, encoding: "utf8" }).trim();
+    const lock = path.resolve(root, gitDirectory, "framework-data.lock");
     await fs.mkdir(lock);
     const token = "11111111-1111-4111-8111-111111111111";
     await fs.writeFile(path.join(lock, "owner.json"), `${JSON.stringify({
@@ -1077,8 +1065,23 @@ test("Git-common-directory lock blocks concurrent commands without age-based rec
       pid: 999_999,
       host: "test-host",
     }, null, 2)}\n`);
-    const result = json(root, ["doctor"], 5).value;
-    assert.equal(result.error.code, "LOCK_BUSY");
+    const readers = await Promise.all(Array.from({ length: 4 }, () => new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [installedBinary(root), "tasks", "doctor"], {
+        cwd: root,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (chunk) => { stdout += chunk; });
+      child.stderr.on("data", (chunk) => { stderr += chunk; });
+      child.once("error", reject);
+      child.once("exit", (code) => resolve({ code, stdout, stderr }));
+    })));
+    assert(readers.every(({ code, stdout }) => code === 0 && JSON.parse(stdout).ok === true));
+    assert.equal(json(root, ["startup"]).value.data.paused, false);
+    assert.match(run(root, [
+      "task", "add", "--outcome", "Must not publish", "--authority-reference", "Test",
+    ], 5).stderr, /LOCK_BUSY/u);
     const inspected = json(root, ["lock", "inspect"]).value.lock;
     assert.equal(inspected.owner.token, token);
     assert.match(run(root, ["lock", "recover", "--expected-token", token], 5).stderr,
@@ -1111,7 +1114,7 @@ test("Git-common-directory lock blocks concurrent commands without age-based rec
   }
 });
 
-test("one Git-common lock serializes linked worktrees across real processes", async () => {
+test("physical-worktree locks allow linked worktrees to read and mutate independently", async () => {
   const root = await makeRepository();
   const linked = await fs.mkdtemp(path.join(os.tmpdir(), "framework-data-linked-"));
   await fs.rmdir(linked);
@@ -1142,7 +1145,14 @@ test("one Git-common lock serializes linked worktrees across real processes", as
         if (code !== null && code !== 0) reject(new Error(`lock holder exited ${code}`));
       });
     });
-    assert.equal(json(linked, ["doctor"], 5).value.error.code, "LOCK_BUSY");
+    assert.equal(json(linked, ["doctor"]).value.ok, true);
+    const linkedTask = json(linked, ["task", "get", "T-0001"]).value.data;
+    const linkedAmended = json(linked, [
+      "task", "amend", linkedTask.id, "--expected-record-version", String(linkedTask.recordVersion),
+      "--outcome", "Linked worktree mutation", "--authority-reference", "Test linked",
+    ]).value.data;
+    assert.equal(linkedAmended.outcome, "Linked worktree mutation");
+    assert.equal(json(root, ["task", "get", "T-0001"]).value.data.outcome, "Linked fixture");
     holder.kill("SIGKILL");
     await new Promise((resolve, reject) => {
       holder.once("exit", (code, signal) => signal === "SIGKILL" ? resolve() :
@@ -1350,7 +1360,6 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
     const selected = json(root, [
       "task", "select", ready.id,
       "--expected-record-version", String(ready.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
     ]).value.data;
     const beforeActiveReactivation = await fs.readFile(taskPath(root, selected.id));
     assert.match(run(root, [
@@ -1369,7 +1378,6 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
     const reactivated = json(root, [
       "task", "checkpoint", unverified.id,
       "--expected-record-version", String(unverified.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--status", "active",
       "--next-safe-action", "Fix the defect exposed by verification",
     ]).value.data;
@@ -1389,25 +1397,16 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
       "task", "checkpoint", unverifiedAgain.id,
       "--expected-record-version", String(unverifiedAgain.recordVersion),
       "--status", "active",
-      "--next-safe-action", "Fix the defect exposed by verification",
-    ], 2).stderr, /ARGUMENT_INVALID/u);
-    assert.match(run(root, [
-      "task", "checkpoint", unverifiedAgain.id,
-      "--expected-record-version", String(unverifiedAgain.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
-      "--status", "active",
     ], 2).stderr, /ARGUMENT_INVALID/u);
     assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeRequiredArguments);
     assert.match(run(root, [
       "task", "checkpoint", unverifiedAgain.id,
       "--expected-record-version", String(unverifiedAgain.recordVersion - 1),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--status", "active",
       "--next-safe-action", "Must not be written",
     ], 4).stderr, /STALE_RECORD/u);
     assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeRequiredArguments);
 
-    const staleDigest = json(root, ["doctor"]).value.storeDigest;
     const competing = json(root, [
       "task", "add",
       "--outcome", "Competing selected task",
@@ -1416,25 +1415,14 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
       "--route", "quick_change",
       "--risk", "low",
     ]).value.data;
-    const beforeStaleStore = await fs.readFile(taskPath(root, unverifiedAgain.id));
-    assert.match(run(root, [
-      "task", "checkpoint", unverifiedAgain.id,
-      "--expected-record-version", String(unverifiedAgain.recordVersion),
-      "--expected-store-digest", staleDigest,
-      "--status", "active",
-      "--next-safe-action", "Fix the defect exposed by verification",
-    ], 4).stderr, /STALE_STORE/u);
-    assert.deepEqual(await fs.readFile(taskPath(root, unverifiedAgain.id)), beforeStaleStore);
     const competingActive = json(root, [
       "task", "select", competing.id,
       "--expected-record-version", String(competing.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
     ]).value.data;
     const beforeCompetingConflict = await fs.readFile(taskPath(root, unverifiedAgain.id));
     assert.match(run(root, [
       "task", "checkpoint", unverifiedAgain.id,
       "--expected-record-version", String(unverifiedAgain.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--status", "active",
       "--next-safe-action", "Fix the defect exposed by verification",
     ], 4).stderr, /STATE_INVALID/u);
@@ -1468,7 +1456,6 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
     const paused = json(root, [
       "pause",
       "--expected-record-version", "1",
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--reason", "Exercise reactivation while paused",
       "--source", "Test",
     ]).value.data;
@@ -1476,7 +1463,6 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
     assert.match(run(root, [
       "task", "checkpoint", unverifiedAgain.id,
       "--expected-record-version", String(unverifiedAgain.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--status", "active",
       "--next-safe-action", "Fix the defect exposed by verification",
     ], 4).stderr, /STATE_INVALID/u);
@@ -1486,7 +1472,6 @@ test("Needs verification reactivates only through an explicit defect checkpoint"
     const resumed = json(root, [
       "task", "checkpoint", unverifiedAgain.id,
       "--expected-record-version", String(unverifiedAgain.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--status", "active",
       "--next-safe-action", "Fix the defect exposed by verification",
     ]).value.data;
@@ -1608,7 +1593,6 @@ test("approval, routing, and dependency transitions cannot bypass eligibility", 
     ]).value.data;
     const dependencyUpdate = json(root, [
       "task", "set-dependencies", dependencyTarget.id, "--expected-record-version", "1",
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--depends-on", dependency.id,
     ]).value.data;
     assert.equal(dependencyUpdate.taskRevision, 2);
@@ -1620,11 +1604,9 @@ test("approval, routing, and dependency transitions cannot bypass eligibility", 
     const selectDigest = json(root, ["doctor"]).value.storeDigest;
     const active = json(root, [
       "task", "select", selectable.id, "--expected-record-version", "1",
-      "--expected-store-digest", selectDigest,
     ]).value.data;
     assert.match(run(root, [
       "task", "set-dependencies", active.id, "--expected-record-version", String(active.recordVersion),
-      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
       "--depends-on", dependency.id,
     ], 4).stderr, /TRANSITION_INVALID/u);
     assert.notEqual(digest, json(root, ["doctor"]).value.storeDigest);
