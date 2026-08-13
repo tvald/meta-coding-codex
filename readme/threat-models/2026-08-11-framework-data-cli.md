@@ -2,8 +2,8 @@
 
 ## Scope
 
-- Change: required Node CLI, canonical JSON task records, Format 1 migration, and
-  package/install/process cutover.
+- Change: required Node CLI, canonical JSON task records, Format 1 migration,
+  FileTaskStore, and the internal SQLiteTaskStore conformance/reference adapter.
 - Assets or data: task authority, revisions, lifecycle, dependencies, approvals,
   scheduling pause, next actions, results, linked evidence, and Git history.
 - Users, systems, or agents involved: Root Orchestrator, delegated workers, Git
@@ -17,7 +17,7 @@
 | Threat | Impact | Likelihood | Control Or Required Mitigation |
 | --- | --- | --- | --- |
 | Partial multi-file state | Contradictory primary/status/control facts block recovery | High | Control owns pause only; each normal transition writes one record; future multi-file operations need a separately reviewed protocol |
-| Stale or concurrent writer | Lost update, duplicate selection, or invalid dependency state | High | Git-common-dir lock, recordVersion CAS, store digest for global invariants, no automatic retry, full pre/post validation |
+| Stale or concurrent writer | Lost update, duplicate selection, or invalid dependency state | High | Per-physical-worktree FileTaskStore mutation lock; SQLite write transaction; target/read-set/control/global preconditions; full prospective validation |
 | Duplicate-key or noncanonical JSON | Parser sees different authority/status than reviewer | Medium | Allowed-key validation on raw parsed objects plus normalized canonical byte equality before use |
 | Malformed or changed legacy input | Silent field shift or incomplete migration | High | Explicit regular-file inputs, escaping-aware exact tables, dry-run hashes, recheck before apply, staged whole-store validation |
 | Path/symlink substitution | Write or read outside repository; replace unrelated data | High | Derived destinations, repo-relative allowlist, component/type checks, same-filesystem staging outside canonical directories, identity recheck, rename without delete fallback |
@@ -26,6 +26,8 @@
 | Git merge/collision | Two primaries or lost same-ID intake after clone merge | Medium | Reject unmerged index/store conflicts, duplicate IDs, wrong shards, and graph/state inconsistency; document disconnected-clone residual risk |
 | Unsupported platform semantics | Claimed durability fails outside the exercised boundary | Medium | Support Linux local filesystems only; keep macOS/WSL as unverified design targets and reject native Windows/network guarantees |
 | Unconditional rollback | Revert deletes tasks created after cutover | Medium | Rehearse pre-mutation rollback; after first structured mutation use forward reconciliation |
+| SQLite injection, extension, or schema substitution | Arbitrary SQL behavior, bypassed constraints, mixed or unbounded state | Medium | Fixed SQL and bound data; extensions disabled; exact normalized table signatures; singleton, count, row, and aggregate-byte preflight before materialization |
+| Accidental SQLite production selection | Two canonical stores, missing audit/recovery controls, or silent migration | High | SQLite module has no CLI/config/environment selector, onboarding, canonical binding, migration, backup, or dual-write path; FileTaskStore remains the only production construction |
 
 ## Mitigations And Verification
 
@@ -33,11 +35,12 @@
 | --- | --- | --- |
 | One-file transition model and pause-only control | State-transition tests plus deterministic SIGKILL immediately before a prepared record claim | Pass on Linux |
 | Strict schema, canonical bytes, full graph/state doctor | Duplicate/unknown key, malformed JSON, conflict, wrong-shard, cycle, process-inventory, budget, and omitted-terminal fixtures | Pass |
-| Cooperative lock and CAS | Concurrent processes, linked worktrees, stale versions/digests, owner-token, empty-owner, and malformed-owner fixtures | Pass on Linux |
+| Worktree mutation lock and precise CAS | Lock-free readers, same-worktree writers, independent linked worktrees, exact target/read-set/control/global conflicts, and owner recovery fixtures | Pass on Linux |
 | Safe path and atomic replacement | Ancestor symlink, hard-link, outside-store staging orphan, write failure, aggregate cap, empty-shard, and failed first-shard-claim fixtures | Pass on Linux |
 | Format 1 prepared migration | Escaped pipe, missing divider, archive-base links, input-change, collision, equivalence, and rollback fixtures | Pass |
 | Bounded safe queries | Exact terminal lookup, filters, byte/row truncation, stale cursor, numeric ordering, C1/bidi payload, and 10,000-task fixtures | Pass |
 | Package/runtime boundary | Exact allowlist, unsupported/missing Node, pinned CLI version, fresh install/init/doctor, deterministic archive tests | Pass on Linux |
+| SQLite private transactional boundary | Unchanged common conformance suite, real create/import races, complete concurrent snapshots, schema/identity tamper, bound hostile text, rollback, and error-normalization fixtures | Pass on Node 22.13+ reference runtime |
 
 ## Agentic Risks
 
@@ -45,8 +48,9 @@
   queries label provenance and never elevate schema-valid content to instruction authority.
 - Tool permission risk: any same-permission agent can invoke or edit the store; policy
   retains Root-only mutation and the CLI never claims actor authentication.
-- Dependency, script, or generated-code risk: dependency-free repository-pinned Node
-  ESM only; no install hook, external package, generated runtime artifact, or auto-update.
+- Dependency, script, or generated-code risk: repository-pinned Node ESM only with no
+  install hook or external package; the reference adapter uses built-in `node:sqlite`
+  and remains outside the production import graph.
 - Secret or sensitive-data exposure risk: field limits and existing repository policy
   reject secrets; errors omit raw malformed content and stack traces.
 - CI/CD or deployment permission risk: CI runs doctor/tests/package verification under
@@ -60,7 +64,11 @@
   before an atomic claim can leave a hidden staging sibling outside canonical state;
   controlled failures clean these files, while interrupted residue requires deliberate
   filesystem cleanup after confirming no writer is live.
+- SQLite path substitution/permissions, operational backup and restore, audit evidence,
+  canonical binding, migration, and production recovery remain explicitly out of the
+  reference adapter and are required work for T-0042 before any production selection.
 - Approval or decision record:
-  [Decision 0018](../decisions/0018-adopt-node-structured-task-store.md).
+  [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Review trigger: any lost update, escaped malformed state, direct-edit incident,
-  unsupported-platform demand, rollback data loss, or multi-record transition need.
+  unsupported-platform demand, rollback data loss, multi-record transition need, or
+  proposal to make SQLite selectable/canonical.

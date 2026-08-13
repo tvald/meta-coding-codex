@@ -34,6 +34,7 @@
     "readme/meta/framework-data/schema.mjs",
     "readme/meta/framework-data/schemas/control-v1.schema.json",
     "readme/meta/framework-data/schemas/task-v1.schema.json",
+    "readme/meta/framework-data/sqlite-task-store.mjs",
     "readme/meta/framework-data/store.mjs",
     "readme/meta/framework-data/task-application.mjs",
     "readme/meta/framework-data/task-domain.mjs",
