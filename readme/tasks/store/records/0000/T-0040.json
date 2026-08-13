@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0040",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Reduce normal task CLI availability and compatibility burden by validating linked narrative existence in doctor and targeted task context instead of every store load, keeping link syntax and allow-list validation in canonical records, and isolating the Format 1 importer behind onboarding with an explicit compatibility sunset and removal criteria",
+  "authority": {
+    "reference": "User request delivered 2026-08-13 following T-0036 evaluation",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "quick_change",
+  "risk": "medium",
+  "tags": [
+    "framework",
+    "task-store",
+    "validation",
+    "migration"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Implement the accepted T-0037 validation and migration boundary with tests showing a missing unrelated narrative does not block task operations while doctor and targeted context report it safely",
+  "details": [],
+  "completion": null
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0043",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Make PostgreSQL a selectable canonical local task backend, covering the already-identified requirements for a concrete transactional commit protocol, stable store identity and trusted binding, canonical audit and reviewable terminal Git evidence, backup and restore, logical export/import with fenced cutover or rollback, schema compatibility, least-privilege access, failure normalization, and exactly one canonical live store without dual writes",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13; scope is limited to requirements already identified in T-0037 and T-0041",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "postgresql",
+    "canonical-backend"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After T-0037 is accepted and the TaskStore contract is proved by FileTaskStore and SQLite, frame the PostgreSQL promotion decision and implementation from the existing T-0037 and T-0041 findings; perform no provider work before that dependency",
+  "details": [
+    {
+      "label": "Existing feasibility assessment",
+      "path": "readme/tasks/0041-task-store-adapter-feasibility-notes.md"
+    }
+  ],
+  "completion": null
+}

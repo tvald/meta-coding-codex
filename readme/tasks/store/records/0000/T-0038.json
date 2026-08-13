@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0038",
+  "recordVersion": 2,
+  "taskRevision": 2,
+  "outcome": "Simplify FileTaskStore concurrency and align it with the future storage port by making ordinary queries and doctor optimistic and lock-free with bounded retry, scoping its exclusive mutation lock to the physical worktree, and removing caller-managed whole-store digest mutation preconditions while retaining backend-internal snapshot tokens, deterministic conditional publication, target and declared read-set recordVersion CAS, and current-state invariant validation",
+  "authority": {
+    "reference": "User requests delivered 2026-08-13 following T-0036 simplification and T-0041 adapter-feasibility evaluations",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "quick_change",
+  "risk": "medium",
+  "tags": [
+    "framework",
+    "task-store",
+    "concurrency",
+    "adapters"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After T-0037, implement the accepted FileTaskStore concurrency and storage-port boundary with tests for concurrent reads, same-worktree mutations, linked-worktree independence, stale target and read-set versions, harmless unrelated intake, and retained internal snapshot publication",
+  "details": [],
+  "completion": null
+}

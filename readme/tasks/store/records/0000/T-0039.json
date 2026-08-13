@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0039",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Simplify task-store crash and durability handling by replacing the elaborate orphan-lock identity protocol with explicit bounded recovery, tolerating empty shards, and removing redundant staging, fsync, path, and hard-link checks while retaining containment, valid owner-token comparison, atomic rename, file fsync, destination-directory fsync, and fail-closed state validation",
+  "authority": {
+    "reference": "User request delivered 2026-08-13 following T-0036 evaluation",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "quick_change",
+  "risk": "medium",
+  "tags": [
+    "framework",
+    "task-store",
+    "recovery"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Implement the accepted T-0037 recovery design with counterfactual tests for crash-before-rename, valid and malformed orphan locks, empty shards, containment, and targeted Git restore without broad reset",
+  "details": [],
+  "completion": null
+}

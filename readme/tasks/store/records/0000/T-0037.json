@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0037",
+  "recordVersion": 11,
+  "taskRevision": 5,
+  "outcome": "Supersede Decision 0018 with an Adopt/Revise/Reject task-store design that retains typed domain state, lifecycle invariants, recordVersion and taskRevision; simplifies the file engine; separates domain, persistence, and repository integration; rejects Git as live transactional storage; proves the backend-neutral TaskStore contract with production FileTaskStore and a conformance/reference-only SQLite adapter; leaves later promotion of SQLite and PostgreSQL to selectable canonical local backends for separate tasks and decisions; drops S3; and defines audit, recovery, migration, compatibility, security, and counterfactual-test boundaries",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13: SQLite is initially conformance/reference-only; separately retain already-identified work for selectable canonical SQLite and PostgreSQL local backends; do no further research or design",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "active",
+  "dependencies": [
+    "T-0036",
+    "T-0041"
+  ],
+  "route": "decide",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "architecture",
+    "adapters",
+    "sqlite"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Finish the superseding decision around FileTaskStore as the sole initial production backend and SQLite as conformance/reference-only, while deferring canonical SQLite and PostgreSQL promotion to T-0042 and T-0043",
+  "details": [],
+  "completion": null
+}
