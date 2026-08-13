@@ -46,7 +46,6 @@ import {
   planSelectTask,
   planSetDependencies,
 } from "./task-application.mjs";
-import { applyFormat1Migration, prepareFormat1Migration } from "./importer.mjs";
 import { runFrameworkChecks } from "./framework-checks.mjs";
 import { unwrapValidatedTaskRuntime } from "../../../lib/runtime-roots.mjs";
 
@@ -129,9 +128,13 @@ Commands:
   resume --expected-record-version N
   lock inspect
   lock recover --expected-token TOKEN --confirm-owner-not-live
-  migrate format1 --catalog readme/tasks/README.md [--archive PATH]...
+  onboarding migrate-format1 --catalog readme/tasks/README.md [--archive PATH]...
       (--dry-run | --apply --expected-source-digest DIGEST)
 `;
+}
+
+async function format1Importer() {
+  return import("./importer.mjs");
 }
 
 function parseArguments(tokens, definition = {}) {
@@ -557,6 +560,7 @@ export async function preflightTaskStore(context, frameworkRoot, { lockHeld = fa
               if (archives.length > 63) fail("STORE_SIZE", "legacy archive metadata exceeds the source-count limit");
             }
           }
+          const { prepareFormat1Migration } = await format1Importer();
           await prepareFormat1Migration(context, "readme/tasks/README.md", archives);
           disposition = "legacy_format1";
         } catch (error) {
@@ -1169,7 +1173,17 @@ async function migrateCommand(context, tokens) {
   }
   const catalog = required(values, "catalog");
   const archives = values.archive ?? [];
+  const requireLegacyFormat1 = async (options = {}) => {
+    const readiness = await preflightTaskStore(context, LEXICAL_FRAMEWORK_ROOT, options);
+    if (readiness.disposition === "legacy_format1") return;
+    if (readiness.disposition === "malformed") {
+      fail(readiness.issue ?? "MIGRATION_SOURCE", "legacy Format 1 onboarding source is malformed");
+    }
+    fail("MIGRATION_ONBOARDING_ONLY", "Format 1 migration requires a recognized legacy_format1 preflight", 4);
+  };
   if (values["dry-run"]) {
+    await requireLegacyFormat1({ readOnly: true });
+    const { prepareFormat1Migration } = await format1Importer();
     const prepared = await prepareFormat1Migration(context, catalog, archives);
     return {
       ok: true,
@@ -1181,6 +1195,8 @@ async function migrateCommand(context, tokens) {
   }
   const expected = required(values, "expected-source-digest");
   return productionStore(context).withExclusiveRepositoryOperation(async () => {
+    await requireLegacyFormat1({ lockHeld: true });
+    const { applyFormat1Migration, prepareFormat1Migration } = await format1Importer();
     const prepared = await prepareFormat1Migration(context, catalog, archives);
     const { loaded, report } = await applyFormat1Migration(context, prepared, expected, catalog, archives);
     return {
@@ -1249,7 +1265,12 @@ async function dispatch(argv, context, frameworkRoot, { programName } = {}) {
   if (command === "resume") return pauseCommand(context, rest, true);
   if (command === "lock") return lockCommand(context, rest);
   if (command === "migrate") {
-    if (rest[0] !== "format1") fail("ARGUMENT_INVALID", "migrate requires format1", 2);
+    fail("MIGRATION_ONBOARDING_ONLY", "legacy migration is available only through onboarding migrate-format1", 4);
+  }
+  if (command === "onboarding") {
+    if (rest[0] !== "migrate-format1") {
+      fail("ARGUMENT_INVALID", "onboarding requires migrate-format1", 2);
+    }
     return migrateCommand(context, rest.slice(1));
   }
   if (command !== "task" || rest.length === 0) fail("ARGUMENT_INVALID", "unknown command", 2);

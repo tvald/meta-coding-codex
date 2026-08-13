@@ -22,8 +22,9 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Change: Kept FileTaskStore canonical; extracted/routed contracts; made reads lock-free,
   scoped locks per worktree, removed public digest CAS, moved narrative checks
-  to doctor/targeted context, advanced the task CLI contract to 2.0.0, and
-  authorized a reference-only SQLite adapter while rejecting S3.
+  to doctor/targeted context, certified a reference-only SQLite adapter, isolated the
+  frozen Format 1 importer behind onboarding with a 1.x sunset, advanced the task CLI
+  contract to 3.0.0, and rejected S3.
 - Success signal: Both adapters satisfy the common suite and differential semantic trace;
   SQLite remains non-selectable without weakening domain invariants.
 - Review or sunset trigger: conformance exceptions, lost task facts, partial publication,

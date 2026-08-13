@@ -94,6 +94,8 @@ contract is not the same as approving a production backend.
   every canonical store load. Keep path syntax and allow-list validation in task data.
 - Isolate the Format 1 importer behind onboarding and give its compatibility support an
   explicit sunset rather than expanding one-shot migration machinery indefinitely.
+  Support its frozen contract only through framework 1.x/task CLI 3.x; remove it at the
+  next major boundary under the objective conditions owned by onboarding policy.
 
 ### Reject Or Defer
 

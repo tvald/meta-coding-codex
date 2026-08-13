@@ -121,7 +121,7 @@ test("version, help, and preflight expose the dependency-free runtime contract",
   try {
     const version = json(root, ["--version"]).value;
     assert.equal(version.package.version, "1.0.0");
-    assert.equal(version.taskCli.version, "2.0.0");
+    assert.equal(version.taskCli.version, "3.0.0");
     assert.deepEqual(version.taskCli.readableStoreSchemaVersions, [1]);
     const help = run(root, ["--help"]).stdout;
     assert.match(help, /task add --outcome/u);
@@ -130,7 +130,8 @@ test("version, help, and preflight expose the dependency-free runtime contract",
       "task", "select", "T-0001", "--expected-record-version", "1",
       "--expected-store-digest", `sha256:${"0".repeat(64)}`,
     ], 2).stderr, /unsupported option/u);
-    assert.match(help, /migrate format1/u);
+    assert.match(help, /onboarding migrate-format1/u);
+    assert.doesNotMatch(help, /^\s+migrate format1/mu);
     const preflight = json(root, ["preflight"]).value;
     assert.equal(preflight.compatible, true);
     assert.ok(preflight.nodeMajor >= 22);
@@ -148,6 +149,27 @@ test("preflight pins shipped schema bytes", async () => {
       "framework-data", "schemas", "task-v1.schema.json"), "\n");
     const result = run(root, ["preflight"], 1);
     assert.match(result.stderr, /SCHEMA_FILES/u);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("ordinary task commands do not load the onboarding-only Format 1 importer", async () => {
+  const root = await makeRepository();
+  try {
+    const importer = path.join(root, "node_modules", "meta-framework", "readme", "meta",
+      "framework-data", "importer.mjs");
+    await fs.writeFile(importer, "this is deliberately invalid JavaScript\n");
+    assert.equal(json(root, ["--version"]).value.taskCli.version, "3.0.0");
+    assert.match(run(root, ["--help"]).stdout, /onboarding migrate-format1/u);
+    assert.equal(json(root, ["preflight"]).value.disposition, "ready_to_initialize");
+    json(root, ["init"]);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    assert.equal(json(root, ["startup"]).value.data.primaryTask, null);
+    const rejected = run(root, [
+      "onboarding", "migrate-format1", "--catalog", "readme/tasks/README.md", "--dry-run",
+    ], 4);
+    assert.match(rejected.stderr, /MIGRATION_ONBOARDING_ONLY/u);
   } finally {
     await removeRepository(root);
   }
@@ -763,8 +785,19 @@ async function makeMigrationRepository() {
 test("Format 1 dry-run and atomic claim migrate T-0001 through T-0022", async () => {
   const root = await makeMigrationRepository();
   try {
+    const catalogBefore = await fs.readFile(path.join(root, "readme", "tasks", "README.md"));
+    const archiveBefore = await fs.readFile(path.join(root, "readme", "archive", "tasks", "archive.md"));
+    const oldCommand = run(root, [
+      "migrate", "format1", "--catalog", "readme/tasks/README.md",
+      "--archive", "readme/archive/tasks/archive.md", "--dry-run",
+    ], 4);
+    assert.match(oldCommand.stderr, /MIGRATION_ONBOARDING_ONLY/u);
+    assert.equal(oldCommand.stdout, "");
+    await assert.rejects(fs.lstat(path.join(root, "readme", "tasks", "store")), { code: "ENOENT" });
+    assert.deepEqual(await fs.readFile(path.join(root, "readme", "tasks", "README.md")), catalogBefore);
+    assert.deepEqual(await fs.readFile(path.join(root, "readme", "archive", "tasks", "archive.md")), archiveBefore);
     const args = [
-      "migrate", "format1",
+      "onboarding", "migrate-format1",
       "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md",
     ];
@@ -778,7 +811,7 @@ test("Format 1 dry-run and atomic claim migrate T-0001 through T-0022", async ()
     const applied = json(root, [...args, "--apply", "--expected-source-digest", dry.sourceDigest]).value;
     assert.equal(applied.activation, "claimed-by-atomic-absent-directory-rename");
     assert.match(run(root, [...args, "--apply", "--expected-source-digest", dry.sourceDigest], 4).stderr,
-      /DESTINATION_COLLISION/u);
+      /MIGRATION_ONBOARDING_ONLY/u);
     await fs.writeFile(path.join(root, "readme", "tasks", "README.md"),
       "# Task Store\n\nUse `node readme/meta/framework-data/cli.mjs doctor`.\n");
     assert.equal(json(root, ["doctor"]).value.taskCount, 22);
@@ -966,7 +999,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
     const content = await fs.readFile(catalogPath, "utf8");
     await fs.writeFile(catalogPath, content.replace("| T-0003 | Outcome 3 |", "| T-0003 Outcome 3 |"));
     assert.match(run(malformedRoot, [
-      "migrate", "format1",
+      "onboarding", "migrate-format1",
       "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md",
       "--dry-run",
@@ -979,7 +1012,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
   const changedRoot = await makeMigrationRepository();
   try {
     const args = [
-      "migrate", "format1",
+      "onboarding", "migrate-format1",
       "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md",
     ];
@@ -998,7 +1031,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
     const content = await fs.readFile(catalogPath, "utf8");
     await fs.writeFile(catalogPath, content.replace("- Next task ID: T-0023", "- Next task ID: T-0999"));
     assert.match(run(nextIdRoot, [
-      "migrate", "format1",
+      "onboarding", "migrate-format1",
       "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md",
       "--dry-run",
@@ -1009,7 +1042,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
 
   const sourceLimitRoot = await makeMigrationRepository();
   try {
-    const tooMany = ["migrate", "format1", "--catalog", "readme/tasks/README.md", "--dry-run"];
+    const tooMany = ["onboarding", "migrate-format1", "--catalog", "readme/tasks/README.md", "--dry-run"];
     for (let index = 0; index < 64; index += 1) {
       tooMany.push("--archive", `readme/archive/tasks/${index}.md`);
     }
@@ -1024,7 +1057,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
     const content = await fs.readFile(catalogPath, "utf8");
     await fs.writeFile(catalogPath, content.replace("- Scheduling: Active", "- Scheduling: Idle"));
     assert.match(run(schedulingRoot, [
-      "migrate", "format1", "--catalog", "readme/tasks/README.md",
+      "onboarding", "migrate-format1", "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md", "--dry-run",
     ], 1).stderr, /FORMAT1_METADATA/u);
   } finally {
@@ -1041,7 +1074,7 @@ test("Format 1 migration rejects malformed dividers and changed sources without 
         line.replace(" | Active | ", " | Parked | ") : line).join("\n");
     await fs.writeFile(catalogPath, content);
     const paused = json(pausedRoot, [
-      "migrate", "format1", "--catalog", "readme/tasks/README.md",
+      "onboarding", "migrate-format1", "--catalog", "readme/tasks/README.md",
       "--archive", "readme/archive/tasks/archive.md", "--dry-run",
     ]).value;
     assert.equal(paused.report.paused, true);
