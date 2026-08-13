@@ -17,8 +17,8 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 
 - Status: Revised.
 - Evidence: T-0036 simplification review, T-0041 feasibility and security assessment,
-  T-0037 implementation ordering, passing task-store and documentation checks, and an
-  independent Reviewer adoption; see
+  T-0037 implementation ordering, T-0044's 37-test characterization baseline, and
+  independent Reviewer and QA adoption; see
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Change: Kept FileTaskStore as the sole production backend, separated task domain,
   persistence, and repository responsibilities, simplified disproportionate local
