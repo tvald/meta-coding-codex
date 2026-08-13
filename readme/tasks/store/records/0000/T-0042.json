@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0042",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Promote the conformance/reference SQLiteTaskStore to a selectable canonical local backend, covering the already-identified requirements for explicit backend binding and onboarding, binary-store audit and reviewable terminal Git evidence, backup and restore, logical export/import and cutover or rollback, schema and driver compatibility, local concurrency and recovery, and exactly one canonical live store without dual writes",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13; scope is limited to requirements already identified in T-0037 and T-0041",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "sqlite",
+    "canonical-backend"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After T-0037 is accepted and the SQLite conformance adapter exists, frame the promotion decision and implementation from the existing T-0037 and T-0041 findings without assuming reference-adapter status grants production eligibility",
+  "details": [
+    {
+      "label": "Existing feasibility assessment",
+      "path": "readme/tasks/0041-task-store-adapter-feasibility-notes.md"
+    }
+  ],
+  "completion": null
+}
