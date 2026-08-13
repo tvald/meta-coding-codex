@@ -204,8 +204,9 @@ or T-0042/T-0043 proposes a canonical backend with different audit or recovery n
 - T-0036 task-CLI simplification review, T-0041 adapter feasibility assessment,
   T-0044 characterization, T-0040 narrative-validation evidence, T-0045's reviewed
   contracts, T-0046's FileTaskStore routing, T-0038's independently verified lock-free
-  reads and precise CAS, T-0047's reusable conformance suite, and T-0048's internal
-  transactional SQLiteTaskStore implementation.
+  reads and precise CAS, T-0047's reusable conformance suite, T-0048's internal
+  transactional SQLiteTaskStore implementation, and T-0049's differential reference
+  certification.
 - Independent architecture and security reviews recorded in T-0041.
 - [Decision 0018](0018-adopt-node-structured-task-store.md).
 - `readme/meta/framework-data/{cli,store,schema}.mjs` and

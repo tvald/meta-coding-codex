@@ -17,15 +17,15 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 
 - Status: Revised.
 - Evidence: T-0036/T-0041 reviews, T-0037 ordering, T-0044's baseline, independently
-  adopted T-0045/T-0046 boundaries, T-0038 concurrency QA, and T-0047/T-0048 adapter
-  conformance; see
+  adopted T-0045/T-0046 boundaries, T-0038 concurrency QA, and T-0047–T-0049 reference
+  certification; see
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Change: Kept FileTaskStore canonical; extracted/routed contracts; made reads lock-free,
   scoped locks per worktree, removed public digest CAS, moved narrative checks
   to doctor/targeted context, advanced the task CLI contract to 2.0.0, and
   authorized a reference-only SQLite adapter while rejecting S3.
-- Success signal: FileTaskStore satisfies the common suite; SQLite passes the same suite
-  without becoming selectable or weakening domain invariants.
+- Success signal: Both adapters satisfy the common suite and differential semantic trace;
+  SQLite remains non-selectable without weakening domain invariants.
 - Review or sunset trigger: conformance exceptions, lost task facts, partial publication,
   a production backend proposal, or evidence that a removed local guard was necessary.
 
