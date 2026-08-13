@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0041",
+  "recordVersion": 6,
+  "taskRevision": 2,
+  "outcome": "Evaluate the feasibility of abstracting the task store behind pluggable local-file and remote datastore adapters such as S3 or PostgreSQL, map current architectural coupling and consistency assumptions, and recommend incremental gaps and sequencing that preserve current robustness while making remote storage viable",
+  "authority": {
+    "reference": "Direct user request delivered 2026-08-13",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "done",
+  "dependencies": [
+    "T-0036"
+  ],
+  "route": "discover",
+  "risk": "medium",
+  "tags": [
+    "framework",
+    "task-store",
+    "architecture",
+    "adapters"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "Feasibility notes",
+      "path": "readme/tasks/0041-task-store-adapter-feasibility-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Documented the adapter feasibility assessment and incremental architecture in readme/tasks/0041-task-store-adapter-feasibility-notes.md. Mapped coupling across store, CLI, runtime roots, initializer, doctor, Git policy, and tests; verified official S3 conditional-write/single-key atomicity and PostgreSQL transaction/locking/retry semantics. Conclusion: file adapter extraction high feasibility, PostgreSQL high after the split, S3 medium with conditional immutable-snapshot publication, unchanged Git policy low. Independent architecture and security reviews both returned Revise and their required change-set, idempotency, identity, audit, credential, fencing, provider, and migration controls were integrated. Focused framework-data/package/initializer tests passed 54/54; doctor and git diff --check passed."
+  }
+}
