@@ -21,30 +21,31 @@ import {
   canonicalJson,
   fail,
   isDate,
-  normalizeTask,
   parseTaskId,
   safeText,
   validateDate,
   validateDetailPath,
 } from "./schema.mjs";
 import {
-  activeTask,
-  addTask,
   assertRepositoryContext,
   assertOrdinaryDirectoryTree,
-  assertExpectedDigest,
-  compareTaskIds,
-  initializeStore,
   inspectLock,
-  loadStore,
-  mutateControl,
-  mutateTask,
-  nextTaskId,
   repositoryContext,
   recoverLock,
-  taskIsCandidate,
-  withLock,
 } from "./store.mjs";
+import { activeTask, compareTaskIds, taskIsCandidate } from "./task-domain.mjs";
+import { FileTaskStore } from "./file-task-store.mjs";
+import {
+  planAddTask,
+  planAmendTask,
+  planCheckpointTask,
+  planCloseTask,
+  planPause,
+  planRecordApproval,
+  planResume,
+  planSelectTask,
+  planSetDependencies,
+} from "./task-application.mjs";
 import { applyFormat1Migration, prepareFormat1Migration } from "./importer.mjs";
 import { runFrameworkChecks } from "./framework-checks.mjs";
 import { unwrapValidatedTaskRuntime } from "../../../lib/runtime-roots.mjs";
@@ -53,6 +54,38 @@ const UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const TERMINAL_FILTER = new Set(TERMINAL_STATUSES);
 const MODULE_PATH = fileURLToPath(import.meta.url);
 const LEXICAL_FRAMEWORK_ROOT = path.resolve(path.dirname(MODULE_PATH), "../../..");
+
+function productionStore(context) {
+  return new FileTaskStore(context);
+}
+
+function loadedFromSnapshot(snapshot) {
+  return {
+    control: snapshot.control,
+    tasks: new Map(snapshot.tasks.map((task) => [task.id, task])),
+    digest: snapshot.generation,
+  };
+}
+
+async function readLoaded(context, options = {}) {
+  return loadedFromSnapshot(await productionStore(context).readSnapshot(options));
+}
+
+function loadedFromReceipt(receipt) {
+  return {
+    control: receipt.control,
+    tasks: new Map(receipt.tasks.map((task) => [task.id, task])),
+    digest: receipt.generation,
+  };
+}
+
+function mutableSnapshotTask(snapshot, id, expected) {
+  const task = snapshot.tasks.find((item) => item.id === id);
+  if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
+  if (TERMINAL_FILTER.has(task.status)) fail("TRANSITION_INVALID", "terminal task cannot use this mutation", 4);
+  if (task.recordVersion !== expected) fail("STALE_RECORD", "task recordVersion is stale", 4);
+  return task;
+}
 
 function outputJson(value) {
   return canonicalJson(value).replace(/[\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ufeff]/gu,
@@ -554,9 +587,7 @@ export async function preflightTaskStore(context, frameworkRoot, { lockHeld = fa
     issue = "unsafe-store-root";
   } else {
     try {
-      const loaded = lockHeld || readOnly
-        ? await loadStore(context)
-        : await withLock(context, () => loadStore(context));
+      const loaded = await readLoaded(context, { lockHeld, readOnly });
       integrity = "valid";
       const staticEntrypoint = entrypoint.kind === "recognized" && entrypoint.heading === "# Task Store" &&
         (entrypoint.text.includes("node readme/meta/framework-data/cli.mjs") ||
@@ -590,8 +621,8 @@ export async function preflightTaskStore(context, frameworkRoot, { lockHeld = fa
 
 async function doctorCommand(context, frameworkRoot, { staged = false } = {}) {
   try {
-    return await withLock(context, async () => {
-      const loaded = await loadStore(context);
+    return await productionStore(context).readConsistent(async (snapshot) => {
+      const loaded = loadedFromSnapshot(snapshot);
       const framework = await runFrameworkChecks({
         root: context.root,
         frameworkRoot,
@@ -626,8 +657,8 @@ async function doctorCommand(context, frameworkRoot, { staged = false } = {}) {
 
 async function startupCommand(context, tokens) {
   const { values } = commonPageOptions(tokens);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
+  {
+    const loaded = await readLoaded(context);
     const limit = pageLimit(values);
     const maxBytes = pageByteLimit(values);
     const primary = activeTask(loaded.tasks);
@@ -663,22 +694,22 @@ async function startupCommand(context, tokens) {
         tasks: items,
       }),
     });
-  });
+  }
 }
 
 async function taskGetCommand(context, tokens) {
   const { values, positionals } = parseArguments(tokens, { positionals: 1, options: { "max-bytes": "value" } });
   const id = positionals[0];
   parseTaskId(id);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
+  {
+    const loaded = await readLoaded(context);
     const task = loaded.tasks.get(id);
     if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
     return envelope(loaded, task, {
       filters: { id, terminal: "included" },
       byteLimit: pageByteLimit(values),
     });
-  });
+  }
 }
 
 const LIST_OPTIONS = {
@@ -698,8 +729,8 @@ const LIST_OPTIONS = {
 
 async function taskListCommand(context, tokens, { forceAll = false, candidates = false, kind = "task-list" } = {}) {
   const { values } = commonPageOptions(tokens, { options: LIST_OPTIONS });
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
+  {
+    const loaded = await readLoaded(context);
     const limit = pageLimit(values, forceAll ? MAX_LIMIT : DEFAULT_LIMIT);
     const maxBytes = pageByteLimit(values);
     let { selected, filters, omittedTerminal } = listSelection(loaded, values, { forceAll });
@@ -718,7 +749,7 @@ async function taskListCommand(context, tokens, { forceAll = false, candidates =
       omittedTerminal,
       maxBytes,
     });
-  });
+  }
 }
 
 function dependencyClosure(loaded, id, direction) {
@@ -751,8 +782,8 @@ async function taskDepsCommand(context, tokens) {
   parseTaskId(id);
   const direction = values.direction ?? "both";
   if (!["ancestors", "dependents", "both"].includes(direction)) fail("ARGUMENT_INVALID", "dependency direction is invalid", 2);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
+  {
+    const loaded = await readLoaded(context);
     if (!loaded.tasks.has(id)) fail("TASK_NOT_FOUND", "task does not exist", 4);
     let tasks;
     if (direction === "both") {
@@ -775,7 +806,7 @@ async function taskDepsCommand(context, tokens) {
       total: tasks.length,
       maxBytes,
     });
-  });
+  }
 }
 
 async function taskContextCommand(context, tokens) {
@@ -788,8 +819,8 @@ async function taskContextCommand(context, tokens) {
   const maxBytes = Object.hasOwn(values, "max-bytes") ?
     positiveInteger(values["max-bytes"], "max-bytes", { max: MAX_CONTEXT_BYTES }) : 32_768;
   if (maxBytes < 8192) fail("ARGUMENT_INVALID", "context max-bytes must be at least 8192", 2);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
+  return productionStore(context).readConsistent(async (snapshot) => {
+    const loaded = loadedFromSnapshot(snapshot);
     const task = loaded.tasks.get(id);
     if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
     const sourceDetails = [];
@@ -928,37 +959,20 @@ async function taskAddCommand(context, tokens) {
   if (!["pending", "ready"].includes(status)) fail("ARGUMENT_INVALID", "new task status must be pending or ready", 2);
   const route = values.route ?? "unrouted";
   const risk = values.risk ?? null;
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    const id = nextTaskId(loaded.tasks);
-    const task = normalizeTask({
-      schemaVersion: 1,
-      id,
-      recordVersion: 1,
-      taskRevision: 1,
+  const store = productionStore(context);
+  const { changeSet, receipt } = await store.execute((snapshot) => planAddTask(snapshot, {
       outcome,
-      authority: { reference: authorityReference, acceptedDate },
+      authorityReference,
+      acceptedDate,
       status,
       dependencies: values["depends-on"] ?? [],
       route,
       risk,
       tags: (values.tag ?? []).map(validateTag),
-      gate: { kind: "none" },
-      nextSafeAction: values["next-safe-action"] ?? null,
+      nextSafeAction: values["next-safe-action"],
       details: parseDetails(values.detail),
-      completion: null,
-    });
-    const next = await addTask(context, loaded, task);
-    return taskMutationReceipt(next, id);
-  });
-}
-
-function mutableTask(loaded, id, expected) {
-  const task = loaded.tasks.get(id);
-  if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
-  if (TERMINAL_FILTER.has(task.status)) fail("TRANSITION_INVALID", "terminal task cannot use this mutation", 4);
-  if (task.recordVersion !== expected) fail("STALE_RECORD", "task recordVersion is stale", 4);
-  return task;
+  }), { legacyErrors: true });
+  return taskMutationReceipt(loadedFromReceipt(receipt), changeSet.changes.create.task.id);
 }
 
 async function taskAmendCommand(context, tokens) {
@@ -980,34 +994,28 @@ async function taskAmendCommand(context, tokens) {
   const authorityReference = required(values, "authority-reference");
   const acceptedDate = values["accepted-date"] ?? null;
   validateDate(acceptedDate, "accepted-date", true);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    mutableTask(loaded, id, expected);
-    if (Object.hasOwn(values, "route") !== Object.hasOwn(values, "risk")) {
-      fail("ARGUMENT_INVALID", "an amendment must provide route and risk together", 2);
-    }
-    const route = values.route ?? "unrouted";
-    const risk = Object.hasOwn(values, "risk") ? values.risk : null;
-    if (!ROUTES.includes(route) || (risk !== null && !RISKS.includes(risk))) {
-      fail("ARGUMENT_INVALID", "amended route or risk is invalid", 2);
-    }
-    const next = await mutateTask(context, loaded, id, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
-      taskRevision: task.taskRevision + 1,
+  if (Object.hasOwn(values, "route") !== Object.hasOwn(values, "risk")) {
+    fail("ARGUMENT_INVALID", "an amendment must provide route and risk together", 2);
+  }
+  const route = values.route ?? "unrouted";
+  const risk = Object.hasOwn(values, "risk") ? values.risk : null;
+  if (!ROUTES.includes(route) || (risk !== null && !RISKS.includes(risk))) {
+    fail("ARGUMENT_INVALID", "amended route or risk is invalid", 2);
+  }
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planAmendTask(snapshot, {
+      id,
+      expectedRecordVersion: expected,
       outcome,
-      authority: { reference: authorityReference, acceptedDate },
+      authorityReference,
+      acceptedDate,
       route,
       risk,
-      tags: Object.hasOwn(values, "tag") ? values.tag.map(validateTag) : task.tags,
-      status: "pending",
-      gate: { kind: "none" },
-      nextSafeAction: values["next-safe-action"] ?? task.nextSafeAction,
-      details: Object.hasOwn(values, "detail") ? parseDetails(values.detail) : task.details,
-      completion: null,
-    }));
-    return taskMutationReceipt(next, id);
-  });
+      ...(Object.hasOwn(values, "tag") ? { tags: values.tag.map(validateTag) } : {}),
+      ...(Object.hasOwn(values, "next-safe-action") ? { nextSafeAction: values["next-safe-action"] } : {}),
+      ...(Object.hasOwn(values, "detail") ? { details: parseDetails(values.detail) } : {}),
+  }), { legacyErrors: true });
+  return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function taskDependenciesCommand(context, tokens) {
@@ -1020,25 +1028,17 @@ async function taskDependenciesCommand(context, tokens) {
   parseTaskId(id);
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
   const expectedDigest = required(values, "expected-store-digest");
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    const current = mutableTask(loaded, id, expected);
-    assertExpectedDigest(loaded, expectedDigest);
-    if (current.status === "active") fail("TRANSITION_INVALID", "Active task dependencies cannot be changed", 4);
-    if (current.gate.kind === "approval") {
-      fail("TRANSITION_INVALID", "dependency changes require a separate semantic amendment before approval", 4);
-    }
-    const next = await mutateTask(context, loaded, id, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
-      taskRevision: task.taskRevision + 1,
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planSetDependencies(snapshot, {
+      id,
+      expectedRecordVersion: expected,
       dependencies: values["depends-on"] ?? [],
-      status: "pending",
-      gate: { kind: "none" },
-      completion: null,
-    }), { expectedDigest });
-    return taskMutationReceipt(next, id);
+  }), {
+    expectedDigest,
+    legacyErrors: true,
+    beforeExpectedDigest: (snapshot) => mutableSnapshotTask(snapshot, id, expected),
   });
+  return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function taskApprovalCommand(context, tokens) {
@@ -1059,40 +1059,19 @@ async function taskApprovalCommand(context, tokens) {
   if (!["pending", "granted", "denied", "expired"].includes(approvalStatus)) fail("ARGUMENT_INVALID", "approval status is invalid", 2);
   const detailPath = required(values, "detail-path");
   validateDetailPath(detailPath, "approval detail path");
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    const current = mutableTask(loaded, taskId, expected);
-    if (current.status === "blocked" || current.status === "active") fail("TRANSITION_INVALID", "approval cannot be recorded in the current task status", 4);
-    const requestedScope = {
-      id: required(values, "id"),
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planRecordApproval(snapshot, {
+      id: taskId,
+      expectedRecordVersion: expected,
+      approvalId: required(values, "id"),
+      status: approvalStatus,
       source: required(values, "source"),
       action: required(values, "action"),
       boundary: required(values, "boundary"),
       detailPath,
-    };
-    if (current.gate.kind === "approval" && [
-      "id", "source", "action", "boundary", "detailPath",
-    ].some((field) => current.gate[field] !== requestedScope[field])) {
-      fail("TRANSITION_INVALID", "approval identity or boundary changes require a semantic task amendment", 4);
-    }
-    const next = await mutateTask(context, loaded, taskId, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
-      status: approvalStatus === "granted" ? task.status : "pending",
-      gate: {
-        kind: "approval",
-        summary: values.summary ?? null,
-        id: requestedScope.id,
-        status: approvalStatus,
-        boundTaskRevision: task.taskRevision,
-        source: requestedScope.source,
-        action: requestedScope.action,
-        boundary: requestedScope.boundary,
-        detailPath: requestedScope.detailPath,
-      },
-    }));
-    return taskMutationReceipt(next, taskId);
-  });
+      summary: values.summary,
+  }), { legacyErrors: true });
+  return taskMutationReceipt(loadedFromReceipt(receipt), taskId);
 }
 
 async function taskSelectCommand(context, tokens) {
@@ -1105,20 +1084,17 @@ async function taskSelectCommand(context, tokens) {
   parseTaskId(id);
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
   const expectedDigest = required(values, "expected-store-digest");
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    mutableTask(loaded, id, expected);
-    assertExpectedDigest(loaded, expectedDigest);
-    if (!taskIsCandidate(loaded.tasks.get(id), loaded)) fail("TRANSITION_INVALID", "task is not mechanically eligible for selection", 4);
-    if (activeTask(loaded.tasks) !== null) fail("STATE_INVALID", "another task is already Active", 4);
-    const next = await mutateTask(context, loaded, id, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
-      status: "active",
-      nextSafeAction: values["next-safe-action"] ?? task.nextSafeAction,
-    }), { expectedDigest });
-    return taskMutationReceipt(next, id);
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planSelectTask(snapshot, {
+    id,
+    expectedRecordVersion: expected,
+    nextSafeAction: values["next-safe-action"],
+  }), {
+    expectedDigest,
+    legacyErrors: true,
+    beforeExpectedDigest: (snapshot) => mutableSnapshotTask(snapshot, id, expected),
   });
+  return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function taskCheckpointCommand(context, tokens) {
@@ -1138,41 +1114,25 @@ async function taskCheckpointCommand(context, tokens) {
   }
   if (status === "blocked" && !values.blocker) fail("ARGUMENT_INVALID", "blocked checkpoint requires --blocker", 2);
   if (status !== "blocked" && values.blocker) fail("ARGUMENT_INVALID", "--blocker requires blocked status", 2);
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    const current = mutableTask(loaded, id, expected);
-    if (status === "active" && current.status !== "needs_verification") {
-      fail("TRANSITION_INVALID", "Active checkpoint requires a Needs verification task", 4);
-    }
-    const expectedDigest = status === "active" ? required(values, "expected-store-digest") : null;
-    const nextSafeAction = status === "active" ? required(values, "next-safe-action") :
-      values["next-safe-action"] ?? current.nextSafeAction;
-    if (expectedDigest !== null) assertExpectedDigest(loaded, expectedDigest);
-    if (status === "active" && loaded.control.pause !== null) {
-      fail("STATE_INVALID", "paused scheduling cannot reactivate a task", 4);
-    }
-    if (status === "active" && activeTask(loaded.tasks) !== null) {
-      fail("STATE_INVALID", "another task is already Active", 4);
-    }
-    if (status === "needs_verification" && !["active", "needs_verification"].includes(current.status)) {
-      fail("TRANSITION_INVALID", "Needs verification requires an Active task", 4);
-    }
-    if (status === "blocked" && current.gate.kind === "approval") {
-      fail("TRANSITION_INVALID", "a checkpoint cannot replace approval evidence with a blocker", 4);
-    }
-    if (status === "ready" && current.gate.kind === "approval" && current.gate.status !== "granted") {
-      fail("TRANSITION_INVALID", "Ready requires no unresolved approval", 4);
-    }
-    const next = await mutateTask(context, loaded, id, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
-      status,
-      gate: status === "blocked" ? { kind: "blocker", summary: values.blocker } :
-        task.gate.kind === "blocker" ? { kind: "none" } : task.gate,
-      nextSafeAction,
-    }), { expectedDigest });
-    return taskMutationReceipt(next, id);
+  const expectedDigest = status === "active" ? () => required(values, "expected-store-digest") : null;
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planCheckpointTask(snapshot, {
+    id,
+    expectedRecordVersion: expected,
+    status,
+    nextSafeAction: status === "active" ? required(values, "next-safe-action") : values["next-safe-action"],
+    blocker: values.blocker,
+  }), {
+    expectedDigest,
+    legacyErrors: true,
+    beforeExpectedDigest: (snapshot) => {
+      const current = mutableSnapshotTask(snapshot, id, expected);
+      if (status === "active" && current.status !== "needs_verification") {
+        fail("TRANSITION_INVALID", "Active checkpoint requires a Needs verification task", 4);
+      }
+    },
   });
+  return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function taskCloseCommand(context, tokens) {
@@ -1193,26 +1153,16 @@ async function taskCloseCommand(context, tokens) {
   const repositoryChanged = parseBoolean(required(values, "repository-changed"), "repository-changed");
   const evidence = required(values, "evidence");
   safeText(evidence, "completion evidence", { max: 8192 });
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    const current = mutableTask(loaded, id, expected);
-    if (status === "done" && !["active", "needs_verification"].includes(current.status)) {
-      fail("TRANSITION_INVALID", "Done requires Active or Needs verification state", 4);
-    }
-    if (status === "done" && current.gate.kind === "approval" && current.gate.status !== "granted") {
-      fail("TRANSITION_INVALID", "Done requires complete granted approval evidence", 4);
-    }
-    const next = await mutateTask(context, loaded, id, expected, (task) => ({
-      ...task,
-      recordVersion: task.recordVersion + 1,
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => planCloseTask(snapshot, {
+      id,
+      expectedRecordVersion: expected,
       status,
-      gate: status !== "done" || (task.gate.kind === "approval" && task.gate.status === "granted") ?
-        task.gate : { kind: "none" },
-      nextSafeAction: null,
-      completion: { completedAt, repositoryChanged, evidence },
-    }));
-    return taskMutationReceipt(next, id);
-  });
+      completedAt,
+      repositoryChanged,
+      evidence,
+  }), { legacyErrors: true });
+  return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function pauseCommand(context, tokens, resume = false) {
@@ -1225,22 +1175,28 @@ async function pauseCommand(context, tokens, resume = false) {
     source: "value",
   } });
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
-  return withLock(context, async () => {
-    const loaded = await loadStore(context);
-    if (resume) {
-      if (loaded.control.pause === null) fail("TRANSITION_INVALID", "scheduling is not paused", 4);
-    } else {
-      if (loaded.control.pause !== null) fail("TRANSITION_INVALID", "scheduling is already paused", 4);
-      assertExpectedDigest(loaded, required(values, "expected-store-digest"));
-      if (activeTask(loaded.tasks) !== null) fail("TRANSITION_INVALID", "checkpoint the Active task before pausing", 4);
-    }
-    const next = await mutateControl(context, loaded, expected, (control) => ({
-      ...control,
-      recordVersion: control.recordVersion + 1,
-      pause: resume ? null : { reason: required(values, "reason"), source: required(values, "source") },
-    }), { expectedDigest: resume ? null : values["expected-store-digest"] });
-    return envelope(next, next.control, { filters: { mutation: true, control: "pause" } });
-  });
+  const expectedDigest = resume ? null : () => required(values, "expected-store-digest");
+  const store = productionStore(context);
+  const { receipt } = await store.execute((snapshot) => resume ?
+    planResume(snapshot, { expectedRecordVersion: expected }) :
+    planPause(snapshot, {
+      expectedRecordVersion: expected,
+      reason: required(values, "reason"),
+      source: required(values, "source"),
+    }), {
+      expectedDigest,
+      legacyErrors: true,
+      beforeExpectedDigest: resume ? null : (snapshot) => {
+        if (snapshot.control.pause !== null) fail("TRANSITION_INVALID", "scheduling is already paused", 4);
+      },
+      afterExpectedDigest: resume ? null : (snapshot) => {
+        if (activeTask(new Map(snapshot.tasks.map((task) => [task.id, task]))) !== null) {
+          fail("TRANSITION_INVALID", "checkpoint the Active task before pausing", 4);
+        }
+      },
+    });
+  const loaded = loadedFromReceipt(receipt);
+  return envelope(loaded, loaded.control, { filters: { mutation: true, control: "pause" } });
 }
 
 async function migrateCommand(context, tokens) {
@@ -1267,7 +1223,7 @@ async function migrateCommand(context, tokens) {
     };
   }
   const expected = required(values, "expected-source-digest");
-  return withLock(context, async () => {
+  return productionStore(context).withExclusiveRepositoryOperation(async () => {
     const prepared = await prepareFormat1Migration(context, catalog, archives);
     const { loaded, report } = await applyFormat1Migration(context, prepared, expected, catalog, archives);
     return {
@@ -1316,14 +1272,15 @@ async function dispatch(argv, context, frameworkRoot, { programName } = {}) {
   }
   if (command === "init") {
     parseArguments(rest);
-    return withLock(context, async () => {
+    const store = productionStore(context);
+    const snapshot = await store.initialize({ legacyErrors: true, beforeInitialize: async () => {
       const readiness = await preflightTaskStore(context, frameworkRoot, { lockHeld: true });
       if (readiness.disposition !== "ready_to_initialize") {
         fail("INITIALIZATION_UNSAFE", "init requires recognized static project and task-store entrypoints", 4);
       }
-      const loaded = await initializeStore(context);
-      return envelope(loaded, loaded.control, { filters: { mutation: true, initialized: true } });
-    });
+    } });
+    const loaded = loadedFromSnapshot(snapshot);
+    return envelope(loaded, loaded.control, { filters: { mutation: true, initialized: true } });
   }
   if (command === "doctor") {
     const { values } = parseArguments(rest, { options: { staged: "flag" } });

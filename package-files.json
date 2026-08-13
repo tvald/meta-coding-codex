@@ -27,6 +27,7 @@
     "readme/meta/copied-client-transition.md",
     "readme/meta/development-standards.md",
     "readme/meta/framework-data/cli.mjs",
+    "readme/meta/framework-data/file-task-store.mjs",
     "readme/meta/framework-data/framework-checks.mjs",
     "readme/meta/framework-data/importer.mjs",
     "readme/meta/framework-data/repository-integration.mjs",

@@ -461,7 +461,16 @@ export async function mutateControl(context, loaded, expectedVersion, transform,
   return loadStore(context);
 }
 
-export async function initializeStore(context) {
+export async function initializeStore(context, {
+  control = { schemaVersion: 1, recordVersion: 1, pause: null },
+  tasks = [],
+} = {}) {
+  const normalizedControl = normalizeControl(control);
+  if (!Array.isArray(tasks)) fail("STATE_INVALID", "initial task collection must be an array");
+  const normalizedTasks = tasks.map((task) => normalizeTask(task));
+  const taskMap = new Map(normalizedTasks.map((task) => [task.id, task]));
+  if (taskMap.size !== normalizedTasks.length) fail("TASK_ID_MISMATCH", "initial task IDs must be unique");
+  validateState(normalizedControl, taskMap);
   const tasksParent = path.join(context.root, "readme", "tasks");
   await assertOrdinaryDirectoryTree(context.root, path.join(context.root, "readme"), "readme directory");
   await assertOrdinaryDirectoryTree(context.root, tasksParent, "tasks directory");
@@ -474,11 +483,24 @@ export async function initializeStore(context) {
     await fs.mkdir(path.join(stage, "records"), { mode: 0o755 });
     await syncDirectory(stage);
     await syncDirectory(path.join(stage, "records"));
-    await durableWriteExclusive(path.join(stage, "control.json"), boundedCanonicalJson({
-      schemaVersion: 1,
-      recordVersion: 1,
-      pause: null,
-    }, "control record"));
+    const byShard = new Map();
+    for (const task of normalizedTasks.sort((left, right) => compareTaskIds(left.id, right.id))) {
+      const shard = shardForTaskId(task.id);
+      if (!byShard.has(shard)) byShard.set(shard, []);
+      byShard.get(shard).push(task);
+    }
+    for (const [shard, shardTasks] of byShard) {
+      const shardDirectory = path.join(stage, "records", shard);
+      await fs.mkdir(shardDirectory, { mode: 0o755 });
+      for (const task of shardTasks) {
+        await durableWriteExclusive(path.join(shardDirectory, `${task.id}.json`),
+          boundedCanonicalJson(task, "task record"));
+      }
+      await syncDirectory(shardDirectory);
+    }
+    await syncDirectory(path.join(stage, "records"));
+    await durableWriteExclusive(path.join(stage, "control.json"),
+      boundedCanonicalJson(normalizedControl, "control record"));
     await syncDirectory(stage);
     await loadStore(context, { storeRoot: stage, checkGit: false });
     await assertOrdinaryDirectoryTree(context.root, tasksParent, "tasks directory");

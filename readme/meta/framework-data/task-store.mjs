@@ -256,8 +256,10 @@ function normalizeChanges(value, preconditions) {
       controlUpdate.recordVersion !== preconditions.control.recordVersion + 1)) {
     fail("TASK_STORE_CONTRACT", "control update does not match its control precondition");
   }
-  if (controlUpdate === null && preconditions.target === null && create === null) {
-    fail("TASK_STORE_CONTRACT", "change set contains no mutation");
+  const mutationCount = (create === null ? 0 : 1) + taskUpdates.length +
+    (controlUpdate === null ? 0 : 1);
+  if (mutationCount !== 1) {
+    fail("TASK_STORE_CONTRACT", "change set must contain exactly one record mutation");
   }
   return { create, taskUpdates, controlUpdate };
 }
