@@ -51,8 +51,8 @@ results live only in the structured task store.
 
 ## Maintenance Cadence
 
-- Last maintenance pass: 2026-08-11
-- Next trigger: 2026-09-10 or 10 repository-changing completions
+- Last maintenance pass: 2026-08-13
+- Next trigger: 2026-09-12 or 10 repository-changing completions
 
 Derive later completion counts from structured task records; do not maintain a duplicate
 counter or completed-task list here.

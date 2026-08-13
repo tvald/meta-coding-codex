@@ -148,7 +148,7 @@ test('package policy rejects missing or drifting task compatibility metadata', (
   const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
   const mutations = [
     (candidate) => { delete candidate.metaFramework.taskCli; },
-    (candidate) => { candidate.metaFramework.taskCli.version = '2.0.0'; },
+    (candidate) => { candidate.metaFramework.taskCli.version = '3.0.0'; },
     (candidate) => { candidate.metaFramework.taskCli.envelopeVersions = [2]; },
     (candidate) => { candidate.metaFramework.taskCli.readableStoreSchemaVersions = [2]; },
     (candidate) => { candidate.metaFramework.taskCli.writableStoreSchemaVersions = [2]; },

@@ -6,7 +6,11 @@ import path from "node:path";
 import test from "node:test";
 
 import { FileTaskStore } from "../readme/meta/framework-data/file-task-store.mjs";
-import { planAddTask, planAmendTask } from "../readme/meta/framework-data/task-application.mjs";
+import {
+  planAddTask,
+  planAmendTask,
+  planPause,
+} from "../readme/meta/framework-data/task-application.mjs";
 import { repositoryContext } from "../readme/meta/framework-data/store.mjs";
 
 async function repository() {
@@ -80,6 +84,77 @@ test("FileTaskStore executes planners under one lock and normalizes receipts and
     await assert.rejects(() => fixture.store.publish(update),
       (error) => error.code === "TASK_STORE_TARGET_CONFLICT");
     assert.equal((await fixture.store.readSnapshot()).tasks[0].recordVersion, 2);
+  } finally {
+    await fs.rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("FileTaskStore enforces precise target, read-set, control, and global preconditions", async () => {
+  const fixture = await initializedStore();
+  try {
+    await fixture.store.execute((snapshot) => planAddTask(snapshot, addCommand("Target")));
+    await fixture.store.execute((snapshot) => planAddTask(snapshot, addCommand("Observed read")));
+
+    const initial = await fixture.store.readSnapshot();
+    const targetPlan = planAmendTask(initial, {
+      id: "T-0001",
+      expectedRecordVersion: 1,
+      outcome: "Target plan",
+      authorityReference: "Test",
+      route: "initiative",
+      risk: "medium",
+    });
+    const readSetPlan = {
+      ...structuredClone(targetPlan),
+      preconditions: {
+        ...structuredClone(targetPlan.preconditions),
+        readSet: [{ id: "T-0002", recordVersion: 1 }],
+      },
+    };
+    await fixture.store.execute((snapshot) => planAmendTask(snapshot, {
+      id: "T-0002",
+      expectedRecordVersion: 1,
+      outcome: "Advance observed record",
+      authorityReference: "Test",
+      route: "initiative",
+      risk: "medium",
+    }));
+    await assert.rejects(() => fixture.store.publish(readSetPlan),
+      (error) => error.code === "TASK_STORE_READ_SET_CONFLICT");
+
+    const harmless = await fixture.store.publish(targetPlan);
+    assert.equal(harmless.tasks[0].outcome, "Target plan");
+    await assert.rejects(() => fixture.store.publish(targetPlan),
+      (error) => error.code === "TASK_STORE_TARGET_CONFLICT");
+
+    const beforeControl = await fixture.store.readSnapshot();
+    const stalePause = planPause(beforeControl, {
+      expectedRecordVersion: 1,
+      reason: "Stale control plan",
+      source: "Test",
+    });
+    await fixture.store.execute((snapshot) => planPause(snapshot, {
+      expectedRecordVersion: 1,
+      reason: "Committed pause",
+      source: "Test",
+    }));
+    await assert.rejects(() => fixture.store.publish(stalePause),
+      (error) => error.code === "TASK_STORE_CONTROL_CONFLICT");
+  } finally {
+    await fs.rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("FileTaskStore rejects a stale global plan while unrelated-safe plans can publish", async () => {
+  const fixture = await initializedStore();
+  try {
+    const snapshot = await fixture.store.readSnapshot();
+    const staleGlobal = planAddTask(snapshot, addCommand("First allocation"));
+    await fixture.store.execute((current) => planAddTask(current, addCommand("Winning allocation")));
+    await assert.rejects(() => fixture.store.publish(staleGlobal),
+      (error) => error.code === "TASK_STORE_GLOBAL_CONFLICT");
+    assert.deepEqual((await fixture.store.readSnapshot()).tasks.map(({ outcome }) => outcome),
+      ["Winning allocation"]);
   } finally {
     await fs.rm(fixture.root, { recursive: true, force: true });
   }

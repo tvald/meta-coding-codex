@@ -79,14 +79,6 @@ function loadedFromReceipt(receipt) {
   };
 }
 
-function mutableSnapshotTask(snapshot, id, expected) {
-  const task = snapshot.tasks.find((item) => item.id === id);
-  if (!task) fail("TASK_NOT_FOUND", "task does not exist", 4);
-  if (TERMINAL_FILTER.has(task.status)) fail("TRANSITION_INVALID", "terminal task cannot use this mutation", 4);
-  if (task.recordVersion !== expected) fail("STALE_RECORD", "task recordVersion is stale", 4);
-  return task;
-}
-
 function outputJson(value) {
   return canonicalJson(value).replace(/[\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ufeff]/gu,
     (character) => `\\u${character.codePointAt(0).toString(16).padStart(4, "0")}`);
@@ -120,19 +112,17 @@ Commands:
   task amend ID --expected-record-version N --outcome TEXT --authority-reference TEXT
       [--accepted-date DATE] [--route ROUTE --risk RISK] [--tag TAG]...
       [--next-safe-action TEXT] [--detail LABEL=PATH]...
-  task set-dependencies ID --expected-record-version N --expected-store-digest DIGEST
-      [--depends-on ID]...
+  task set-dependencies ID --expected-record-version N [--depends-on ID]...
   task record-approval ID --expected-record-version N --id TEXT
       --status pending|granted|denied|expired --source TEXT --action TEXT
       --boundary TEXT --detail-path PATH [--summary TEXT]
-  task select ID --expected-record-version N --expected-store-digest DIGEST
-      [--next-safe-action TEXT]
+  task select ID --expected-record-version N [--next-safe-action TEXT]
   task checkpoint ID --expected-record-version N --status STATUS
-      [--expected-store-digest DIGEST] [--next-safe-action TEXT] [--blocker TEXT]
+      [--next-safe-action TEXT] [--blocker TEXT]
   task close ID --expected-record-version N --status done|cancelled|superseded
       --completed-at DATE --repository-changed true|false --evidence TEXT
   export [task-list filters] [--limit N] [--max-bytes N] [--cursor CURSOR]
-  pause --expected-record-version N --expected-store-digest DIGEST --reason TEXT --source TEXT
+  pause --expected-record-version N --reason TEXT --source TEXT
   resume --expected-record-version N
   lock inspect
   lock recover --expected-token TOKEN --confirm-owner-not-live
@@ -1021,23 +1011,17 @@ async function taskAmendCommand(context, tokens) {
 async function taskDependenciesCommand(context, tokens) {
   const { values, positionals } = parseArguments(tokens, { positionals: 1, options: {
     "expected-record-version": "value",
-    "expected-store-digest": "value",
     "depends-on": "repeat",
   } });
   const id = positionals[0];
   parseTaskId(id);
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
-  const expectedDigest = required(values, "expected-store-digest");
   const store = productionStore(context);
   const { receipt } = await store.execute((snapshot) => planSetDependencies(snapshot, {
       id,
       expectedRecordVersion: expected,
       dependencies: values["depends-on"] ?? [],
-  }), {
-    expectedDigest,
-    legacyErrors: true,
-    beforeExpectedDigest: (snapshot) => mutableSnapshotTask(snapshot, id, expected),
-  });
+  }), { legacyErrors: true });
   return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
@@ -1077,30 +1061,23 @@ async function taskApprovalCommand(context, tokens) {
 async function taskSelectCommand(context, tokens) {
   const { values, positionals } = parseArguments(tokens, { positionals: 1, options: {
     "expected-record-version": "value",
-    "expected-store-digest": "value",
     "next-safe-action": "value",
   } });
   const id = positionals[0];
   parseTaskId(id);
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
-  const expectedDigest = required(values, "expected-store-digest");
   const store = productionStore(context);
   const { receipt } = await store.execute((snapshot) => planSelectTask(snapshot, {
     id,
     expectedRecordVersion: expected,
     nextSafeAction: values["next-safe-action"],
-  }), {
-    expectedDigest,
-    legacyErrors: true,
-    beforeExpectedDigest: (snapshot) => mutableSnapshotTask(snapshot, id, expected),
-  });
+  }), { legacyErrors: true });
   return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
 async function taskCheckpointCommand(context, tokens) {
   const { values, positionals } = parseArguments(tokens, { positionals: 1, options: {
     "expected-record-version": "value",
-    "expected-store-digest": "value",
     status: "value",
     "next-safe-action": "value",
     blocker: "value",
@@ -1114,24 +1091,14 @@ async function taskCheckpointCommand(context, tokens) {
   }
   if (status === "blocked" && !values.blocker) fail("ARGUMENT_INVALID", "blocked checkpoint requires --blocker", 2);
   if (status !== "blocked" && values.blocker) fail("ARGUMENT_INVALID", "--blocker requires blocked status", 2);
-  const expectedDigest = status === "active" ? () => required(values, "expected-store-digest") : null;
   const store = productionStore(context);
   const { receipt } = await store.execute((snapshot) => planCheckpointTask(snapshot, {
     id,
     expectedRecordVersion: expected,
     status,
-    nextSafeAction: status === "active" ? required(values, "next-safe-action") : values["next-safe-action"],
+    nextSafeAction: values["next-safe-action"],
     blocker: values.blocker,
-  }), {
-    expectedDigest,
-    legacyErrors: true,
-    beforeExpectedDigest: (snapshot) => {
-      const current = mutableSnapshotTask(snapshot, id, expected);
-      if (status === "active" && current.status !== "needs_verification") {
-        fail("TRANSITION_INVALID", "Active checkpoint requires a Needs verification task", 4);
-      }
-    },
-  });
+  }), { legacyErrors: true });
   return taskMutationReceipt(loadedFromReceipt(receipt), id);
 }
 
@@ -1170,12 +1137,10 @@ async function pauseCommand(context, tokens, resume = false) {
     "expected-record-version": "value",
   } : {
     "expected-record-version": "value",
-    "expected-store-digest": "value",
     reason: "value",
     source: "value",
   } });
   const expected = positiveInteger(required(values, "expected-record-version"), "expected-record-version");
-  const expectedDigest = resume ? null : () => required(values, "expected-store-digest");
   const store = productionStore(context);
   const { receipt } = await store.execute((snapshot) => resume ?
     planResume(snapshot, { expectedRecordVersion: expected }) :
@@ -1183,18 +1148,7 @@ async function pauseCommand(context, tokens, resume = false) {
       expectedRecordVersion: expected,
       reason: required(values, "reason"),
       source: required(values, "source"),
-    }), {
-      expectedDigest,
-      legacyErrors: true,
-      beforeExpectedDigest: resume ? null : (snapshot) => {
-        if (snapshot.control.pause !== null) fail("TRANSITION_INVALID", "scheduling is already paused", 4);
-      },
-      afterExpectedDigest: resume ? null : (snapshot) => {
-        if (activeTask(new Map(snapshot.tasks.map((task) => [task.id, task]))) !== null) {
-          fail("TRANSITION_INVALID", "checkpoint the Active task before pausing", 4);
-        }
-      },
-    });
+    }), { legacyErrors: true });
   const loaded = loadedFromReceipt(receipt);
   return envelope(loaded, loaded.control, { filters: { mutation: true, control: "pause" } });
 }

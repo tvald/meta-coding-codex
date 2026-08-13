@@ -16,12 +16,12 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 ## 2026-08-13: Revise The Structured Task Store For Adapters
 
 - Status: Revised.
-- Evidence: T-0036/T-0041 reviews, T-0037 ordering, T-0044's baseline, and independently
-  adopted T-0045 contracts plus T-0046 FileTaskStore routing; see
+- Evidence: T-0036/T-0041 reviews, T-0037 ordering, T-0044's baseline, independently
+  adopted T-0045/T-0046 boundaries, and T-0038 concurrency QA; see
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
-- Change: Kept FileTaskStore as the sole production backend, extracted and routed task
-  domain, application, persistence, and repository contracts, moved narrative checks
-  to doctor/targeted context, advanced the additive task CLI contract to 1.2.0, and
+- Change: Kept FileTaskStore canonical; extracted/routed contracts; made reads lock-free,
+  scoped locks per worktree, removed public digest CAS, moved narrative checks
+  to doctor/targeted context, advanced the task CLI contract to 2.0.0, and
   authorized a reference-only SQLite adapter while rejecting S3.
 - Success signal: FileTaskStore and SQLite satisfy one adapter-neutral conformance suite
   without making SQLite selectable or weakening domain invariants.
