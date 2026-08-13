@@ -235,3 +235,111 @@ test("TaskStore contract rejects multi-record change sets before FileTaskStore w
     await fs.rm(fixture.root, { recursive: true, force: true });
   }
 });
+
+test("FileTaskStore normalizes persistent read corruption and preserves compatibility errors", async () => {
+  const fixture = await initializedStore();
+  try {
+    await fixture.store.execute((snapshot) => planAddTask(snapshot, addCommand("Corrupt read target")));
+    await fs.writeFile(path.join(
+      fixture.root,
+      "readme", "tasks", "store", "records", "0000", "T-0001.json",
+    ), "{\n");
+    const query = {
+      kind: "tasks",
+      filters: { includeTerminal: true },
+      limit: 10,
+      maxBytes: 32_768,
+      cursor: null,
+    };
+    const canonicalCorruption = (error) => {
+      assert.equal(error.code, "TASK_STORE_CORRUPTION");
+      assert.equal(error.message, "task store state is corrupt");
+      assert.equal(error.exitCode, 1);
+      return true;
+    };
+
+    await assert.rejects(() => fixture.store.readSnapshot(), canonicalCorruption);
+    await assert.rejects(() => fixture.store.query(query), canonicalCorruption);
+    await assert.rejects(() => fixture.store.exportLogical(), canonicalCorruption);
+    await assert.rejects(() => fixture.store.readSnapshot({ legacyErrors: true }),
+      (error) => error.code === "JSON_INVALID");
+    await assert.rejects(() => fixture.store.query(query, { legacyErrors: true }),
+      (error) => error.code === "JSON_INVALID");
+    await assert.rejects(() => fixture.store.exportLogical({ legacyErrors: true }),
+      (error) => error.code === "JSON_INVALID");
+  } finally {
+    await fs.rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("FileTaskStore never replays an operation that throws LOCK_BUSY", async () => {
+  const plannerFixture = await initializedStore();
+  const initializeRoot = await repository();
+  try {
+    let plannerCalls = 0;
+    await assert.rejects(() => plannerFixture.store.execute(() => {
+      plannerCalls += 1;
+      const error = new Error("operation-origin lock signal");
+      error.code = "LOCK_BUSY";
+      throw error;
+    }), (error) => error.code === "TASK_STORE_UNAVAILABLE");
+    assert.equal(plannerCalls, 1);
+    assert.equal((await plannerFixture.store.readSnapshot()).tasks.length, 0);
+
+    const initializing = new FileTaskStore(await repositoryContext(initializeRoot));
+    let beforeInitializeCalls = 0;
+    await assert.rejects(() => initializing.initialize({ beforeInitialize: () => {
+      beforeInitializeCalls += 1;
+      const error = new Error("initialization-origin lock signal");
+      error.code = "LOCK_BUSY";
+      throw error;
+    } }), (error) => error.code === "TASK_STORE_UNAVAILABLE");
+    assert.equal(beforeInitializeCalls, 1);
+    const initialized = await initializing.initialize();
+    assert.equal(initialized.tasks.length, 0);
+  } finally {
+    await fs.rm(plannerFixture.root, { recursive: true, force: true });
+    await fs.rm(initializeRoot, { recursive: true, force: true });
+  }
+});
+
+test("FileTaskStore normalizes unexpected backend read failures without leaking internals", async () => {
+  const fixture = await initializedStore();
+  try {
+    const backendFailure = new Error("injected backend implementation detail");
+    const failing = new FileTaskStore(await repositoryContext(fixture.root), {
+      load: () => { throw backendFailure; },
+    });
+    const query = {
+      kind: "tasks",
+      filters: { includeTerminal: true },
+      limit: 10,
+      maxBytes: 32_768,
+      cursor: null,
+    };
+    const canonicalCorruption = (error) => {
+      assert.equal(error.code, "TASK_STORE_CORRUPTION");
+      assert.equal(error.message, "task store state is corrupt");
+      assert.equal(error.exitCode, 1);
+      return true;
+    };
+
+    await assert.rejects(() => failing.readSnapshot(), canonicalCorruption);
+    await assert.rejects(() => failing.query(query), canonicalCorruption);
+    await assert.rejects(() => failing.exportLogical(), canonicalCorruption);
+    await assert.rejects(() => failing.readSnapshot({ legacyErrors: true }),
+      (error) => error === backendFailure);
+
+    const unavailable = new FileTaskStore(await repositoryContext(fixture.root), {
+      load: () => { const error = new Error("injected busy detail"); error.code = "LOCK_BUSY"; throw error; },
+    });
+    await assert.rejects(() => unavailable.readSnapshot(), (error) => {
+      assert.equal(error.code, "TASK_STORE_UNAVAILABLE");
+      assert.equal(error.message, "task store is unavailable");
+      assert.equal(error.exitCode, 5);
+      return true;
+    });
+  } finally {
+    await fs.rm(fixture.root, { recursive: true, force: true });
+  }
+});

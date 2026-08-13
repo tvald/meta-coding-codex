@@ -68,7 +68,10 @@ function loadedFromSnapshot(snapshot) {
 }
 
 async function readLoaded(context, options = {}) {
-  return loadedFromSnapshot(await productionStore(context).readSnapshot(options));
+  return loadedFromSnapshot(await productionStore(context).readSnapshot({
+    ...options,
+    legacyErrors: true,
+  }));
 }
 
 function loadedFromReceipt(receipt) {
@@ -632,7 +635,7 @@ async function doctorCommand(context, frameworkRoot, { staged = false } = {}) {
         warnings: framework.warnings,
         checks: framework.checks,
       };
-    });
+    }, { legacyErrors: true });
   } catch (error) {
     if (!(error instanceof FrameworkDataError)) throw error;
     process.exitCode = error.exitCode;
@@ -921,7 +924,7 @@ async function taskContextCommand(context, tokens) {
     }
     if (!truncated) truncated = details.length < task.details.length;
     return makeEnvelope(details, truncated, maxBytes);
-  });
+  }, { legacyErrors: true });
 }
 
 function taskMutationReceipt(loaded, id) {

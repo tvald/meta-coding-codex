@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 
 import {
   SCHEMA_VERSION,
@@ -11,6 +12,7 @@ import { nextTaskId, taskIsCandidate } from "./task-domain.mjs";
 import {
   TASK_STORE_PROTOCOL_VERSION,
   assertTaskStore,
+  normalizeLogicalTaskStore,
   normalizeMutationReceipt,
   normalizeStoreMetadata,
   normalizeStoreSnapshot,
@@ -31,6 +33,8 @@ import {
 } from "./store.mjs";
 
 const TERMINAL = new Set(TERMINAL_STATUSES);
+const MUTATION_LOCK_RETRY_DELAY_MS = 5;
+const MUTATION_LOCK_RETRY_LIMIT = 200;
 const QUERY_FILTERS = new Set([
   "acceptedAfter",
   "acceptedBefore",
@@ -74,6 +78,25 @@ function legacyConflict(code, message) {
 function conflict(category, legacyErrors, legacyCode, legacyMessage) {
   if (legacyErrors) legacyConflict(legacyCode, legacyMessage);
   throwTaskStoreError(category);
+}
+
+function normalizedReadError(error) {
+  return normalizeTaskStoreError(error, error?.code === "LOCK_BUSY" ? "unavailable" : "corruption");
+}
+
+async function withMutationLock(context, operation, { legacyErrors = false } = {}) {
+  for (let attempt = 0; ; attempt += 1) {
+    let entered = false;
+    try {
+      return await withLock(context, (...args) => {
+        entered = true;
+        return operation(...args);
+      });
+    } catch (error) {
+      if (entered || legacyErrors || error?.code !== "LOCK_BUSY" || attempt >= MUTATION_LOCK_RETRY_LIMIT) throw error;
+      await delay(MUTATION_LOCK_RETRY_DELAY_MS);
+    }
+  }
 }
 
 function validatePreconditions(loaded, changeSet, { legacyErrors = false } = {}) {
@@ -168,30 +191,16 @@ function decodeCursor(value, generation, request) {
   return cursor.lastId;
 }
 
-function logicalState(value, metadata) {
-  if (value === null || typeof value !== "object" || Array.isArray(value) ||
-      JSON.stringify(Object.keys(value)) !== JSON.stringify(["taskSchemaVersion", "control", "tasks"])) {
-    fail("TASK_STORE_CONTRACT", "logical task store export has an invalid shape");
-  }
-  if (value.taskSchemaVersion !== SCHEMA_VERSION) {
-    fail("TASK_STORE_SCHEMA_UNSUPPORTED", "logical task store schema version is unsupported");
-  }
-  const snapshot = normalizeStoreSnapshot({
-    metadata,
-    generation: "logical-import-validation",
-    control: value.control,
-    tasks: value.tasks,
-  });
-  return { taskSchemaVersion: SCHEMA_VERSION, control: snapshot.control, tasks: snapshot.tasks };
-}
-
 /** The sole production TaskStore adapter. Its default identity is bound to one physical store root. */
 export class FileTaskStore {
   #context;
+  #loadStore;
   #metadata;
 
-  constructor(context) {
+  constructor(context, { load = loadStore } = {}) {
     this.#context = assertRepositoryContext(context);
+    if (typeof load !== "function") fail("TASK_STORE_CONTRACT", "FileTaskStore load dependency must be a function");
+    this.#loadStore = load;
     this.#metadata = normalizeStoreMetadata({
       storeId: derivedStoreId(context),
       protocolVersion: TASK_STORE_PROTOCOL_VERSION,
@@ -204,14 +213,29 @@ export class FileTaskStore {
     return this.#metadata;
   }
 
-  async #loaded({ lockHeld = false } = {}) {
-    if (lockHeld) return loadStore(this.#context);
-    try {
-      return await loadStore(this.#context);
-    } catch (error) {
-      if (!(error instanceof FrameworkDataError)) throw error;
+  async #loaded({ lockHeld = false, legacyErrors = false } = {}) {
+    if (lockHeld) {
+      try {
+        return await this.#loadStore(this.#context);
+      } catch (error) {
+        if (legacyErrors) throw error;
+        throw normalizedReadError(error);
+      }
     }
-    return withLock(this.#context, () => loadStore(this.#context));
+    try {
+      return await this.#loadStore(this.#context);
+    } catch (error) {
+      if (!(error instanceof FrameworkDataError)) {
+        if (legacyErrors) throw error;
+        throw normalizedReadError(error);
+      }
+    }
+    try {
+      return await withLock(this.#context, () => this.#loadStore(this.#context));
+    } catch (error) {
+      if (legacyErrors) throw error;
+      throw normalizedReadError(error);
+    }
   }
 
   async readSnapshot(options = {}) {
@@ -219,17 +243,17 @@ export class FileTaskStore {
     return loadedSnapshot(loaded, this.#metadata);
   }
 
-  async readConsistent(operation) {
+  async readConsistent(operation, options = {}) {
     if (typeof operation !== "function") fail("TASK_STORE_CONTRACT", "consistent read operation must be a function");
-    return operation(await this.readSnapshot());
+    return operation(await this.readSnapshot(options));
   }
 
-  async query(value) {
+  async query(value, options = {}) {
     const request = normalizeTaskQueryRequest(value);
     for (const name of Object.keys(request.filters)) {
       if (!QUERY_FILTERS.has(name)) fail("TASK_STORE_CONTRACT", `task query filter ${name} is unsupported`);
     }
-    const snapshot = await this.readSnapshot();
+    const snapshot = await this.readSnapshot(options);
     const matches = snapshot.tasks.filter((task) => matchesQuery(task, request.filters, snapshot));
     let start = 0;
     if (request.cursor !== null) {
@@ -291,9 +315,9 @@ export class FileTaskStore {
   async publish(value, { legacyErrors = false } = {}) {
     const changeSet = normalizeTaskChangeSet(value, this.#metadata.storeId);
     try {
-      return await withLock(this.#context, async () => this.#publishLoaded(
-        await loadStore(this.#context), changeSet, { legacyErrors },
-      ));
+      return await withMutationLock(this.#context, async () => this.#publishLoaded(
+        await this.#loadStore(this.#context), changeSet, { legacyErrors },
+      ), { legacyErrors });
     } catch (error) {
       if (legacyErrors || error?.code?.startsWith("TASK_STORE_")) throw error;
       throw normalizeTaskStoreError(error, error?.code === "LOCK_BUSY" ? "unavailable" : "corruption");
@@ -303,15 +327,15 @@ export class FileTaskStore {
   async execute(planner, { legacyErrors = false } = {}) {
     if (typeof planner !== "function") fail("TASK_STORE_CONTRACT", "task planner must be a function");
     try {
-      return await withLock(this.#context, async () => {
-        const loaded = await loadStore(this.#context);
+      return await withMutationLock(this.#context, async () => {
+        const loaded = await this.#loadStore(this.#context);
         const snapshot = loadedSnapshot(loaded, this.#metadata);
         const changeSet = normalizeTaskChangeSet(
           await planner(snapshot), this.#metadata.storeId,
         );
         const receipt = await this.#publishLoaded(loaded, changeSet, { legacyErrors });
         return Object.freeze({ changeSet, receipt });
-      });
+      }, { legacyErrors });
     } catch (error) {
       if (legacyErrors || error?.code?.startsWith("TASK_STORE_")) throw error;
       throw normalizeTaskStoreError(error, error?.code === "LOCK_BUSY" ? "unavailable" : "corruption");
@@ -327,7 +351,8 @@ export class FileTaskStore {
         await beforeInitialize?.();
         return initializeStore(this.#context);
       };
-      const loaded = lockHeld ? await operation() : await withLock(this.#context, operation);
+      const loaded = lockHeld ? await operation() :
+        await withMutationLock(this.#context, operation, { legacyErrors });
       return loadedSnapshot(loaded, this.#metadata);
     } catch (error) {
       if (legacyErrors) throw error;
@@ -335,8 +360,8 @@ export class FileTaskStore {
     }
   }
 
-  async exportLogical() {
-    const snapshot = await this.readSnapshot();
+  async exportLogical(options = {}) {
+    const snapshot = await this.readSnapshot(options);
     return Object.freeze({
       taskSchemaVersion: SCHEMA_VERSION,
       control: snapshot.control,
@@ -345,10 +370,11 @@ export class FileTaskStore {
   }
 
   async importLogical(value, { lockHeld = false, legacyErrors = false } = {}) {
-    const logical = logicalState(value, this.#metadata);
+    const logical = normalizeLogicalTaskStore(value);
     try {
       const operation = () => initializeStore(this.#context, logical);
-      const loaded = lockHeld ? await operation() : await withLock(this.#context, operation);
+      const loaded = lockHeld ? await operation() :
+        await withMutationLock(this.#context, operation, { legacyErrors });
       return loadedSnapshot(loaded, this.#metadata);
     } catch (error) {
       if (legacyErrors) throw error;

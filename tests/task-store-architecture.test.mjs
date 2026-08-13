@@ -21,6 +21,7 @@ import {
   normalizeRepositoryConflictInspection,
 } from "../readme/meta/framework-data/repository-integration.mjs";
 import {
+  TASK_STORE_ERROR_CATEGORIES,
   TASK_STORE_METHODS,
   TASK_STORE_PROTOCOL_VERSION,
   assertTaskStore,
@@ -30,6 +31,19 @@ import {
   normalizeTaskQueryResult,
   normalizeTaskStoreError,
 } from "../readme/meta/framework-data/task-store.mjs";
+
+const CANONICAL_TASK_STORE_ERRORS = Object.freeze({
+  target_conflict: ["TASK_STORE_TARGET_CONFLICT", "target record precondition failed", 4],
+  read_set_conflict: ["TASK_STORE_READ_SET_CONFLICT", "read-set precondition failed", 4],
+  control_conflict: ["TASK_STORE_CONTROL_CONFLICT", "control precondition failed", 4],
+  global_conflict: ["TASK_STORE_GLOBAL_CONFLICT", "global generation precondition failed", 4],
+  id_allocation_conflict: ["TASK_STORE_ID_ALLOCATION_CONFLICT", "next task ID allocation conflicted", 4],
+  unavailable: ["TASK_STORE_UNAVAILABLE", "task store is unavailable", 5],
+  timeout: ["TASK_STORE_TIMEOUT", "task store operation timed out", 5],
+  authorization: ["TASK_STORE_AUTHORIZATION", "task store operation is not authorized", 5],
+  corruption: ["TASK_STORE_CORRUPTION", "task store state is corrupt", 1],
+  unsupported_schema: ["TASK_STORE_SCHEMA_UNSUPPORTED", "task store schema is unsupported", 1],
+});
 
 function task(id, status = "pending", overrides = {}) {
   const terminal = ["done", "cancelled", "superseded"].includes(status);
@@ -300,6 +314,19 @@ test("TaskStore validators close snapshot, query, change-set, and error shapes",
   assert.throws(() => assertTaskStore({}), (error) => error.code === "TASK_STORE_CONTRACT");
   const implementation = Object.fromEntries(TASK_STORE_METHODS.map((method) => [method, () => {}]));
   assert.equal(assertTaskStore(implementation), implementation);
+});
+
+test("every TaskStore error category has one stable canonical envelope", () => {
+  assert.deepEqual([...TASK_STORE_ERROR_CATEGORIES].sort(), Object.keys(CANONICAL_TASK_STORE_ERRORS).sort());
+  for (const category of TASK_STORE_ERROR_CATEGORIES) {
+    const normalized = normalizeTaskStoreError({ category });
+    const [code, message, exitCode] = CANONICAL_TASK_STORE_ERRORS[category];
+    assert.deepEqual({
+      code: normalized.code,
+      message: normalized.message,
+      exitCode: normalized.exitCode,
+    }, { code, message, exitCode });
+  }
 });
 
 test("repository integration contracts separate conflicts and narrative resolution", () => {
