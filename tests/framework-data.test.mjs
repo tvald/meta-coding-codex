@@ -406,6 +406,212 @@ test("semantic lifecycle enforces CAS, digest, terminal visibility, filters, pau
   }
 });
 
+test("recordVersion tracks every write while taskRevision tracks semantic scope", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    await fs.writeFile(path.join(root, "readme", "tasks", "approval.md"), "# Approval\n");
+    const dependency = json(root, [
+      "task", "add", "--outcome", "Dependency", "--authority-reference", "Test",
+      "--status", "ready", "--route", "quick_change", "--risk", "low",
+    ]).value.data;
+    const selectedDependency = json(root, [
+      "task", "select", dependency.id, "--expected-record-version", "1",
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+    ]).value.data;
+    json(root, [
+      "task", "close", selectedDependency.id,
+      "--expected-record-version", String(selectedDependency.recordVersion),
+      "--status", "done", "--completed-at", "2026-08-13",
+      "--repository-changed", "false", "--evidence", "Dependency fixture",
+    ]);
+    const added = json(root, [
+      "task", "add", "--outcome", "Initial scope", "--authority-reference", "Test",
+    ]).value.data;
+    assert.deepEqual([added.recordVersion, added.taskRevision], [1, 1]);
+
+    const amended = json(root, [
+      "task", "amend", added.id, "--expected-record-version", "1",
+      "--outcome", "Framed scope", "--authority-reference", "Test amendment",
+      "--route", "initiative", "--risk", "high",
+    ]).value.data;
+    assert.deepEqual([amended.recordVersion, amended.taskRevision], [2, 2]);
+
+    const dependencies = json(root, [
+      "task", "set-dependencies", amended.id,
+      "--expected-record-version", String(amended.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--depends-on", dependency.id,
+    ]).value.data;
+    assert.deepEqual([dependencies.recordVersion, dependencies.taskRevision], [3, 3]);
+
+    const approved = json(root, [
+      "task", "record-approval", dependencies.id,
+      "--expected-record-version", String(dependencies.recordVersion),
+      "--id", "A-revisions", "--status", "granted", "--source", "Owner",
+      "--action", "Exercise revision contract", "--boundary", "Fixture only",
+      "--detail-path", "readme/tasks/approval.md",
+    ]).value.data;
+    assert.deepEqual([approved.recordVersion, approved.taskRevision], [4, 3]);
+
+    const ready = json(root, [
+      "task", "checkpoint", approved.id,
+      "--expected-record-version", String(approved.recordVersion), "--status", "ready",
+    ]).value.data;
+    assert.deepEqual([ready.recordVersion, ready.taskRevision], [5, 3]);
+    const active = json(root, [
+      "task", "select", ready.id, "--expected-record-version", String(ready.recordVersion),
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+    ]).value.data;
+    assert.deepEqual([active.recordVersion, active.taskRevision], [6, 3]);
+    const verification = json(root, [
+      "task", "checkpoint", active.id,
+      "--expected-record-version", String(active.recordVersion),
+      "--status", "needs_verification",
+    ]).value.data;
+    assert.deepEqual([verification.recordVersion, verification.taskRevision], [7, 3]);
+    const closed = json(root, [
+      "task", "close", verification.id,
+      "--expected-record-version", String(verification.recordVersion),
+      "--status", "done", "--completed-at", "2026-08-13",
+      "--repository-changed", "false", "--evidence", "Characterization fixture",
+    ]).value.data;
+    assert.deepEqual([closed.recordVersion, closed.taskRevision], [8, 3]);
+
+    const paused = json(root, [
+      "pause", "--expected-record-version", "1",
+      "--expected-store-digest", json(root, ["doctor"]).value.storeDigest,
+      "--reason", "Characterize control revision", "--source", "Test",
+    ]).value.data;
+    assert.equal(paused.recordVersion, 2);
+    const resumed = json(root, [
+      "resume", "--expected-record-version", String(paused.recordVersion),
+    ]).value.data;
+    assert.equal(resumed.recordVersion, 3);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("conditional mutation failures preserve canonical bytes and the current digest", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const selectable = json(root, [
+      "task", "add", "--outcome", "Selectable", "--authority-reference", "Test",
+      "--status", "ready", "--route", "quick_change", "--risk", "low",
+    ]).value.data;
+    const selectablePath = taskPath(root, selectable.id);
+    const originalBytes = await fs.readFile(selectablePath);
+    const originalDigest = json(root, ["doctor"]).value.storeDigest;
+    assert.match(run(root, [
+      "task", "checkpoint", selectable.id, "--expected-record-version", "99",
+      "--status", "pending",
+    ], 4).stderr, /STALE_RECORD/u);
+    assert.deepEqual(await fs.readFile(selectablePath), originalBytes);
+    assert.equal(json(root, ["doctor"]).value.storeDigest, originalDigest);
+
+    const pending = json(root, [
+      "task", "add", "--outcome", "Pending", "--authority-reference", "Test",
+    ]).value.data;
+    const currentDigest = json(root, ["doctor"]).value.storeDigest;
+    // Current behavior only: T-0038 intentionally replaces caller-managed store digests.
+    assert.match(run(root, [
+      "task", "select", selectable.id, "--expected-record-version", "1",
+      "--expected-store-digest", originalDigest,
+    ], 4).stderr, /STALE_STORE/u);
+    assert.deepEqual(await fs.readFile(selectablePath), originalBytes);
+    assert.equal(json(root, ["doctor"]).value.storeDigest, currentDigest);
+
+    const pendingPath = taskPath(root, pending.id);
+    const pendingBytes = await fs.readFile(pendingPath);
+    assert.match(run(root, [
+      "task", "select", pending.id, "--expected-record-version", "1",
+      "--expected-store-digest", currentDigest,
+    ], 4).stderr, /TRANSITION_INVALID/u);
+    assert.deepEqual(await fs.readFile(pendingPath), pendingBytes);
+    assert.equal(json(root, ["doctor"]).value.storeDigest, currentDigest);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("concurrent mutations allow one publication and stale retry observes it", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const task = json(root, [
+      "task", "add", "--outcome", "Concurrent target", "--authority-reference", "Test",
+    ]).value.data;
+    const invoke = (outcome) => new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [installedBinary(root), "tasks", "task", "amend", task.id,
+        "--expected-record-version", "1", "--outcome", outcome,
+        "--authority-reference", `Concurrent ${outcome}`], {
+        cwd: root,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (chunk) => { stdout += chunk; });
+      child.stderr.on("data", (chunk) => { stderr += chunk; });
+      child.once("error", reject);
+      child.once("exit", (status, signal) => resolve({ status, signal, stdout, stderr }));
+    });
+    const results = await Promise.all([invoke("Winner A"), invoke("Winner B")]);
+    assert.deepEqual(results.map((result) => result.signal), [null, null]);
+    assert.deepEqual(results.map((result) => result.status).sort(), [0, 5]);
+    assert.equal(results.filter((result) => /LOCK_BUSY/u.test(result.stderr)).length, 1);
+    const committed = JSON.parse(await fs.readFile(taskPath(root, task.id), "utf8"));
+    assert.equal(committed.recordVersion, 2);
+    assert.equal(committed.taskRevision, 2);
+    assert.ok(["Winner A", "Winner B"].includes(committed.outcome));
+    const losingOutcome = committed.outcome === "Winner A" ? "Winner B" : "Winner A";
+    assert.match(run(root, [
+      "task", "amend", task.id, "--expected-record-version", "1",
+      "--outcome", losingOutcome, "--authority-reference", `Concurrent ${losingOutcome}`,
+    ], 4).stderr, /STALE_RECORD/u);
+    assert.deepEqual(JSON.parse(await fs.readFile(taskPath(root, task.id), "utf8")), committed);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("query output is repeatable and cursors bind kind, filters, and snapshot", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    for (const [outcome, tag] of [["Alpha one", "alpha"], ["Beta", "beta"], ["Alpha two", "alpha"]]) {
+      json(root, [
+        "task", "add", "--outcome", outcome, "--authority-reference", "Test", "--tag", tag,
+      ]);
+    }
+    const args = ["task", "list", "--tag", "alpha", "--limit", "1"];
+    const firstRaw = run(root, args).stdout;
+    assert.equal(run(root, args).stdout, firstRaw);
+    const first = JSON.parse(firstRaw);
+    assert.deepEqual(first.data.map((task) => task.id), ["T-0001"]);
+    const second = json(root, [...args, "--cursor", first.meta.nextCursor]).value;
+    assert.deepEqual(second.data.map((task) => task.id), ["T-0003"]);
+    assert.equal(second.meta.nextCursor, null);
+    assert.match(run(root, [
+      "task", "list", "--tag", "beta", "--limit", "1",
+      "--cursor", first.meta.nextCursor,
+    ], 4).stderr, /CURSOR_INVALID/u);
+    assert.match(run(root, [
+      "task", "deps", "T-0003", "--direction", "both", "--limit", "1",
+      "--cursor", first.meta.nextCursor,
+    ], 4).stderr, /CURSOR_INVALID/u);
+    json(root, [
+      "task", "add", "--outcome", "Snapshot change", "--authority-reference", "Test",
+    ]);
+    assert.match(run(root, [...args, "--cursor", first.meta.nextCursor], 4).stderr,
+      /CURSOR_STALE/u);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
 test("unsafe text and detail paths are rejected before writes", async () => {
   const root = await makeRepository();
   try {
@@ -953,6 +1159,72 @@ test("one Git-common lock serializes linked worktrees across real processes", as
     holder?.kill("SIGKILL");
     await fs.rm(linked, { recursive: true, force: true });
     execFileSync("git", ["worktree", "prune"], { cwd: root });
+    await removeRepository(root);
+  }
+});
+
+test("initialization publishes one canonical empty store and refuses replacement", async () => {
+  const root = await makeRepository();
+  try {
+    const initialized = json(root, ["init"]).value;
+    assert.equal(initialized.data.schemaVersion, 1);
+    assert.equal(initialized.data.recordVersion, 1);
+    assert.equal(initialized.data.pause, null);
+    const control = path.join(root, "readme", "tasks", "store", "control.json");
+    const records = path.join(root, "readme", "tasks", "store", "records");
+    const controlBytes = await fs.readFile(control);
+    assert.equal(controlBytes.toString("utf8"), `${JSON.stringify({
+      schemaVersion: 1,
+      recordVersion: 1,
+      pause: null,
+    }, null, 2)}\n`);
+    assert.deepEqual(await fs.readdir(records), []);
+    const digest = json(root, ["doctor"]).value.storeDigest;
+
+    assert.match(run(root, ["init"], 4).stderr, /INITIALIZATION_UNSAFE/u);
+    assert.deepEqual(await fs.readFile(control), controlBytes);
+    assert.deepEqual(await fs.readdir(records), []);
+    assert.equal(json(root, ["doctor"]).value.storeDigest, digest);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("failed initialization leaves no canonical store and retry succeeds", async () => {
+  const root = await makeRepository();
+  try {
+    const store = path.join(root, "readme", "tasks", "store");
+    const storeModule = fileURLToPath(STORE_MODULE);
+    const script = `
+      import fs from "node:fs/promises";
+      const originalRename = fs.rename.bind(fs);
+      fs.rename = async (source, target) => {
+        if (target === ${JSON.stringify(store)}) {
+          const error = new Error("injected initialization failure");
+          error.code = "EIO";
+          throw error;
+        }
+        return originalRename(source, target);
+      };
+      const { initializeStore, repositoryContext } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      await initializeStore(await repositoryContext());
+    `;
+    const failed = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
+      cwd: root,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    assert.notEqual(failed.status, 0);
+    await assert.rejects(fs.lstat(store), { code: "ENOENT" });
+    assert.equal((await fs.readdir(path.join(root, "readme", "tasks")))
+      .some((entry) => entry.startsWith(".framework-data-init-")), false);
+
+    const initialized = json(root, ["init"]).value;
+    assert.equal(initialized.data.recordVersion, 1);
+    assert.deepEqual(await fs.readdir(path.join(store, "records")), []);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+  } finally {
     await removeRepository(root);
   }
 });
@@ -1603,6 +1875,121 @@ test("SIGKILL before record claim preserves canonical bytes and recoverability",
     assert.equal(json(root, ["doctor"]).value.ok, true);
   } finally {
     writer?.kill("SIGKILL");
+    await removeRepository(root);
+  }
+});
+
+test("SIGKILL after record claim preserves the committed version", { timeout: 15_000 }, async () => {
+  const root = await makeRepository();
+  let writer;
+  try {
+    json(root, ["init"]);
+    const task = json(root, [
+      "task", "add", "--outcome", "Published mutation target", "--authority-reference", "Test",
+    ]).value.data;
+    const record = taskPath(root, task.id);
+    const storeModule = fileURLToPath(STORE_MODULE);
+    const script = `
+      import fs from "node:fs/promises";
+      const originalRename = fs.rename.bind(fs);
+      fs.rename = async (source, target) => {
+        const result = await originalRename(source, target);
+        if (target === ${JSON.stringify(record)}) {
+          process.stdout.write("after-record-claim\\n");
+          await new Promise(() => {});
+        }
+        return result;
+      };
+      const { loadStore, mutateTask, repositoryContext, withLock } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      const context = await repositoryContext();
+      await withLock(context, async () => {
+        const loaded = await loadStore(context);
+        await mutateTask(context, loaded, ${JSON.stringify(task.id)}, 1, (current) => ({
+          ...current,
+          recordVersion: 2,
+          taskRevision: 2,
+          outcome: "Published replacement",
+        }));
+      });
+    `;
+    writer = spawn(process.execPath, ["--input-type=module", "-e", script], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    await new Promise((resolve, reject) => {
+      let output = "";
+      let errorOutput = "";
+      writer.stdout.on("data", (chunk) => {
+        output += chunk;
+        if (output.includes("after-record-claim\n")) resolve();
+      });
+      writer.stderr.on("data", (chunk) => { errorOutput += chunk; });
+      writer.once("error", reject);
+      writer.once("exit", (code, signal) => {
+        if (!output.includes("after-record-claim\n")) {
+          reject(new Error(`published writer exited early ${code}/${signal}: ${errorOutput}`));
+        }
+      });
+    });
+    writer.kill("SIGKILL");
+    await new Promise((resolve, reject) => {
+      writer.once("exit", (code, signal) => signal === "SIGKILL" ? resolve() :
+        reject(new Error(`published writer exited ${code}/${signal}`)));
+    });
+    writer = null;
+
+    const committed = JSON.parse(await fs.readFile(record, "utf8"));
+    assert.equal(committed.recordVersion, 2);
+    assert.equal(committed.taskRevision, 2);
+    assert.equal(committed.outcome, "Published replacement");
+    const lock = json(root, ["lock", "inspect"]).value.lock;
+    assert.equal(lock.state, "owned");
+    json(root, [
+      "lock", "recover", "--expected-token", lock.owner.token, "--confirm-owner-not-live",
+    ]);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    assert.match(run(root, [
+      "task", "amend", task.id, "--expected-record-version", "1",
+      "--outcome", "Stale replacement", "--authority-reference", "Test stale",
+    ], 4).stderr, /STALE_RECORD/u);
+    const amended = json(root, [
+      "task", "amend", task.id, "--expected-record-version", "2",
+      "--outcome", "Post-recovery replacement", "--authority-reference", "Test recovery",
+    ]).value.data;
+    assert.equal(amended.recordVersion, 3);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+  } finally {
+    writer?.kill("SIGKILL");
+    await removeRepository(root);
+  }
+});
+
+test("malformed task state blocks ordinary commands without publication", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const target = json(root, [
+      "task", "add", "--outcome", "Mutation target", "--authority-reference", "Test",
+    ]).value.data;
+    const malformed = json(root, [
+      "task", "add", "--outcome", "Unrelated malformed task", "--authority-reference", "Test",
+    ]).value.data;
+    const targetRecord = taskPath(root, target.id);
+    const targetBytes = await fs.readFile(targetRecord);
+    const malformedRecord = taskPath(root, malformed.id);
+    const malformedData = JSON.parse(await fs.readFile(malformedRecord, "utf8"));
+    malformedData.unexpected = true;
+    await fs.writeFile(malformedRecord, `${JSON.stringify(malformedData, null, 2)}\n`);
+
+    for (const args of [["startup"], ["task", "list"], [
+      "task", "amend", target.id, "--expected-record-version", "1",
+      "--outcome", "Must not publish", "--authority-reference", "Test",
+    ]]) {
+      assert.match(run(root, args, 1).stderr, /SCHEMA_INVALID/u);
+      assert.deepEqual(await fs.readFile(targetRecord), targetBytes);
+    }
+  } finally {
     await removeRepository(root);
   }
 });
