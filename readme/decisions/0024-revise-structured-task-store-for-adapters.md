@@ -202,8 +202,8 @@ or T-0042/T-0043 proposes a canonical backend with different audit or recovery n
 
 - Product-owner directions dated 2026-08-13.
 - T-0036 task-CLI simplification review, T-0041 adapter feasibility assessment,
-  T-0044 characterization, T-0040 narrative-validation evidence, and T-0045's
-  independently reviewed application/domain, TaskStore, and repository contracts.
+  T-0044 characterization, T-0040 narrative-validation evidence, T-0045's reviewed
+  contracts, and T-0046's independently verified FileTaskStore production routing.
 - Independent architecture and security reviews recorded in T-0041.
 - [Decision 0018](0018-adopt-node-structured-task-store.md).
 - `readme/meta/framework-data/{cli,store,schema}.mjs` and

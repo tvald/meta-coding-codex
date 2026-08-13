@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0046",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Implement the existing file engine as FileTaskStore behind the TaskStore port with behavioral parity, preserving it as the sole production and canonical backend while removing direct CLI dependence on file layouts and adding no backend selector, migration path, or dual-write behavior",
   "authority": {
     "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order as tasks",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0045"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Route existing reads and mutations through FileTaskStore incrementally and require the characterization baseline to remain green before changing its concurrency or recovery internals",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Implemented the existing engine as the sole implicit FileTaskStore production adapter and routed all CLI reads and semantic planner publications through it under one compatible lock. Independent QA PASS; FileTaskStore/architecture 10/10, framework-data 38/38 including 10k, packed task CLI 8/8, package matrix, 60-file reproducible audit, syntax, static layering/sole-backend, doctor, and diff checks passed."
+  }
 }
