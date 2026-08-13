@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0050",
-  "recordVersion": 2,
+  "recordVersion": 5,
   "taskRevision": 2,
   "outcome": "Isolate the legacy Format 1 task-store importer behind onboarding, declare its supported compatibility window, sunset criteria, and removal conditions, and avoid expanding one-shot migration machinery after the structured store is established",
   "authority": {
     "reference": "User direction delivered 2026-08-13: capture all previously identified task-store simplification work as independently reviewable tasks",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0049"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Inventory the existing importer contract from current code and documentation, then specify the compatibility sunset and isolate invocation to onboarding without adding new legacy behaviors",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Isolated the byte-unchanged Format 1 importer behind ; generic migrate now fails before importer loading or mutation, ordinary commands no longer eagerly load the importer, and dry-run/apply both require exact legacy_format1 preflight with apply rechecked under the exclusive FileTaskStore operation. Froze support to framework 1.x/task CLI 3.x, defined objective 2.0/4.0 removal and pinned-1.x legacy recovery, and added no new format or transformation. Reviewer Adopt and independent QA Pass; focused migration/lazy-import 5/5, packed/npm 20/20, serial framework-data 39/39, final full repository 162/162, installed-tarball smoke, 61-file reproducible audit, doctor, syntax, import/version scans, and diff checks passed."
+  }
 }

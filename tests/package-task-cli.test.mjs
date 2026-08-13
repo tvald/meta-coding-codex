@@ -161,7 +161,7 @@ test('packed task CLI uses package resources and mutates only the client Git roo
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       taskCli: {
-        version: '2.0.0',
+        version: '3.0.0',
         envelopeVersions: [1],
         readableStoreSchemaVersions: [1],
         writableStoreSchemaVersions: [1],
@@ -448,7 +448,7 @@ test('task help and version are rootless while data commands report bounded Git 
     assert.equal(help.stderr, '');
     const version = run(process.execPath, [client.binary, 'tasks', '--version'], { cwd: outside });
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(JSON.parse(version.stdout).taskCli.version, '2.0.0');
+    assert.equal(JSON.parse(version.stdout).taskCli.version, '3.0.0');
     const internalHelp = run(process.execPath, [
       join(client.packageRoot, 'readme', 'meta', 'framework-data', 'cli.mjs'), '--help',
     ], { cwd: outside });

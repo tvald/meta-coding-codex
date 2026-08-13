@@ -68,7 +68,8 @@ to its canonical owner instead of copying facts into framework-managed records.
 
 `framework-data/` is required package runtime, not an optional integration. It owns task
 shape, deterministic serialization, bounded queries, mechanical transitions, and the
-Format 1 importer. Markdown process documents retain policy and judgment. The CLI never
+onboarding-only Format 1 importer during its declared compatibility window. Markdown
+process documents retain policy and judgment. The CLI never
 authenticates an agent role or establishes authority, approval truth, priority, risk, or
 semantic completion.
 

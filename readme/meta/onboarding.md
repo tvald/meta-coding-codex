@@ -100,10 +100,30 @@ task mutation.
   Preserve unrelated documents and obtain an owner decision before relocating a
   published or externally referenced contract. The initializer does not claim an
   existing path or fill one side of partial state.
-- A detected legacy Format 1 store uses the task CLI's explicit migration dry run,
-  reviewed source hashes and transformations, and expected-digest apply path. Never
-  migrate through `project init` or a normal read. Prepared or interrupted state follows
-  the task recovery and lock protocol before retry.
+- A detected legacy Format 1 store uses only the task CLI's onboarding namespace:
+  `npm run --ignore-scripts --silent meta -- tasks onboarding migrate-format1
+  --catalog readme/tasks/README.md [--archive PATH]... --dry-run`, followed after review
+  by the same command with `--apply --expected-source-digest DIGEST`. Both modes rerun
+  preflight and require exactly `legacy_format1`; the old generic `tasks migrate`
+  command, `project init`, normal reads, and current structured stores cannot invoke the
+  importer. Prepared or interrupted state follows the task recovery and lock protocol
+  before retry.
+
+### Format 1 Compatibility Sunset
+
+Format 1 import is a frozen onboarding compatibility surface for
+`@tvald/meta-framework` 1.x and task CLI 3.x only. Support is limited to the existing
+exact header, metadata, transformations, source bounds, dry-run digest, and atomic
+apply behavior; do not add fields, aliases, repair heuristics, another legacy format,
+or a normal-runtime adapter.
+
+Remove the importer in framework 2.0/task CLI 4.0 when the maintained client inventory
+and migration fixtures show no remaining Format 1 consumer and the major-version
+release notes retain the final 1.x migration route. A named accepted compatibility
+decision is required to extend that window; absence of evidence does not extend it.
+After removal, a remaining legacy repository must use the final pinned 1.x package to
+migrate and verify its structured store before upgrading. Newer packages continue to
+refuse legacy state rather than auto-convert it.
 - A busy store remains unchanged until the known live owner finishes. Inspect and
   recover a stale lock only through the exact-token task CLI protocol after establishing
   that no owner is live. Never infer owner death from age, PID, or host.
