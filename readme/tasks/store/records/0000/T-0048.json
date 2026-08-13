@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0048",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Implement SQLiteTaskStore as a conformance and reference adapter only, using a reviewed SQLite driver, private adapter schema, read transactions for consistent snapshots, atomic conditional write transactions, store metadata and schema compatibility, and internal test injection while deliberately providing no production backend configuration, onboarding, canonical binding, migration, backup, or dual-write path",
   "authority": {
     "reference": "User direction delivered 2026-08-13: SQLite is initially a conformance/reference adapter and the complete implementation order should be captured as tasks",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0047"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Select the minimal supported SQLite driver under project dependency policy, implement the private schema and TaskStore operations, and run the unchanged conformance suite through an internal adapter factory",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Implemented internal SQLiteTaskStore candidate with fixed bound SQL, exact private schema and metadata validation, atomic read/write transactions, stable identity, bounded snapshots and queries, canonical errors, and no production selector or migration path. The unchanged 11-case conformance suite passed; focused File/SQLite/architecture checks passed 43/43; full repository passed 157/157; package suite passed 66/66; package audit passed at 61 files and 168490 bytes; Security adopted with no high/medium findings; independent QA passed. T-0049 retains differential certification of reference status."
+  }
 }

@@ -17,7 +17,8 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 
 - Status: Revised.
 - Evidence: T-0036/T-0041 reviews, T-0037 ordering, T-0044's baseline, independently
-  adopted T-0045/T-0046 boundaries, T-0038 concurrency QA, and T-0047 conformance; see
+  adopted T-0045/T-0046 boundaries, T-0038 concurrency QA, and T-0047/T-0048 adapter
+  conformance; see
   [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
 - Change: Kept FileTaskStore canonical; extracted/routed contracts; made reads lock-free,
   scoped locks per worktree, removed public digest CAS, moved narrative checks
