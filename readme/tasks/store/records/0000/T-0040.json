@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "id": "T-0040",
-  "recordVersion": 1,
-  "taskRevision": 1,
-  "outcome": "Reduce normal task CLI availability and compatibility burden by validating linked narrative existence in doctor and targeted task context instead of every store load, keeping link syntax and allow-list validation in canonical records, and isolating the Format 1 importer behind onboarding with an explicit compatibility sunset and removal criteria",
+  "recordVersion": 3,
+  "taskRevision": 3,
+  "outcome": "Move linked-narrative existence validation out of canonical task-store loading and into doctor plus targeted task context, retaining safe path syntax and allow-list validation in task records so an unrelated missing or moved Markdown file cannot block ordinary task queries and mutations and repository-document concerns remain outside persistence adapters",
   "authority": {
-    "reference": "User request delivered 2026-08-13 following T-0036 evaluation",
+    "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order as independently reviewable tasks",
     "acceptedDate": "2026-08-13"
   },
   "status": "pending",
   "dependencies": [
-    "T-0037"
+    "T-0044"
   ],
   "route": "quick_change",
   "risk": "medium",
@@ -18,12 +18,12 @@
     "framework",
     "task-store",
     "validation",
-    "migration"
+    "repository-integration"
   ],
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Implement the accepted T-0037 validation and migration boundary with tests showing a missing unrelated narrative does not block task operations while doctor and targeted context report it safely",
+  "nextSafeAction": "After T-0044, move linked-document existence checks to doctor and targeted context and prove an unrelated missing narrative no longer blocks ordinary task operations",
   "details": [],
   "completion": null
 }

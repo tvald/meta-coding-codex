@@ -295,3 +295,19 @@
   output, uncertain retry, ownership guesses, or unbounded history reads.
 - Review or sunset trigger: Duplicated effect, overwritten work, false completion,
   provider discovery drift, unbounded context, or demonstrated need for a helper.
+
+## 2026-08-11: Adopt The Installed Package Task Runtime
+
+- Status: Adopted.
+- Evidence: T-0026 packed-client mutation and adversarial root/metadata/lock fixtures,
+  full task-store regression suite, reproducible package audit, and independent
+  architecture, security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Exposed the guarded task store beneath the immutable package binary, separated
+  package resources from one physically validated client Git root, declared task-format
+  compatibility in package metadata, and rejected untrusted Git and lockfile inputs.
+- Success signal: An installed client can initialize and mutate its task store without a
+  copied meta tree or writes beneath the package, while mismatched roots and metadata
+  fail before client mutation.
+- Review or sunset trigger: Package/client path confusion, package mutation, manifest or
+  schema drift, bypassed lock integrity, unsafe Git discovery, or task CLI regression.

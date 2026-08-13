@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0044",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Freeze the observable behavior of the existing file-backed task CLI with characterization and counterfactual tests covering lifecycle invariants, taskRevision and recordVersion semantics, deterministic bounded queries and pagination, stale cursors, initialization, conditional conflicts, malformed state, and recovery so later responsibility extraction cannot silently weaken behavior",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order as tasks",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0037"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "characterization",
+    "testing"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After T-0037 is accepted, declare the observable compatibility matrix and add characterization tests against the current FileTaskStore behavior before moving responsibilities",
+  "details": [],
+  "completion": null
+}

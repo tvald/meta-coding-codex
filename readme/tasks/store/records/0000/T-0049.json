@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0049",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Certify SQLiteTaskStore as the TaskStore conformance and reference adapter by executing identical semantic command traces against FileTaskStore and SQLiteTaskStore, comparing normalized results and logical exports, exercising concurrency and conditional-conflict behavior, and proving failed transactions leave no partial state without adapter-specific conformance exceptions",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order and the SQLite reference-adapter completion boundary as tasks",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0048"
+  ],
+  "route": "quick_change",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "sqlite",
+    "differential-testing"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Build deterministic cross-adapter traces and declare reference status only after both adapters produce equivalent logical state and pass conflict, rollback, and conformance checks without exceptions",
+  "details": [],
+  "completion": null
+}

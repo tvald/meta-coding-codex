@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0048",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Implement SQLiteTaskStore as a conformance and reference adapter only, using a reviewed SQLite driver, private adapter schema, read transactions for consistent snapshots, atomic conditional write transactions, store metadata and schema compatibility, and internal test injection while deliberately providing no production backend configuration, onboarding, canonical binding, migration, backup, or dual-write path",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13: SQLite is initially a conformance/reference adapter and the complete implementation order should be captured as tasks",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0047"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "sqlite",
+    "reference-adapter"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Select the minimal supported SQLite driver under project dependency policy, implement the private schema and TaskStore operations, and run the unchanged conformance suite through an internal adapter factory",
+  "details": [],
+  "completion": null
+}

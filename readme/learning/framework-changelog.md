@@ -13,6 +13,21 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-13: Revise The Structured Task Store For Adapters
+
+- Status: Revised.
+- Evidence: T-0036 simplification review, T-0041 feasibility and security assessment,
+  T-0037 implementation ordering, passing task-store and documentation checks, and an
+  independent Reviewer adoption; see
+  [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
+- Change: Kept FileTaskStore as the sole production backend, separated task domain,
+  persistence, and repository responsibilities, simplified disproportionate local
+  guards, and authorized a reference-only SQLite adapter while rejecting S3.
+- Success signal: FileTaskStore and SQLite satisfy one adapter-neutral conformance suite
+  without making SQLite selectable or weakening domain invariants.
+- Review or sunset trigger: conformance exceptions, lost task facts, partial publication,
+  a production backend proposal, or evidence that a removed local guard was necessary.
+
 ## 2026-08-12: Revise Codex Child-Agent Disablement
 
 - Status: Revised.
@@ -141,19 +156,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   bounded evidence; malformed, unavailable, unsafe, or orphaning providers stop safely.
 - Review or sunset trigger: Credential or provider data leak, false-safe capacity,
   capability-as-authority use, schema drift, client executable invocation, or orphan.
-
-## 2026-08-11: Adopt The Installed Package Task Runtime
-
-- Status: Adopted.
-- Evidence: T-0026 packed-client mutation and adversarial root/metadata/lock fixtures,
-  full task-store regression suite, reproducible package audit, and independent
-  architecture, security, QA, and Reviewer gates; see
-  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
-- Change: Exposed the guarded task store beneath the immutable package binary, separated
-  package resources from one physically validated client Git root, declared task-format
-  compatibility in package metadata, and rejected untrusted Git and lockfile inputs.
-- Success signal: An installed client can initialize and mutate its task store without a
-  copied meta tree or writes beneath the package, while mismatched roots and metadata
-  fail before client mutation.
-- Review or sunset trigger: Package/client path confusion, package mutation, manifest or
-  schema drift, bypassed lock integrity, unsafe Git discovery, or task CLI regression.
