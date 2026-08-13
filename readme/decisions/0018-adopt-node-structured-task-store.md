@@ -23,6 +23,10 @@ Superseded by:
 - [Decision 0021](0021-adopt-immutable-npm-framework-delivery.md), only where the task
   runtime is pinned under a copied `readme/meta/` tree and updates require core-file
   reconciliation. Task semantics, schemas, bounds, locks, and atomic writes remain.
+- [Decision 0024](0024-revise-structured-task-store-for-adapters.md), where it revises
+  concurrency, crash and durability guards, linked-narrative validation, importer
+  lifetime, and storage responsibilities while retaining the structured domain and
+  FileTaskStore as the initial canonical backend.
 
 ## Context
 

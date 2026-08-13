@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0047",
+  "recordVersion": 2,
+  "taskRevision": 2,
+  "outcome": "Create a reusable TaskStore conformance suite and make FileTaskStore pass it, covering immutable store identity and schema compatibility, consistent snapshots, deterministic bounded queries, pagination and stale cursors, atomic next-display-ID allocation with task creation under races, atomic change-set publication, target and declared read-set conflicts, global-generation checks only for global invariants, stable error normalization, initialization, rollback without partial state, and logical export/import equivalence",
+  "authority": {
+    "reference": "T-0037 independent review accepted under the user-directed 2026-08-13 execution sequence",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0038",
+    "T-0046"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "conformance",
+    "testing"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Define adapter factories and observable assertions independent of file paths, including concurrent next-ID allocation, then run every contract case against FileTaskStore before adding SQLite",
+  "details": [],
+  "completion": null
+}

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "T-0043",
-  "recordVersion": 1,
-  "taskRevision": 1,
+  "recordVersion": 2,
+  "taskRevision": 2,
   "outcome": "Make PostgreSQL a selectable canonical local task backend, covering the already-identified requirements for a concrete transactional commit protocol, stable store identity and trusted binding, canonical audit and reviewable terminal Git evidence, backup and restore, logical export/import with fenced cutover or rollback, schema compatibility, least-privilege access, failure normalization, and exactly one canonical live store without dual writes",
   "authority": {
     "reference": "User direction delivered 2026-08-13; scope is limited to requirements already identified in T-0037 and T-0041",
@@ -10,7 +10,7 @@
   },
   "status": "pending",
   "dependencies": [
-    "T-0037"
+    "T-0049"
   ],
   "route": "initiative",
   "risk": "high",

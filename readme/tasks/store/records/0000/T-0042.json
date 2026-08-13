@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "T-0042",
-  "recordVersion": 1,
-  "taskRevision": 1,
+  "recordVersion": 2,
+  "taskRevision": 2,
   "outcome": "Promote the conformance/reference SQLiteTaskStore to a selectable canonical local backend, covering the already-identified requirements for explicit backend binding and onboarding, binary-store audit and reviewable terminal Git evidence, backup and restore, logical export/import and cutover or rollback, schema and driver compatibility, local concurrency and recovery, and exactly one canonical live store without dual writes",
   "authority": {
     "reference": "User direction delivered 2026-08-13; scope is limited to requirements already identified in T-0037 and T-0041",
@@ -10,7 +10,7 @@
   },
   "status": "pending",
   "dependencies": [
-    "T-0037"
+    "T-0049"
   ],
   "route": "initiative",
   "risk": "high",

@@ -25,7 +25,7 @@ results live only in the structured task store.
 | --- | --- |
 | Skip the Pilot disposition: use Adopt, Revise, or Reject. | [Decision 0016](decisions/0016-adopt-adapters-and-skip-pilot-disposition.md) |
 | Keep framework-source history in `readme/learning/framework-changelog.md`; installed clients keep no framework changelog or package edits. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
-| Mutate and normally query canonical task state only through the repository-pinned Node CLI. | [Decision 0018](decisions/0018-adopt-node-structured-task-store.md) |
+| Mutate and normally query canonical task state only through the repository-pinned Node CLI; keep FileTaskStore as the sole initial production backend and SQLite reference-only. | [Decisions 0018](decisions/0018-adopt-node-structured-task-store.md) and [0024](decisions/0024-revise-structured-task-store-for-adapters.md) |
 | Keep source-only harness skill bodies aligned with package-owned onboarding and recovery policy; never copy discovery bundles into clients. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
 | Keep recovery proposal-only, bounded, revision-aware, and conservative about uncertain effects or ownership. | [Decision 0020](decisions/0020-adopt-guarded-task-recovery-skill.md) |
 | Deliver future clients an immutable npm dependency with explicit package/client roots, derived attributable prompts, guarded extensions, and replacement-only updates. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0045",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Extract a Task application and domain service, a backend-neutral TaskStore port, and repository-integration services so semantic commands produce deterministic change sets, domain code owns lifecycle and global invariants, adapters own consistent snapshots, deterministic queries and atomic conditional publication with normalized conflicts, and Git plus linked-document concerns remain outside persistence",
+  "authority": {
+    "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order as tasks",
+    "acceptedDate": "2026-08-13"
+  },
+  "status": "pending",
+  "dependencies": [
+    "T-0040"
+  ],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "framework",
+    "task-store",
+    "architecture",
+    "application-service",
+    "repository-integration"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "After characterization and repository-validation separation, define the minimal adapter-neutral interfaces and move one semantic command path at a time without adding backend selection",
+  "details": [],
+  "completion": null
+}
