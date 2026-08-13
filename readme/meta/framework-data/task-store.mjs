@@ -125,10 +125,10 @@ export function normalizeStoreMetadata(value) {
   exactKeys(value, ["storeId", "protocolVersion", "taskSchemaVersion"], "store metadata");
   const storeId = normalizeStoreId(value.storeId);
   if (value.protocolVersion !== TASK_STORE_PROTOCOL_VERSION) {
-    fail("TASK_STORE_SCHEMA_UNSUPPORTED", "TaskStore protocol version is unsupported");
+    throwTaskStoreError("unsupported_schema");
   }
   if (value.taskSchemaVersion !== SCHEMA_VERSION) {
-    fail("TASK_STORE_SCHEMA_UNSUPPORTED", "task schema version is unsupported");
+    throwTaskStoreError("unsupported_schema");
   }
   return deepFreeze({
     storeId,
@@ -267,7 +267,7 @@ function normalizeChanges(value, preconditions) {
 export function normalizeTaskChangeSet(value, expectedStoreId = null) {
   exactKeys(value, ["protocolVersion", "storeId", "operation", "preconditions", "changes"], "task change set");
   if (value.protocolVersion !== TASK_STORE_PROTOCOL_VERSION) {
-    fail("TASK_STORE_SCHEMA_UNSUPPORTED", "change-set protocol version is unsupported");
+    throwTaskStoreError("unsupported_schema");
   }
   if (typeof value.operation !== "string" || !/^[a-z][a-z0-9-]{0,63}$/u.test(value.operation)) {
     fail("TASK_STORE_CONTRACT", "change-set operation is invalid");
@@ -282,6 +282,26 @@ export function normalizeTaskChangeSet(value, expectedStoreId = null) {
     operation: value.operation,
     preconditions,
     changes,
+  });
+}
+
+export function normalizeLogicalTaskStore(value) {
+  exactKeys(value, ["taskSchemaVersion", "control", "tasks"], "logical task store export");
+  if (value.taskSchemaVersion !== SCHEMA_VERSION) throwTaskStoreError("unsupported_schema");
+  const snapshot = normalizeStoreSnapshot({
+    metadata: {
+      storeId: "logical-import-validation",
+      protocolVersion: TASK_STORE_PROTOCOL_VERSION,
+      taskSchemaVersion: SCHEMA_VERSION,
+    },
+    generation: "logical-import-validation",
+    control: value.control,
+    tasks: value.tasks,
+  });
+  return deepFreeze({
+    taskSchemaVersion: SCHEMA_VERSION,
+    control: snapshot.control,
+    tasks: snapshot.tasks,
   });
 }
 
