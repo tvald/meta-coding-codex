@@ -395,6 +395,10 @@ export class SQLiteTaskStore {
         enableDoubleQuotedStringLiterals: false,
         enableForeignKeyConstraints: true,
       });
+      // Match the local FileTaskStore's bounded acquisition window: short-lived
+      // writers serialize to semantic precondition checks, while a persistent owner
+      // still fails as unavailable after one second.
+      this.#database.exec("PRAGMA busy_timeout = 1000");
     } catch (error) {
       throw normalizeDriverError(error);
     }

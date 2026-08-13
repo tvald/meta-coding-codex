@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0049",
-  "recordVersion": 1,
+  "recordVersion": 4,
   "taskRevision": 1,
   "outcome": "Certify SQLiteTaskStore as the TaskStore conformance and reference adapter by executing identical semantic command traces against FileTaskStore and SQLiteTaskStore, comparing normalized results and logical exports, exercising concurrency and conditional-conflict behavior, and proving failed transactions leave no partial state without adapter-specific conformance exceptions",
   "authority": {
     "reference": "User direction delivered 2026-08-13: capture the complete recommended implementation order and the SQLite reference-adapter completion boundary as tasks",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0048"
   ],
@@ -23,7 +23,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Build deterministic cross-adapter traces and declare reference status only after both adapters produce equivalent logical state and pass conflict, rollback, and conformance checks without exceptions",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-13",
+    "repositoryChanged": true,
+    "evidence": "Certified SQLiteTaskStore as the internal TaskStore reference adapter. The unchanged 11-case common suite remained byte-identical; a new public-contract differential trace exercised all nine semantic planners, exact logical/receipt/query parity, canonical target/read-set/control/global/ID/identity/schema/contract conflicts, rollback through reopened handles, and real two-process publication barriers. Short SQLite contention now uses the same bounded one-second acquisition window as FileTaskStore and reaches semantic CAS; persistent locks return unavailable with no write and fresh retry succeeds. Reviewer Adopt and independent QA Pass; focused 47/47, full 161/161, package 66/66, 61-file reproducible audit, doctor, syntax, selector scan, and diff checks passed. SQLite remains non-selectable and non-canonical; production promotion stays T-0042."
+  }
 }

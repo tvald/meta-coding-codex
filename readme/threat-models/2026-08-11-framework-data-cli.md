@@ -40,7 +40,7 @@
 | Format 1 prepared migration | Escaped pipe, missing divider, archive-base links, input-change, collision, equivalence, and rollback fixtures | Pass |
 | Bounded safe queries | Exact terminal lookup, filters, byte/row truncation, stale cursor, numeric ordering, C1/bidi payload, and 10,000-task fixtures | Pass |
 | Package/runtime boundary | Exact allowlist, unsupported/missing Node, pinned CLI version, fresh install/init/doctor, deterministic archive tests | Pass on Linux |
-| SQLite private transactional boundary | Unchanged common conformance suite, real create/import races, complete concurrent snapshots, schema/identity tamper, bound hostile text, rollback, and error-normalization fixtures | Pass on Node 22.13+ reference runtime |
+| SQLite private transactional boundary | Unchanged common conformance suite, differential semantic traces, real process create/import races, bounded writer acquisition, complete concurrent snapshots, schema/identity tamper, bound hostile text, rollback, and error-normalization fixtures | Pass on Node 22.13+ reference runtime |
 
 ## Agentic Risks
 
