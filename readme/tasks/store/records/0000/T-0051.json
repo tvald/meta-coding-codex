@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0051",
+  "recordVersion": 5,
+  "taskRevision": 2,
+  "outcome": "Evaluate a two-phase orchestration architecture that preserves conversational task design and uses fresh orient-decide-converge controller ticks for autonomous implementation; analyze prior .codex session transcripts and agent activity, identify deterministic versus model-judgment control steps, and produce durable findings and a recommended design",
+  "authority": {
+    "reference": "User instruction on 2026-08-14 to investigate design-versus-implementation orchestration, analyze prior .codex transcripts and agent behavior, use agents as useful, and write task notes during the investigation",
+    "acceptedDate": "2026-08-14"
+  },
+  "status": "done",
+  "dependencies": [],
+  "route": "decide",
+  "risk": "medium",
+  "tags": [
+    "orchestration",
+    "context-engineering",
+    "transcript-analysis"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": null,
+  "details": [
+    {
+      "label": "execution-note",
+      "path": "readme/tasks/0051-tick-orchestrator-evaluation-notes.md"
+    }
+  ],
+  "completion": {
+    "completedAt": "2026-08-14",
+    "repositoryChanged": true,
+    "evidence": "Recorded a two-phase event-driven tick-orchestrator recommendation with minimized measurements from three representative Codex roots; independent Reviewer and Security analyses found no blocking design issue; focused metric spot-check, task-store doctor, local link/document-budget validation, and diff check passed"
+  }
+}
