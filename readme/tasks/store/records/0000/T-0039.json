@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0039",
-  "recordVersion": 2,
+  "recordVersion": 5,
   "taskRevision": 2,
   "outcome": "Simplify task-store crash and durability handling by replacing the elaborate orphan-lock identity protocol with explicit bounded recovery, tolerating empty shards, and removing redundant staging, fsync, path, and hard-link checks while retaining containment, valid owner-token comparison, atomic rename, file fsync, destination-directory fsync, and fail-closed state validation",
   "authority": {
     "reference": "User request delivered 2026-08-13 following T-0036 evaluation",
     "acceptedDate": "2026-08-13"
   },
-  "status": "pending",
+  "status": "done",
   "dependencies": [
     "T-0047"
   ],
@@ -22,7 +22,11 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Implement the accepted T-0037 recovery design with counterfactual tests for crash-before-rename, valid and malformed orphan locks, empty shards, containment, and targeted Git restore without broad reset",
+  "nextSafeAction": null,
   "details": [],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-14",
+    "repositoryChanged": true,
+    "evidence": "Observed: npm test 167/167 passed; test:tasks 8/8 passed; test:package 67/67 passed; package:check passed for 61 files with sha256 b6096e5be6fc3494dffd3820b9ebb025cb5cbaa036ebe2e882f4ac8d740a9042; focused FileTaskStore checks 43/43 and 31/31 passed; task-store doctor passed; independent Reviewer disposition Adopt with zero blocking findings."
+  }
 }

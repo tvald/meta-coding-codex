@@ -802,6 +802,34 @@ test('populated task stores remain byte-exact across current and add-bootstrap i
   }
 });
 
+test('current initialization preserves tolerated empty shards and hard-linked task records', () => {
+  const client = makeClient('preserved-store-simplifications');
+  projectJson(client, ['init']);
+  const added = taskJson(client, [
+    'task', 'add', '--outcome', 'Preserve simplified store state',
+    '--authority-reference', 'T-0039 initializer regression',
+  ]).data;
+  const tasksRoot = join(client.clientRoot, 'readme', 'tasks');
+  const storeRoot = join(tasksRoot, 'store');
+  const control = join(storeRoot, 'control.json');
+  const record = join(storeRoot, 'records', '0000', `${added.id}.json`);
+  mkdirSync(join(storeRoot, 'records', '0001'));
+  linkSync(control, join(tasksRoot, 'control-record-alias.json'));
+  linkSync(record, join(tasksRoot, 'task-record-alias.json'));
+  rmSync(join(client.clientRoot, 'CLAUDE.md'));
+  const before = mutableInventory(client.clientRoot);
+
+  const preflight = projectJson(client, ['preflight']).value.projectInit;
+  assert.equal(preflight.disposition, 'ready_to_add_bootstraps');
+  assert.equal(preflight.taskState, 'valid_current_store');
+  const initialized = projectJson(client, ['init']).value.projectInit;
+  assert.deepEqual(initialized.created, ['CLAUDE.md']);
+  assert.deepEqual(initialized.preserved,
+    ['AGENTS.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/']);
+  assert.equal(taskJson(client, ['doctor']).ok, true);
+  assert.deepEqual(mutableInventory(client.clientRoot).filter((entry) => !entry.endsWith(' CLAUDE.md')), before);
+});
+
 test('injected phase failures roll back only the initializer-owned exact state', async () => {
   for (const phase of ['stage', 'claim:AGENTS.md', 'store']) {
     const client = makeClient(`rollback-${phase.replaceAll(':', '-')}`);
