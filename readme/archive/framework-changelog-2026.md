@@ -338,3 +338,18 @@
   bounded evidence; malformed, unavailable, unsafe, or orphaning providers stop safely.
 - Review or sunset trigger: Credential or provider data leak, false-safe capacity,
   capability-as-authority use, schema drift, client executable invocation, or orphan.
+
+## 2026-08-11: Adopt Locked Data-Only Prompt Extensions
+
+- Status: Adopted.
+- Evidence: T-0028 packed clients, all 15 disabled-extension snapshots, deterministic
+  composition/provenance, 81 hostile mutations, exact package audit, and independent
+  Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added an ordered explicit client allowlist for exact direct dependencies whose
+  lock-bound, bounded, lifecycle-free Markdown skill facets append to declared profiles
+  without scanning, execution, core override, or ambiguous provenance.
+- Success signal: Reviewed extension facets compose equally across harnesses and fail
+  before stdout on identity, lock, schema, filesystem, conflict, or budget drift.
+- Review or sunset trigger: Implicit discovery, extension execution, lock/root bypass,
+  core shadowing, nondeterminism, provenance ambiguity, or output-budget exhaustion.

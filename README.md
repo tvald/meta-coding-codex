@@ -168,6 +168,43 @@ npm run --ignore-scripts --silent meta -- quota --harness codex
 npm run --ignore-scripts --silent meta -- capability --harness claude --name delegation
 ```
 
+## Run The Autonomous Implementation Controller
+
+Keep interactive task design in the primary session. After the task is fully specified,
+the package exposes a separate, repository-pinned implementation boundary:
+
+```sh
+npm run --ignore-scripts --silent meta -- implement --version
+npm run --ignore-scripts --silent meta -- implement T-0054 \
+  --expected-task-revision 2 --harness codex --shadow
+```
+
+The controller stores bounded canonical operational state under the resolved Git common
+directory and uses fresh, single-tick Root judgments plus bounded specialist jobs. The
+task store remains authoritative for task state; models return typed proposals and never
+integrate, close tasks, update refs, or grant approvals themselves.
+
+This package version intentionally ships live effects disabled. `--shadow`, `status`,
+`events`, `doctor`, and `lock inspect` are non-authoritative/read-only. A start without
+`--shadow`, stop, resume, cleanup, lock recovery, provider launch, workspace write, Git
+administration, task mutation, or final ref update fails closed unless the protected
+runtime supplies an exact current activation receipt. The supported host has not yet
+proved the required pidfd/process and worker-isolation mechanism, so there is no general
+activation or live canary in this release.
+
+For an existing run, the bounded operator reads are:
+
+```sh
+npm run --ignore-scripts --silent meta -- implement status RUN --json
+npm run --ignore-scripts --silent meta -- implement events RUN --after 0 --limit 128
+npm run --ignore-scripts --silent meta -- implement doctor RUN
+npm run --ignore-scripts --silent meta -- implement lock inspect RUN
+```
+
+Replacing or rolling back the immutable package disables its code without deleting the
+project-owned task store or Git-common execution ledger. Cleanup is always a separate,
+exact-identity operation; package replacement never broadly removes run evidence.
+
 ## Upgrade And Rollback
 
 Replace the package by changing the exact alias and lockfile together:

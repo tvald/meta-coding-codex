@@ -11,6 +11,7 @@ import { PROVIDER_PROBE_COMPATIBILITY } from '../lib/provider-contract.mjs';
 import { PROMPT_COMPILER_COMPATIBILITY } from '../lib/prompt-contract.mjs';
 import { PROJECT_INIT_COMPATIBILITY } from '../lib/project-contract.mjs';
 import { HOOK_ADAPTER_COMPATIBILITY } from '../lib/hook-contract.mjs';
+import { IMPLEMENTATION_CONTROLLER_COMPATIBILITY } from '../lib/implementation-controller.mjs';
 
 const sourceRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
@@ -229,6 +230,24 @@ export function validateManifest(candidate = manifest) {
       JSON.stringify(hookCompatibility.testedCodexVersions) ===
         JSON.stringify(HOOK_ADAPTER_COMPATIBILITY.testedCodexVersions),
     'hook adapter compatibility metadata differs from the runtime contract',
+  );
+  const controllerCompatibility = candidate.metaFramework?.implementationController;
+  const controllerCompatibilityKeys = controllerCompatibility !== null &&
+    typeof controllerCompatibility === 'object' && !Array.isArray(controllerCompatibility) ?
+    Object.keys(controllerCompatibility).sort() : [];
+  const expectedControllerCompatibilityKeys = Object.keys(IMPLEMENTATION_CONTROLLER_COMPATIBILITY).sort();
+  assert(
+    controllerCompatibilityKeys.length === expectedControllerCompatibilityKeys.length &&
+      controllerCompatibilityKeys.every((key, index) => key === expectedControllerCompatibilityKeys[index]) &&
+      controllerCompatibility.version === IMPLEMENTATION_CONTROLLER_COMPATIBILITY.version &&
+      JSON.stringify(controllerCompatibility.protocolVersions) ===
+        JSON.stringify(IMPLEMENTATION_CONTROLLER_COMPATIBILITY.protocolVersions) &&
+      JSON.stringify(controllerCompatibility.ledgerVersions) ===
+        JSON.stringify(IMPLEMENTATION_CONTROLLER_COMPATIBILITY.ledgerVersions) &&
+      JSON.stringify(controllerCompatibility.providerAdapters) ===
+        JSON.stringify(IMPLEMENTATION_CONTROLLER_COMPATIBILITY.providerAdapters) &&
+      controllerCompatibility.liveEffects === IMPLEMENTATION_CONTROLLER_COMPATIBILITY.liveEffects,
+    'implementation controller compatibility metadata differs from the runtime contract',
   );
   assert(candidate.bin?.['meta-framework'] === 'bin/meta-framework.mjs', 'unexpected package binary');
   assert(candidate.scripts?.meta === 'node ./bin/meta-framework.mjs', 'unexpected source meta command');

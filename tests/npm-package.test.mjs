@@ -243,6 +243,25 @@ test('package policy rejects missing or drifting hook adapter metadata', () => {
   }
 });
 
+test('package policy rejects missing or drifting implementation controller metadata', () => {
+  const manifest = JSON.parse(readFileSync(join(sourceRoot, 'package.json'), 'utf8'));
+  const mutations = [
+    (candidate) => { delete candidate.metaFramework.implementationController; },
+    (candidate) => { candidate.metaFramework.implementationController.version = '2.0.0'; },
+    (candidate) => { candidate.metaFramework.implementationController.protocolVersions = [2]; },
+    (candidate) => { candidate.metaFramework.implementationController.ledgerVersions = [2]; },
+    (candidate) => { candidate.metaFramework.implementationController.providerAdapters = ['unknown']; },
+    (candidate) => { candidate.metaFramework.implementationController.liveEffects = 'enabled'; },
+    (candidate) => { candidate.metaFramework.implementationController.unreviewed = true; },
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(manifest);
+    mutate(candidate);
+    assert.throws(() => validateManifest(candidate),
+      /implementation controller compatibility metadata differs from the runtime contract/);
+  }
+});
+
 test('package audit proves exact inventory and byte reproducibility', () => {
   const result = run(process.execPath, ['scripts/check-npm-package.mjs'], { cwd: sourceRoot });
   assert.equal(result.status, 0, result.stderr);
@@ -322,6 +341,31 @@ test('packed dependency installs without scripts and runs through the explicit l
     });
     assert.equal(invoked.status, 0, invoked.stderr);
     assert.equal(invoked.stdout, '1.0.0\n');
+
+    const implementationVersion = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', '--version',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(implementationVersion.status, 0, implementationVersion.stderr);
+    assert.equal(JSON.parse(implementationVersion.stdout).implementationController.liveEffects,
+      'disabled_without_activation_receipt');
+
+    normalizeFrameworkLock(clientDirectory, '1.0.0');
+    const initialized = run('git', ['init', '--quiet'], { cwd: clientDirectory });
+    assert.equal(initialized.status, 0, initialized.stderr);
+    const shadow = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'T-0054',
+      '--expected-task-revision', '2', '--harness', 'codex', '--shadow',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(shadow.status, 0, shadow.stderr);
+    assert.equal(JSON.parse(shadow.stdout).effectAuthority, false);
+    assert.equal(existsSync(join(clientDirectory, '.git', 'meta-framework')), false);
+    const live = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'T-0054',
+      '--expected-task-revision', '2', '--harness', 'codex',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(live.status, 1);
+    assert.match(live.stderr, /ACTIVATION_DISABLED/u);
+    assert.equal(existsSync(join(clientDirectory, '.git', 'meta-framework')), false);
 
     const installedManifest = JSON.parse(readFileSync(join(clientDirectory, 'node_modules/meta-framework/package.json'), 'utf8'));
     assert.equal(installedManifest.name, '@tvald/meta-framework');

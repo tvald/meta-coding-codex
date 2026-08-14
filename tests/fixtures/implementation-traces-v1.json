@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "traces": [
+    {
+      "schemaVersion": 1,
+      "id": "handoff",
+      "initial": {
+        "run": {
+          "schemaVersion": 1,
+          "runId": "run_1",
+          "revision": 1,
+          "phase": "preflight",
+          "stop": { "requested": false, "mode": null, "reasonDigest": null },
+          "reconciliation": { "required": false, "reasonCode": null, "refs": [] },
+          "updatedAt": "2026-08-14T10:00:00.000Z"
+        },
+        "attempt": null,
+        "operation": null,
+        "operations": []
+      },
+      "steps": [
+        {
+          "action": "transition_run",
+          "expectedRevision": 1,
+          "nextPhase": "dormant",
+          "observation": "preflight_compatible",
+          "updatedAt": "2026-08-14T10:00:01.000Z"
+        },
+        {
+          "action": "transition_run",
+          "expectedRevision": 2,
+          "nextPhase": "orienting",
+          "observation": "wake_changed",
+          "updatedAt": "2026-08-14T10:00:02.000Z"
+        },
+        {
+          "action": "transition_run",
+          "expectedRevision": 3,
+          "nextPhase": "judgment_required",
+          "observation": "orientation_published",
+          "updatedAt": "2026-08-14T10:00:03.000Z"
+        },
+        {
+          "action": "transition_run",
+          "expectedRevision": 4,
+          "nextPhase": "waiting",
+          "observation": "wait_decision_accepted",
+          "updatedAt": "2026-08-14T10:00:04.000Z"
+        },
+        { "action": "plan_orientation", "stateChanged": false, "deadlineDue": false }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "concurrent_increments",
+      "initial": {
+        "run": {
+          "schemaVersion": 1,
+          "runId": "run_1",
+          "revision": 7,
+          "phase": "dormant",
+          "stop": { "requested": false, "mode": null, "reasonDigest": null },
+          "reconciliation": { "required": false, "reasonCode": null, "refs": [] },
+          "updatedAt": "2026-08-14T10:01:00.000Z"
+        },
+        "attempt": null,
+        "operation": null,
+        "operations": []
+      },
+      "steps": [
+        {
+          "action": "transition_run",
+          "expectedRevision": 7,
+          "nextPhase": "orienting",
+          "observation": "wake_changed",
+          "updatedAt": "2026-08-14T10:01:01.000Z"
+        },
+        {
+          "action": "transition_run",
+          "expectedRevision": 7,
+          "nextPhase": "orienting",
+          "observation": "wake_due",
+          "updatedAt": "2026-08-14T10:01:02.000Z",
+          "expectedError": "STALE_STATE"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "duplicate_reordered_notifications",
+      "initial": { "run": null, "attempt": null, "operation": null, "operations": [] },
+      "steps": [
+        {
+          "action": "reduce_events",
+          "afterSequence": 0,
+          "events": [
+            {
+              "schemaVersion": 1,
+              "eventId": "event_3",
+              "sequence": 3,
+              "binding": {
+                "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+                "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+                "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "controlGeneration": 0, "correctionGeneration": 0
+              },
+              "kind": "provider_observed",
+              "subject": { "kind": "attempt", "id": "attempt_1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+              "causationId": null,
+              "correlationId": "job_1",
+              "producer": { "kind": "provider", "connectionId": "connection_1" },
+              "dedupeKey": "first",
+              "observedAt": "2026-08-14T10:02:03.000Z",
+              "payload": { "kind": "evidence", "id": "payload_1", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }
+            },
+            {
+              "schemaVersion": 1,
+              "eventId": "event_1",
+              "sequence": 1,
+              "binding": {
+                "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+                "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+                "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "controlGeneration": 0, "correctionGeneration": 0
+              },
+              "kind": "provider_observed",
+              "subject": { "kind": "attempt", "id": "attempt_1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+              "causationId": null,
+              "correlationId": "job_1",
+              "producer": { "kind": "provider", "connectionId": "connection_1" },
+              "dedupeKey": "first",
+              "observedAt": "2026-08-14T10:02:01.000Z",
+              "payload": { "kind": "evidence", "id": "payload_1", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }
+            },
+            {
+              "schemaVersion": 1,
+              "eventId": "event_2",
+              "sequence": 2,
+              "binding": {
+                "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+                "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+                "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "controlGeneration": 0, "correctionGeneration": 0
+              },
+              "kind": "provider_observed",
+              "subject": { "kind": "attempt", "id": "attempt_1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+              "causationId": null,
+              "correlationId": "job_1",
+              "producer": { "kind": "provider", "connectionId": "connection_1" },
+              "dedupeKey": "second",
+              "observedAt": "2026-08-14T10:02:02.000Z",
+              "payload": { "kind": "evidence", "id": "payload_2", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" }
+            }
+          ]
+        },
+        {
+          "action": "reduce_events",
+          "afterSequence": 0,
+          "events": [
+            {
+              "schemaVersion": 1,
+              "eventId": "event_2",
+              "sequence": 2,
+              "binding": {
+                "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+                "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+                "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "controlGeneration": 0, "correctionGeneration": 0
+              },
+              "kind": "provider_observed",
+              "subject": { "kind": "attempt", "id": "attempt_1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+              "causationId": null,
+              "correlationId": "job_1",
+              "producer": { "kind": "provider", "connectionId": "connection_1" },
+              "dedupeKey": "second",
+              "observedAt": "2026-08-14T10:02:02.000Z",
+              "payload": { "kind": "evidence", "id": "payload_2", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" }
+            }
+          ],
+          "expectedError": "EVENT_GAP"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "stop_divergence",
+      "initial": {
+        "run": {
+          "schemaVersion": 1,
+          "runId": "run_1",
+          "revision": 3,
+          "phase": "dormant",
+          "stop": {
+            "requested": true,
+            "mode": "checkpoint",
+            "reasonDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "reconciliation": { "required": false, "reasonCode": null, "refs": [] },
+          "updatedAt": "2026-08-14T10:03:00.000Z"
+        },
+        "attempt": null,
+        "operation": null,
+        "operations": []
+      },
+      "steps": [
+        { "action": "stop_allows_effect" },
+        {
+          "action": "transition_run",
+          "expectedRevision": 3,
+          "nextPhase": "orienting",
+          "observation": "wake_changed",
+          "updatedAt": "2026-08-14T10:03:01.000Z",
+          "expectedError": "STOP_DOMINATES"
+        },
+        {
+          "action": "transition_run",
+          "expectedRevision": 3,
+          "nextPhase": "stopping",
+          "observation": "stop_observed",
+          "updatedAt": "2026-08-14T10:03:02.000Z"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "fence_and_revision_divergence",
+      "initial": { "run": null, "attempt": null, "operation": null, "operations": [] },
+      "steps": [
+        {
+          "action": "binding_authorizes_effect",
+          "expectedBinding": {
+            "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          },
+          "candidateBinding": {
+            "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          }
+        },
+        {
+          "action": "binding_authorizes_effect",
+          "expectedBinding": {
+            "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          },
+          "candidateBinding": {
+            "runId": "run_1", "epoch": 2, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          }
+        },
+        {
+          "action": "task_revision_authorizes_effect",
+          "binding": {
+            "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          },
+          "task": { "id": "T-0054", "taskRevision": 2, "recordVersion": 5, "status": "active" }
+        },
+        {
+          "action": "task_revision_authorizes_effect",
+          "binding": {
+            "runId": "run_1", "epoch": 1, "snapshotRevision": 2,
+            "taskId": "T-0054", "taskRevision": 2, "taskRecordVersion": 5,
+            "capsuleDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "controlGeneration": 0, "correctionGeneration": 0
+          },
+          "task": { "id": "T-0054", "taskRevision": 3, "recordVersion": 6, "status": "active" }
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "acknowledgement_boundary",
+      "initial": {
+        "run": null,
+        "attempt": null,
+        "operation": {
+          "schemaVersion": 1,
+          "operationId": "operation_1",
+          "recordVersion": 1,
+          "idempotencyKey": "launch:attempt_1",
+          "inputDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "state": "intended",
+          "receipt": null,
+          "observedAt": "2026-08-14T10:04:00.000Z",
+          "failureCode": null
+        },
+        "operations": []
+      },
+      "steps": [
+        { "action": "acknowledgement_authorizes", "operation": null },
+        {
+          "action": "transition_operation",
+          "expectedRecordVersion": 1,
+          "nextState": "observed_succeeded",
+          "observation": "success_postcondition_exists",
+          "observedAt": "2026-08-14T10:04:01.000Z",
+          "receipt": {
+            "kind": "evidence",
+            "id": "receipt_1",
+            "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "failureCode": null
+        },
+        { "action": "acknowledgement_authorizes", "operation": null }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "quota_divergence",
+      "initial": {
+        "run": {
+          "schemaVersion": 1,
+          "runId": "run_1",
+          "revision": 1,
+          "phase": "preflight",
+          "stop": { "requested": false, "mode": null, "reasonDigest": null },
+          "reconciliation": { "required": false, "reasonCode": null, "refs": [] },
+          "updatedAt": "2026-08-14T10:05:00.000Z"
+        },
+        "attempt": null,
+        "operation": null,
+        "operations": []
+      },
+      "steps": [
+        {
+          "action": "transition_run",
+          "expectedRevision": 1,
+          "nextPhase": "failed",
+          "observation": "preflight_failed",
+          "updatedAt": "2026-08-14T10:05:01.000Z"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "ownership_divergence",
+      "initial": {
+        "run": null,
+        "attempt": {
+          "schemaVersion": 1,
+          "attemptId": "attempt_1",
+          "recordVersion": 6,
+          "state": "frozen",
+          "observedAt": "2026-08-14T10:06:00.000Z"
+        },
+        "operation": null,
+        "operations": []
+      },
+      "steps": [
+        {
+          "action": "transition_attempt",
+          "expectedRecordVersion": 6,
+          "nextState": "quarantined",
+          "observation": "unsafe_or_unknown_paths",
+          "observedAt": "2026-08-14T10:06:01.000Z"
+        }
+      ]
+    }
+  ]
+}

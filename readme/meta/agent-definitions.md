@@ -56,6 +56,15 @@ The project hook file owns one fixed `SubagentStart` profile command for each ex
 `agent_type`. Every Codex manifest disables its child multi-agent tools, and its static
 guard also stops work without the matching envelope and prohibits delegation.
 
+Separately launched implementation-controller jobs are not native subagents and never
+claim a role in prose. A controller `SessionStart` binds one protected, descriptor-
+anchored run/task/assignment/attempt/job identity to the exact compiled profile and
+prompt digests. Startup, resume, and compaction revalidate that identity; a missing,
+linked, changed, wrong-role, or stale descriptor stops before tools. The controller
+removes descriptor capability from the worker environment and keeps provider launch
+disabled when the host cannot prove that boundary. Normal interactive top-level startup
+continues to load Root and cannot be repurposed as a specialist binding.
+
 The Root Orchestrator assigns, integrates, and applies decomposition rules; discovery never mandates delegation.
 <!-- meta-framework-facet:v1:start roles.root -->
 ## Root Orchestrator

@@ -13,6 +13,24 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-14: Adopt The Concurrent Implementation Controller
+
+- Status: Adopted with live effects disabled.
+- Evidence: T-0051 transcript measurements, T-0052 command-boundary evaluation, T-0053
+  design gates, and T-0054 protocol, ledger, scheduler, provider, workspace, Git,
+  finalization, verification, package, recovery, and independent gate evidence; see
+  [Decision 0025](../decisions/0025-adopt-concurrent-implementation-controller.md).
+- Change: Added the explicit `meta implement` phase boundary, canonical execution ledger,
+  deterministic one-tick Root convergence, bounded concurrent specialist scheduling,
+  exact provider/role contracts, fenced single-writer plans, operator reads, shadow mode,
+  and state-preserving rollback. All effects require protected activation evidence.
+- Success signal: Fresh bounded jobs and durable files replace one accumulating autonomous
+  Root context while stale task, process, ownership, resource, check, and Git evidence
+  fail closed without losing recoverable state.
+- Review or sunset trigger: Wrong-role launch, missed stop, stale effect, sandbox/Git
+  escape, duplicate finalization, resource corruption, unbounded ledger/context, provider
+  drift, or evidence that tick freshness costs more than it saves.
+
 ## 2026-08-14: Simplify File Task Store Recovery And Durability
 
 - Status: Revised.
@@ -131,18 +149,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   package mutation, lifecycle hooks, wrong-root writes, or preserved-state drift.
 - Review or sunset trigger: Bootstrap/profile drift, overwrite, escaped or partial write,
   metadata/store race, recovery ambiguity, provider-discovery change, or platform demand.
-
-## 2026-08-11: Adopt Locked Data-Only Prompt Extensions
-
-- Status: Adopted.
-- Evidence: T-0028 packed clients, all 15 disabled-extension snapshots, deterministic
-  composition/provenance, 81 hostile mutations, exact package audit, and independent
-  Architect, Security, QA, and Reviewer gates; see
-  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
-- Change: Added an ordered explicit client allowlist for exact direct dependencies whose
-  lock-bound, bounded, lifecycle-free Markdown skill facets append to declared profiles
-  without scanning, execution, core override, or ambiguous provenance.
-- Success signal: Reviewed extension facets compose equally across harnesses and fail
-  before stdout on identity, lock, schema, filesystem, conflict, or budget drift.
-- Review or sunset trigger: Implicit discovery, extension execution, lock/root bypass,
-  core shadowing, nondeterminism, provenance ambiguity, or output-budget exhaustion.

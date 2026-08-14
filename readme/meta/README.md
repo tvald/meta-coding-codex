@@ -98,6 +98,14 @@ Onboarding and recovery are retrieved as bounded package documents whose policy 
 remain [onboarding.md](onboarding.md) and
 [resumption-protocol.md](resumption-protocol.md).
 
+The optional autonomous implementation phase starts only at the explicit local
+`meta implement TASK --expected-task-revision N --harness HARNESS` boundary described by
+[the root loop](root-loop.md#command-launched-implementation-phase). Its deterministic
+supervisor owns an operational ledger in the Git common directory while the task store
+retains task authority. Fresh bounded model jobs emit proposals; a single trusted writer
+owns effects. The initial package exposes effect-free shadow/read surfaces and keeps all
+live effects fail-closed behind exact activation evidence.
+
 ## Principles
 
 - Outcome first; context before code.

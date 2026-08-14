@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0054",
+  "recordVersion": 5,
+  "taskRevision": 2,
+  "outcome": "Implement Decision 0025's concurrent command-launched implementation controller through the nine ordered slices, including canonical protocol and reducer, execution ledger, Codex exec provider and exact role binding, deterministic concurrent scheduler, isolated worker workspaces, single Git integration and finalization writer, verification DAG and resource controls, operator CLI, recovery, packaging, shadow and live activation gates, tests, documentation, and state-preserving rollback",
+  "authority": {
+    "reference": "User instruction on 2026-08-14 to proceed with implementation of the accepted full concurrent controller design",
+    "acceptedDate": "2026-08-14"
+  },
+  "status": "active",
+  "dependencies": [
+    "T-0053"
+  ],
+  "route": "initiative",
+  "risk": "critical",
+  "tags": [
+    "orchestration",
+    "concurrency",
+    "codex",
+    "implementation"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Complete repository and verification seam inventory, assign non-overlapping slice-1 implementation and independent QA/security research, then implement pure protocol and reducer surfaces with every effect path disabled",
+  "details": [
+    {
+      "label": "execution-note",
+      "path": "readme/tasks/0054-concurrent-controller-implementation-notes.md"
+    },
+    {
+      "label": "decision",
+      "path": "readme/decisions/0025-adopt-concurrent-implementation-controller.md"
+    },
+    {
+      "label": "quality-record",
+      "path": "readme/quality/0054-concurrent-controller-implementation.md"
+    },
+    {
+      "label": "threat-model",
+      "path": "readme/threat-models/2026-08-14-concurrent-implementation-controller.md"
+    }
+  ],
+  "completion": null
+}

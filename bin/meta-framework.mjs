@@ -37,6 +37,16 @@ Usage:
   meta-framework quota --harness HARNESS
   meta-framework capability --version
   meta-framework capability --harness HARNESS --name NAME
+  meta-framework implement --version
+  meta-framework implement TASK --expected-task-revision N --harness codex [--max-concurrency 3] [--shadow]
+  meta-framework implement status RUN [--json]
+  meta-framework implement events RUN [--after SEQUENCE] [--limit COUNT]
+  meta-framework implement doctor RUN
+  meta-framework implement stop RUN --expected-control-generation N --reason TEXT
+  meta-framework implement resume RUN --expected-epoch N
+  meta-framework implement clean RUN
+  meta-framework implement lock inspect RUN
+  meta-framework implement lock recover RUN --expected-token TOKEN --confirm-owner-not-live
 `);
 }
 
@@ -84,6 +94,17 @@ function failProjectInitializer(error, prefix) {
     error.message : 'project initializer failed';
   process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
   process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 5 ?
+    error.exitCode : 1;
+}
+
+function failImplementationCli(error, prefix) {
+  const safeCode = typeof error?.code === 'string' && /^[A-Z][A-Z_]{0,63}$/u.test(error.code) ?
+    error.code : 'INTERNAL_ERROR';
+  const safeMessage = typeof error?.message === 'string' && error.message.length <= 512 &&
+    !/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069\ufeff]/u.test(error.message) ?
+    error.message : 'implementation controller failed';
+  process.stderr.write(`${prefix}: ${safeCode}: ${safeMessage}\n`);
+  process.exitCode = Number.isInteger(error?.exitCode) && error.exitCode >= 1 && error.exitCode <= 9 ?
     error.exitCode : 1;
 }
 
@@ -211,6 +232,7 @@ try {
   const args = process.argv.slice(2);
   if (args[0] === 'tasks') frameworkDataErrorPrefix = 'meta-framework tasks';
   else if (args[0] === 'project') frameworkDataErrorPrefix = 'meta-framework project';
+  else if (args[0] === 'implement') frameworkDataErrorPrefix = 'meta-framework implement';
   else if (['agent-prompt', 'hook', 'docs', 'explain'].includes(args[0])) {
     frameworkDataErrorPrefix = `meta-framework ${args[0]}`;
   }
@@ -344,6 +366,21 @@ try {
       probeOutput(packageRuntime, 'capability', options['--harness'], options['--name'],
         await inspectCapability(options['--harness'], options['--name'], { clientRoot }));
     }
+  } else if (args[0] === 'implement') {
+    const implementation = await import('../lib/implementation-cli.mjs');
+    const command = implementation.parseImplementationCommand(args.slice(1));
+    let adapter = null;
+    if (!['version', 'help'].includes(command.command)) {
+      const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+      const context = await repositoryContext();
+      validateClientRuntimeRoots({ packageRuntime, context });
+      adapter = implementation.createReadOnlyImplementationAdapter(context.commonDir);
+    }
+    const result = await implementation.executeImplementationCommand(command, {
+      packageIdentity: identity,
+      adapter,
+    });
+    process.stdout.write(command.command === 'help' ? result.help : `${JSON.stringify(result)}\n`);
   } else {
     fail('unknown command; run --help');
   }
@@ -356,5 +393,7 @@ try {
   else if (error?.name === 'PromptCompilerError') failPromptCompiler(error, frameworkDataErrorPrefix);
   else if (error?.name === 'ExtensionError') failPromptCompiler(error, frameworkDataErrorPrefix);
   else if (error?.name === 'ProjectInitializerError') failProjectInitializer(error, frameworkDataErrorPrefix);
+  else if (error?.name === 'ImplementationCliError') failImplementationCli(error, frameworkDataErrorPrefix);
+  else if (error?.name === 'ImplementationLedgerError') failImplementationCli(error, frameworkDataErrorPrefix);
   else failUnexpected(frameworkDataErrorPrefix);
 }

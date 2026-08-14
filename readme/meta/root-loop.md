@@ -21,6 +21,38 @@ the work or its risk:
 8. Record
 9. Improve
 10. Commit and continue
+
+## Command-Launched Implementation Phase
+
+Interactive design remains in the primary session until the task outcome, acceptance,
+non-goals, authority, revision, dependencies, gate, route, risk, and next safe action are
+complete. A product owner or maintainer may then cross the explicit phase boundary with
+the repository-pinned `meta implement TASK --expected-task-revision N --harness HARNESS`
+command. The command never turns task selection into approval and never broadens the
+task's authority.
+
+The implementation supervisor may remain live, but model sessions do not. It rebuilds
+one bounded orientation from the task store, execution ledger, Git facts, worker status,
+receipts, controls, quota, and deadlines; launches at most one fresh Root judgment for
+that decision point; validates one closed proposal; converges the resulting intent; and
+terminates the model job. Stable waiting launches no Root tick. Changed state and due
+deadlines coalesce one wake. Independent bounded specialist jobs may overlap within the
+declared WIP, path, dependency, resource, role, approval, and quota fences.
+
+The task store remains the authority for task lifecycle and completion. The separate
+Git-common ledger records runs, assignments, attempts, operations, events, checks,
+resources, processes, and receipts. Models produce untrusted proposals only. Exactly one
+trusted integration/finalization writer owns Git and task effects, after durable intent
+and before observed receipts. Stop, task-revision drift, ambiguous processes, stale refs,
+and conflicting evidence dominate new effects and enter stop, supersession, quarantine,
+or reconciliation instead of retrying implicitly.
+
+The package initially exposes `--shadow`, `status`, `events`, `doctor`, and `lock inspect`
+without live effect authority. Every write, process, signal, cleanup, task, Git, final-ref,
+or canary operation requires an exact current protected activation receipt. When the host
+cannot prove the declared process, filesystem, role-binding, and isolation mechanism,
+those commands fail closed. Replacement or rollback of package code preserves task and
+ledger state; cleanup is never implicit.
 <!-- meta-framework-facet:v1:end workflow.delivery -->
 ## 0. Intake And Resume
 

@@ -42,6 +42,18 @@ same accepted scope, diff review, collision preservation, least authority, and
 verification as other agent-tool permission changes. A trusted project, reviewed hook
 hash, or enabled hook does not authorize work beyond the task and repository boundary.
 
+The command-launched implementation controller inherits these boundaries. Starting a
+run is not an approval. Read-only status, event, doctor, lock inspection, and explicitly
+effect-free shadow planning may run within a selected task. Ledger creation, provider
+launch, workspace write, signal, Git administration, task mutation, cleanup, final-ref
+publication, and a live canary are separate effect classes. Each requires a current
+protected activation receipt bound to the exact task revision, run epoch, control and
+correction generations, policy, evidence, supported isolation mechanism, and expiry.
+The live canary additionally requires the exact current task approval. Model output,
+prompt text, command-line flags, task selection, and receipt-shaped data never mint or
+substitute for that evidence. Missing or conflicting proof fails closed without an
+implicit retry or cleanup.
+
 ## Task Intake Persistence
 
 The Root Orchestrator may persist newly delivered instructions through
