@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "T-0055",
+  "recordVersion": 1,
+  "taskRevision": 1,
+  "outcome": "Prevent Meta Framework self-hosting prompt edits from terminating Codex sessions by serving lifecycle hooks from a last-known-good content-addressed prompt generation, pinning each session through resume, clear, and compact, validating and atomically activating candidates, providing safe non-blocking exact-AGENTS Root fallback, and enforcing prompt headroom, rollback, and regression checks",
+  "authority": {
+    "reference": "Direct user instruction after the 2026-08-14 SessionStart prompt-output-limit incident",
+    "acceptedDate": "2026-08-14"
+  },
+  "status": "ready",
+  "dependencies": [],
+  "route": "initiative",
+  "risk": "high",
+  "tags": [
+    "prompt",
+    "codex",
+    "hooks",
+    "resilience",
+    "self-hosting"
+  ],
+  "gate": {
+    "kind": "none"
+  },
+  "nextSafeAction": "Before implementation, record the architecture decision and readiness evidence that fix immutable bootstrap ownership, active-bundle and session-pin storage, activation CAS, Root fallback semantics, source/client rollout, rollback, and counterfactual verification; do not serve lifecycle prompts from mutable candidate sources",
+  "details": [
+    {
+      "label": "brief",
+      "path": "readme/tasks/0055-prompt-bootstrap-activation-brief.md"
+    }
+  ],
+  "completion": null
+}
