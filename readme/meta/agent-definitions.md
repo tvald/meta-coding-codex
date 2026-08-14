@@ -234,46 +234,38 @@ trigger. Decompose only when it improves speed, quality, or focus:
 <!-- meta-framework-facet:v1:start capacity.guard -->
 ## Usage Capacity Guard
 
-The Root Orchestrator owns capacity monitoring whenever any child worker is planned,
-running, or quota-suspended. Use package-owned authoritative probes, never estimates: run
-`npm run --ignore-scripts --silent meta -- quota --harness codex`, or use `claude` for Claude Code. The
-package owns acquisition only; exclusively exit zero plus `disposition: "proceed"` is safe.
+Root monitors capacity for planned, running, or quota-suspended children. Run only
+`npm run --ignore-scripts --silent meta -- quota --harness codex` (or `claude`); safety
+requires exit zero with `disposition: "proceed"`.
 
-- Read every advertised five-hour, weekly, model-scoped, and monthly window before each
-  spawn or resume, after a worker result, and at least every five minutes while a child
-  is active. Consumed is `100 - remaining` when only remaining capacity is reported.
-- Apply each window independently at **95%** five-hour, **98%** weekly or model-scoped
-  weekly, and **99%** monthly. Treat a real limit error as 100%, and a failed, malformed,
-  or unknown required reading as at-cutoff. An explicitly omitted window is not
-  applicable; never guess or ask the product owner to monitor it.
-- At or above any cutoff, start or resume no child. Ask active children to checkpoint and
-  suspend at the next safe boundary, then preserve their state and output.
-- Before waiting, record the reading time, consumed percentages, reset times, limiting
-  windows, worker states, next safe action, and wake method without account or billing
-  data. Wake at the latest authoritative limiting reset when possible; otherwise poll
-  every five minutes. Re-read every window before resuming and prefer existing handles.
-- A quota wait is an operational pause, not **Blocked**, **Needs verification**, or task
-  completion. Use the replacement rules below only when a prior worker cannot resume.
+- Check every advertised five-hour, weekly/model-weekly, and monthly window before each
+  spawn/resume, after each result, and every five minutes while children run. Consumed is
+  `100 - remaining` when needed.
+- Cutoffs are **95%** five-hour, **98%** weekly/model-weekly, **99%** monthly. Limit
+  errors equal 100%; failed, malformed, or unknown required data is at cutoff. Omitted
+  windows are inapplicable; never estimate or ask the owner to monitor.
+- At cutoff, spawn/resume nothing; have children checkpoint and suspend safely.
+- Before waiting, record time, consumption, resets, limiting windows, worker state, next
+  action, and wake method without account data. Wake at the latest reset or poll every
+  five minutes; re-read before resuming and reuse handles.
+- Quota wait is operational, not task completion, **Blocked**, or **Needs verification**;
+  replace only a worker that cannot resume.
 <!-- meta-framework-facet:v1:end capacity.guard -->
 ## Parallel Integration And Recovery
 
-Before starting a worker, make its assignment and shared context durable and visible in
-that worker's execution model. A saved task note is enough in a shared worktree. An
-isolated checkout needs an approved shared commit, patch, or equivalent transfer; if no
-safe transfer exists, do not decompose. Do not create unauthorized checkpoint commits
-merely to satisfy parallelism.
+Before starting a worker, make its assignment and shared context durable in its execution
+model. A task note is enough in a shared worktree; an isolated checkout needs an approved
+commit, patch, or equivalent transfer. Without one, do not decompose or create an
+unauthorized checkpoint merely for parallelism.
 
 - Use one writer for task state and each shared knowledge file. Workers return proposed
   updates to the Root Orchestrator unless explicitly assigned ownership.
-- Integrate the smallest coherent worker result first. Run its focused checks before
-  integration, then the affected integration checks after each merge or integration
-  batch. Run the full task-required suite after all results are combined.
-- After interruption, inspect worker handles, `git status`, recent commits,
-  `git worktree list`, and relevant branches before replacing work. Never assume a
-  missing worker failed or completed.
-- Treat orphaned branches, worktrees, commits, and uncommitted changes as owned until
-  proven otherwise. Record them in the task note, recover needed results, and remove
-  nothing without repository authority and a confirmed safe disposition.
+- Integrate the smallest coherent worker result first. Run focused checks before it,
+  affected checks after each batch, and the full required suite after all results.
+- After interruption, inspect handles, `git status`, commits, worktrees, and branches
+  before replacing work. Never assume a missing worker failed or completed.
+- Treat orphaned branches, worktrees, commits, and changes as owned until proven otherwise.
+  Record and recover them; remove nothing without authority and a safe disposition.
 - Reassign only work still needed, independent, and absent from integrated results.
   Replacement instructions include prior evidence, current state, owned files, what not
   to redo or revert, checks, and handoff format.
@@ -305,5 +297,4 @@ Use this format when assigning or returning work:
 - Follow-up:
 ```
 <!-- meta-framework-facet:v1:end handoff.result -->
-Add a durable project-specific role only after repeated use justifies it; keep its purpose,
-triggers, inputs, boundaries, loop, verification, and output in the canonical agent file.
+Add a durable project-specific role only after repeated use; keep its purpose, triggers, inputs, boundaries, loop, verification, and output in the canonical agent file.

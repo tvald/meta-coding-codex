@@ -32,6 +32,9 @@ changes are uncommitted. Reading only `HEAD` also remains unsafe after a broken 
 The runtime prompt generation therefore needs an explicit build, validation, activation,
 and rollback boundary comparable to a transactional blue/green deployment.
 
+Incident evidence and follow-up are recorded in
+[the SessionStart prompt load incident](../incidents/2026-08-14-sessionstart-prompt-load-failure.md).
+
 ## Scope
 
 In scope:
@@ -60,8 +63,9 @@ In scope:
   established; Root fallback must not mint specialist authority.
 - Add an explicit prompt-capacity reserve rather than treating one byte below the hard limit
   as releasable. Record the chosen reserve and enforce it during candidate validation.
-- Provide explicit activation inspection, rollback to a prior valid generation, stale-pin
-  cleanup, corruption handling, and bounded operator diagnostics.
+- Provide explicit activation inspection, rollback to a prior valid generation, validated
+  SessionEnd/exact pin retirement, conservative unreferenced-generation cleanup,
+  corruption handling, and bounded operator diagnostics.
 - Update package/source documentation, decision records, tests, quality evidence, and threat
   modeling required by the final architecture.
 
@@ -86,31 +90,31 @@ Out of scope:
 
 ## Acceptance Criteria
 
-- [ ] Editing any prompt source, registry, compiler, hook adapter, or prompt-bearing framework
+- [x] Editing any prompt source, registry, compiler, hook adapter, or prompt-bearing framework
       document cannot change the prompt bytes used by an already-running session.
-- [ ] Startup pins one validated generation, and resume, clear, and compact return byte-identical
+- [x] Startup pins one validated generation, and resume, clear, and compact return byte-identical
       content for that session after arbitrary candidate-source changes.
-- [ ] A new session observes a newly activated generation, while existing session pins remain
+- [x] A new session observes a newly activated generation, while existing session pins remain
       valid until their defined end or explicit safe retirement.
-- [ ] Oversized, malformed, incomplete, stale, unsupported, digest-mismatched, or test-failing
+- [x] Oversized, malformed, incomplete, stale, unsupported, digest-mismatched, or test-failing
       candidates cannot advance the active generation or damage the last-known-good bundle.
-- [ ] Candidate publication and active-pointer advancement are crash-safe and atomic; recovery
+- [x] Candidate publication and active-pointer advancement are crash-safe and atomic; recovery
       can distinguish private candidate creation from successful activation.
-- [ ] The hook-serving bootstrap itself is immutable or content-addressed and is not executed
+- [x] The hook-serving bootstrap itself is immutable or content-addressed and is not executed
       from the mutable candidate source tree it is protecting.
-- [ ] A Root load failure returns a small valid `continue: true` SessionStart response with
+- [x] A Root load failure returns a small valid `continue: true` SessionStart response with
       exact local `AGENTS.md` fallback context and a sanitized operator-visible reason.
-- [ ] Root fallback does not authorize framework task continuation, external effects, prompt
+- [x] Root fallback does not authorize framework task continuation, external effects, prompt
       activation, or specialist work until the degraded state is reconciled.
-- [ ] Missing or mismatched specialist prompts remain fail-closed without inheriting Root or
+- [x] Missing or mismatched specialist prompts remain fail-closed without inheriting Root or
       fallback authority.
-- [ ] Candidate validation exercises all supported profiles/harnesses and every applicable
+- [x] Candidate validation exercises all supported profiles/harnesses and every applicable
       lifecycle source, including an actual over-limit counterfactual that fails before the fix.
-- [ ] A documented capacity-reserve rule rejects near-limit prompts before the hard compiler or
+- [x] A documented capacity-reserve rule rejects near-limit prompts before the hard compiler or
       Codex delivery boundary is reached.
-- [ ] Rollback selects a previously validated content-addressed generation without rebuilding
+- [x] Rollback selects a previously validated content-addressed generation without rebuilding
       it from current source files and does not alter existing session pins unexpectedly.
-- [ ] Source and installed-client packaging, update, trust review, and fallback behavior remain
+- [x] Source and installed-client packaging, update, trust review, and fallback behavior remain
       explicit and are covered by focused integration tests.
 
 ## Constraints
@@ -149,7 +153,7 @@ Out of scope:
 | Fallback behaves as an authority bypass | Work proceeds without the intended profile | Restrict Root fallback, name degraded state, and keep specialists fail-closed |
 | Partial activation destroys last-known-good state | All later sessions fail | Immutable bundles, atomic CAS pointer, receipts, and rollback tests |
 | Prompt grows back to the hard boundary | Minor edits recreate outages | Enforced reserve budget plus per-profile size reporting |
-| Cleanup removes a live pin or bundle | Resume/compact fails later | Reference-aware retention and conservative cleanup |
+| Cleanup guesses a live session ended | Resume/compact silently repins | SessionEnd/exact retirement; missed events leak pins; reference-aware generation cleanup |
 
 ## Assumptions
 

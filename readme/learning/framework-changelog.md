@@ -13,6 +13,21 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-14: Adopt Transactional Prompt Bootstrap Activation
+
+- Status: Adopted.
+- Evidence: T-0055 incident reproduction and the observed implementation and independent
+  gate results recorded in its quality record; see
+  [Decision 0026](../decisions/0026-adopt-transactional-prompt-bootstrap.md).
+- Change: Replaced live-worktree lifecycle compilation with content-addressed Git-common
+  generations, explicit ABA-safe activation, session pins, a verified standalone loader,
+  buffered literal fallback, direct rollback, and conservative cleanup.
+- Success signal: Prompt edits stay inactive, running sessions keep exact bytes through
+  resume/clear/compact, and a broken loader degrades Root to local `AGENTS.md` without
+  granting specialist or framework continuation authority.
+- Review or sunset trigger: Provider lifecycle drift, mixed session bytes, failed
+  rollback, fallback authority expansion, or a runtime path that imports candidate source.
+
 ## 2026-08-14: Adopt The Concurrent Implementation Controller
 
 - Status: Adopted with live effects disabled.
@@ -135,17 +150,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
 - Review or sunset trigger: A live copied-core path, mutable installed package, client
   framework log, ambiguous legacy deletion, source-bundle tarball leak, or replacement
   path that does not bind manifest and lockfile together.
-
-## 2026-08-11: Adopt Thin Harness Bootstraps And Guarded Client Initialization
-
-- Status: Adopted.
-- Evidence: T-0029 packed clean clients, exact bootstrap/state snapshots, populated-store
-  and restrictive-umask fixtures, 88-test regression suite, reproducible package audit,
-  and independent Architect, Security, QA, and Reviewer gates; see
-  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
-- Change: Added exact thin Codex/Claude discovery files and a Linux descriptor-anchored,
-  lock/journal-backed initializer for minimum client-owned cursor and task state.
-- Success signal: Installed clients initialize or resume without copied framework policy,
-  package mutation, lifecycle hooks, wrong-root writes, or preserved-state drift.
-- Review or sunset trigger: Bootstrap/profile drift, overwrite, escaped or partial write,
-  metadata/store race, recovery ambiguity, provider-discovery change, or platform demand.

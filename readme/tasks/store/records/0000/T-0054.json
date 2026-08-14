@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0054",
-  "recordVersion": 5,
+  "recordVersion": 6,
   "taskRevision": 2,
   "outcome": "Implement Decision 0025's concurrent command-launched implementation controller through the nine ordered slices, including canonical protocol and reducer, execution ledger, Codex exec provider and exact role binding, deterministic concurrent scheduler, isolated worker workspaces, single Git integration and finalization writer, verification DAG and resource controls, operator CLI, recovery, packaging, shadow and live activation gates, tests, documentation, and state-preserving rollback",
   "authority": {
     "reference": "User instruction on 2026-08-14 to proceed with implementation of the accepted full concurrent controller design",
     "acceptedDate": "2026-08-14"
   },
-  "status": "active",
+  "status": "blocked",
   "dependencies": [
     "T-0053"
   ],
@@ -21,9 +21,10 @@
     "implementation"
   ],
   "gate": {
-    "kind": "none"
+    "kind": "blocker",
+    "summary": "The live SessionStart prompt path is unsafe while the framework modifies prompt-bearing sources; T-0055 must establish a last-known-good bootstrap and non-blocking Root fallback first"
   },
-  "nextSafeAction": "Complete repository and verification seam inventory, assign non-overlapping slice-1 implementation and independent QA/security research, then implement pure protocol and reducer surfaces with every effect path disabled",
+  "nextSafeAction": "Resume only after T-0055 completes; then reconcile commit 9ed2d59 against the T-0054 execution note and rerun all required verification gates before further controller work",
   "details": [
     {
       "label": "execution-note",

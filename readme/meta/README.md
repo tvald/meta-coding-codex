@@ -239,15 +239,39 @@ targets without overwrite or merge. Exact current files are preserved, and an
 exact-plus-absent interrupted prefix may be completed through the same anchored
 transaction. Hook-disabled, untrusted, managed-only, and operator-disabled unverified
 versions use the `AGENTS.md` fallback; a delegated manifest with missing or mismatched
-injected context stops before tool work. Codex trusts the root and four agent hook definitions
-independently even though they share one `hooks.json`, so maintainers review and approve
-all five exact command hashes. Every custom-agent layer disables its own multi-agent
+injected context stops before tool work. Codex trusts each lifecycle definition
+independently even though they share one `hooks.json`. Every custom-agent layer disables its own multi-agent
 tools as a mechanical nested-delegation boundary. Source and installed-client hooks use
-a quoted `git rev-parse --show-toplevel` result to resolve their fixed local binary from
-any repository subdirectory. They never dispatch through a mutable client npm script.
+a buffered trusted wrapper from any repository subdirectory. Source hooks verify and
+invoke a digest-addressed standalone loader in the physical Git-common prompt runtime;
+installed hooks invoke the exact local package binary and may seed only a canonically
+absent runtime. They never dispatch through a mutable client npm script or compile the
+live source worktree during a lifecycle event. Review the Root SessionStart, four
+SubagentStart, and SessionEnd definitions; a loader digest change receives normal hook
+trust review.
 The adapter does not detect the running Codex version: versions absent from
 `hook --version` are unverified and require explicit review or operator disablement to
 use the fallback.
+
+Source maintainers publish prompt changes transactionally:
+
+```sh
+npm run --ignore-scripts --silent meta -- prompt-runtime build
+npm run --ignore-scripts --silent meta -- prompt-runtime install-bootstrap
+npm run --ignore-scripts --silent meta -- prompt-runtime status
+npm run --ignore-scripts --silent meta -- prompt-runtime activate GENERATION --expected-active TOKEN
+```
+
+Candidate build requires two byte-stable profile/harness compilations, independent core
+reserve evidence for extensions, and a digest-bound passed lifecycle receipt before it
+publishes an inactive content-addressed generation. Activation and rollback require the
+exact opaque token returned by `status`. SessionStart pins startup/resume/clear/compact
+to one generation; validated SessionEnd retires the pin. Status reports crash-left
+private candidates without treating them as published generations. `prompt-runtime
+cleanup` is inspect-only, while `cleanup --apply` can remove only inactive, unreferenced
+generations at least 90 days old. Missing end events intentionally leak pins rather than
+guessing that a resumable session ended. See
+[Decision 0026](../decisions/0026-adopt-transactional-prompt-bootstrap.md).
 
 After initialization, follow [onboarding.md](onboarding.md): load the root profile,
 create an onboarding task through the package task CLI, inventory the repository, and

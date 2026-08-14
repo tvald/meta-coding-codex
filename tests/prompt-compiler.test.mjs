@@ -30,6 +30,7 @@ import {
   validatePromptRegistry,
 } from '../lib/prompt-compiler.mjs';
 import {
+  PROMPT_ACTIVATION_RESERVE_BYTES,
   PROMPT_COMPILER_COMPATIBILITY,
   PROMPT_LIMITS,
 } from '../lib/prompt-contract.mjs';
@@ -207,9 +208,12 @@ test('every profile and harness is deterministic, bounded, attributable, and sem
       const first = compileAgentPrompt(sourceRuntime, profile, harness);
       const second = compileAgentPrompt(sourceRuntime, profile, harness);
       assert.equal(first, second);
-      assert.ok(Buffer.byteLength(first) <= PROMPT_LIMITS.promptBytes);
+      assert.ok(Buffer.byteLength(first) <=
+        PROMPT_LIMITS.promptBytes - PROMPT_ACTIVATION_RESERVE_BYTES.output);
       assert.deepEqual({ bytes: Buffer.byteLength(first), sha256: sha256(first) }, snapshots[`${profile}:${harness}`]);
       const parsed = parsePrompt(first);
+      assert.ok(Buffer.byteLength(parsed.body) <=
+        PROMPT_LIMITS.promptBodyBytes - PROMPT_ACTIVATION_RESERVE_BYTES.body);
       const withoutDigest = { ...parsed.manifest };
       delete withoutDigest.digest;
       assert.equal(parsed.manifest.digest,

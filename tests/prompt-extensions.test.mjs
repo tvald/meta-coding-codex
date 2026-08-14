@@ -6,9 +6,11 @@ import {
   cpSync,
   existsSync,
   linkSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   renameSync,
   rmSync,
   symlinkSync,
@@ -286,10 +288,10 @@ function invoke(client, args, extraEnvironment = {}) {
   });
 }
 
-function invokeHook(client, profile, source = 'startup') {
+function invokeHook(client, profile, source = 'startup', sessionId = 'extension-hook-session') {
   const event = profile === 'root'
-    ? { hook_event_name: 'SessionStart', source }
-    : { hook_event_name: 'SubagentStart', agent_type: `meta_${profile}` };
+    ? { hook_event_name: 'SessionStart', source, session_id: sessionId }
+    : { hook_event_name: 'SubagentStart', agent_type: `meta_${profile}`, session_id: sessionId };
   return run(process.execPath,
     [client.binary, 'hook', '--harness', 'codex', '--profile', profile], {
       cwd: client.root,
@@ -370,8 +372,20 @@ test.before(() => {
     lifecycleTarball, lifecycleSentinel);
 });
 
+function makeTreeRemovable(target) {
+  if (!existsSync(target)) return;
+  const info = lstatSync(target);
+  if (info.isDirectory()) {
+    chmodSync(target, 0o700);
+    for (const name of readdirSync(target)) makeTreeRemovable(join(target, name));
+  } else if (info.isFile()) chmodSync(target, 0o600);
+}
+
 test.after(() => {
-  if (suiteRoot !== undefined) rmSync(suiteRoot, { recursive: true, force: true });
+  if (suiteRoot !== undefined) {
+    makeTreeRemovable(suiteRoot);
+    rmSync(suiteRoot, { recursive: true, force: true });
+  }
 });
 
 test('absent and empty allowlists preserve all fifteen source prompts byte for byte without scanning', () => {
@@ -427,6 +441,10 @@ test('ordered extensions compose deterministically across profiles and harnesses
   }
 
   const outputs = new Map();
+  const hookSession = 'ordered-extension-hook-session';
+  const seededHook = invokeHook(client, 'root', 'startup', hookSession);
+  assert.equal(seededHook.status, 0, seededHook.stderr);
+  assert.match(seededHook.stdout, /^META-FRAMEWORK-AGENT-PROMPT 1\n/u);
   for (const profile of profiles) for (const harness of harnesses) {
     const args = ['agent-prompt', '--profile', profile, '--harness', harness];
     const first = invoke(client, args);
@@ -435,7 +453,7 @@ test('ordered extensions compose deterministically across profiles and harnesses
     assert.equal(second.status, 0, second.stderr);
     assert.equal(first.stdout, second.stdout, `${profile}:${harness}`);
     if (harness === 'codex') {
-      const hook = invokeHook(client, profile);
+      const hook = invokeHook(client, profile, 'startup', hookSession);
       assert.equal(hook.status, 0, hook.stderr);
       assert.equal(hook.stderr, '');
       assert.equal(hook.stdout, first.stdout, `hook:${profile}`);
@@ -606,7 +624,7 @@ test('maximum facet and inventory boundaries succeed exactly at their declared l
 
     const maximumCodexPrompt = invoke(facetMaximum,
       ['agent-prompt', '--profile', 'root', '--harness', 'codex']);
-    const maximumCodexHook = invokeHook(facetMaximum, 'root', 'compact');
+    const maximumCodexHook = invokeHook(facetMaximum, 'root', 'compact', 'maximum-extension-hook-session');
     assert.equal(maximumCodexPrompt.status, 0, maximumCodexPrompt.stderr);
     assert.equal(maximumCodexHook.status, 0, maximumCodexHook.stderr);
     assert.equal(maximumCodexHook.stdout, maximumCodexPrompt.stdout);

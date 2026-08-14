@@ -1,5 +1,19 @@
 # Framework Changelog Archive: 2026
 
+## 2026-08-11: Adopt Thin Harness Bootstraps And Guarded Client Initialization
+
+- Status: Adopted.
+- Evidence: T-0029 packed clean clients, exact bootstrap/state snapshots, populated-store
+  and restrictive-umask fixtures, 88-test regression suite, reproducible package audit,
+  and independent Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added exact thin Codex/Claude discovery files and a Linux descriptor-anchored,
+  lock/journal-backed initializer for minimum client-owned cursor and task state.
+- Success signal: Installed clients initialize or resume without copied framework policy,
+  package mutation, lifecycle hooks, wrong-root writes, or preserved-state drift.
+- Review or sunset trigger: Bootstrap/profile drift, overwrite, escaped or partial write,
+  metadata/store race, recovery ambiguity, provider-discovery change, or platform demand.
+
 ## 2026-07-30: Adopt Tiered Per-Window Usage Cutoffs
 
 - Status: Adopted.

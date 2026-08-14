@@ -211,7 +211,7 @@ test('package policy rejects missing or drifting project initializer metadata', 
     (candidate) => { candidate.metaFramework.projectInit.bootstrapVersions = [2]; },
     (candidate) => { candidate.metaFramework.projectInit.stateTemplateVersions = [2]; },
     (candidate) => { candidate.metaFramework.projectInit.optionalHarnesses = ['claude']; },
-    (candidate) => { candidate.metaFramework.projectInit.codexIntegrationConfigVersions = [2]; },
+    (candidate) => { candidate.metaFramework.projectInit.codexIntegrationConfigVersions = [9]; },
     (candidate) => { candidate.metaFramework.projectInit.unreviewed = true; },
   ];
   for (const mutate of mutations) {
@@ -229,7 +229,7 @@ test('package policy rejects missing or drifting hook adapter metadata', () => {
     (candidate) => { candidate.metaFramework.hookAdapter.version = '2.0.0'; },
     (candidate) => { candidate.metaFramework.hookAdapter.envelopeVersions = [2]; },
     (candidate) => { candidate.metaFramework.hookAdapter.hookEventSchemaVersions = [2]; },
-    (candidate) => { candidate.metaFramework.hookAdapter.integrationConfigVersions = [2]; },
+    (candidate) => { candidate.metaFramework.hookAdapter.integrationConfigVersions = [9]; },
     (candidate) => { candidate.metaFramework.hookAdapter.harnesses = ['claude']; },
     (candidate) => { candidate.metaFramework.hookAdapter.profiles.reverse(); },
     (candidate) => { candidate.metaFramework.hookAdapter.testedCodexVersions = ['9.9.9']; },

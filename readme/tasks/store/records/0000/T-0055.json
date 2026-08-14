@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0055",
-  "recordVersion": 1,
-  "taskRevision": 1,
+  "recordVersion": 6,
+  "taskRevision": 2,
   "outcome": "Prevent Meta Framework self-hosting prompt edits from terminating Codex sessions by serving lifecycle hooks from a last-known-good content-addressed prompt generation, pinning each session through resume, clear, and compact, validating and atomically activating candidates, providing safe non-blocking exact-AGENTS Root fallback, and enforcing prompt headroom, rollback, and regression checks",
   "authority": {
     "reference": "Direct user instruction after the 2026-08-14 SessionStart prompt-output-limit incident",
     "acceptedDate": "2026-08-14"
   },
-  "status": "ready",
+  "status": "done",
   "dependencies": [],
   "route": "initiative",
   "risk": "high",
@@ -22,12 +22,32 @@
   "gate": {
     "kind": "none"
   },
-  "nextSafeAction": "Before implementation, record the architecture decision and readiness evidence that fix immutable bootstrap ownership, active-bundle and session-pin storage, activation CAS, Root fallback semantics, source/client rollout, rollback, and counterfactual verification; do not serve lifecycle prompts from mutable candidate sources",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "brief",
       "path": "readme/tasks/0055-prompt-bootstrap-activation-brief.md"
+    },
+    {
+      "label": "execution-note",
+      "path": "readme/tasks/0055-prompt-bootstrap-activation-notes.md"
+    },
+    {
+      "label": "decision",
+      "path": "readme/decisions/0026-adopt-transactional-prompt-bootstrap.md"
+    },
+    {
+      "label": "quality-record",
+      "path": "readme/quality/0055-prompt-bootstrap-activation.md"
+    },
+    {
+      "label": "threat-model",
+      "path": "readme/threat-models/2026-08-14-prompt-bootstrap-activation.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-14",
+    "repositoryChanged": true,
+    "evidence": "Decision 0026 transactional prompt runtime implemented; final Reviewer, QA, and Security gates Pass; runtime 14/14, hooks 7/7, compiler 8/8, extensions 5/5, initializer 19/19, package 104/104, and full 294/294 tests Pass; Codex 0.147.0 startup/resume and exact four-source lifecycle checks Pass; 77-file package audit, pack dry-run, doctor, links, budgets, and diff checks Pass"
+  }
 }

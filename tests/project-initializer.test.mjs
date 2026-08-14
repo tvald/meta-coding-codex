@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   chmodSync,
@@ -21,6 +21,7 @@ import { delimiter, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test, { after, before } from 'node:test';
 import {
+  CLIENT_HOOK_COMMAND,
   CODEX_INTEGRATION_FILES,
   CODEX_INTEGRATION_PATHS,
 } from '../lib/codex-integration.mjs';
@@ -109,6 +110,25 @@ function run(command, args, options = {}) {
     timeout: 30_000,
     maxBuffer: 2 * 1024 * 1024,
     ...options,
+  });
+}
+
+function runAsync(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const { input = '', ...spawnOptions } = options;
+    const child = spawn(command, args, { ...spawnOptions, stdio: ['pipe', 'pipe', 'pipe'] });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on('data', (chunk) => stdout.push(chunk));
+    child.stderr.on('data', (chunk) => stderr.push(chunk));
+    child.on('error', reject);
+    child.on('close', (status, signal) => resolve({
+      status,
+      signal,
+      stdout: Buffer.concat(stdout).toString('utf8'),
+      stderr: Buffer.concat(stderr).toString('utf8'),
+    }));
+    child.stdin.end(input);
   });
 }
 
@@ -334,7 +354,17 @@ before(() => {
   writeJson(join(clientTemplate, 'package-lock.json'), lock);
 });
 
+function makeTreeRemovable(target) {
+  if (!existsSync(target)) return;
+  const info = lstatSync(target);
+  if (info.isDirectory()) {
+    chmodSync(target, 0o700);
+    for (const name of readdirSync(target)) makeTreeRemovable(join(target, name));
+  } else if (info.isFile()) chmodSync(target, 0o600);
+}
+
 after(() => {
+  makeTreeRemovable(suiteRoot);
   rmSync(suiteRoot, { recursive: true, force: true });
 });
 
@@ -346,12 +376,12 @@ test('project version is rootless and exposes the exact initializer compatibilit
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       projectInit: {
-        version: '1.1.0',
+        version: '1.2.0',
         envelopeVersions: [1],
         bootstrapVersions: [1],
         stateTemplateVersions: [1],
         optionalHarnesses: ['codex'],
-        codexIntegrationConfigVersions: [1],
+        codexIntegrationConfigVersions: [2],
       },
     });
     for (const args of [[], ['--help'], ['init', '--force'], ['preflight', 'extra'],
@@ -376,7 +406,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.1.0',
+      version: '1.2.0',
       disposition: 'fresh',
       bootstrapVersion: 1,
       stateTemplateVersion: 1,
@@ -390,7 +420,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.1.0',
+      version: '1.2.0',
       result: 'initialized',
       created: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
       preserved: [],
@@ -430,7 +460,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.1.0',
+      version: '1.2.0',
       result: 'already_initialized',
       created: [],
       preserved: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
@@ -502,7 +532,7 @@ test('opt-in Codex integration installs exact files, preserves unrelated config,
   const preflight = projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit;
   assert.equal(preflight.disposition, 'ready_to_add_codex_integration');
   assert.equal(preflight.harness, 'codex');
-  assert.equal(preflight.integrationConfigVersion, 1);
+  assert.equal(preflight.integrationConfigVersion, 2);
   assert.deepEqual(preflight.integration,
     Object.fromEntries(CODEX_INTEGRATION_PATHS.map((relative) => [relative, 'absent'])));
 
@@ -540,18 +570,18 @@ test('opt-in Codex integration installs exact files, preserves unrelated config,
     readFileSync(join(client.clientRoot, '.codex', 'hooks.json'), 'utf8'),
   ).hooks;
   const installedHook = installedHooks.SessionStart[0].hooks[0].command;
-  assert.equal(installedHook,
-    'node "$(git rev-parse --show-toplevel)/node_modules/meta-framework/bin/meta-framework.mjs" hook --harness codex --profile root');
+  assert.equal(installedHook, CLIENT_HOOK_COMMAND);
   const manifest = JSON.parse(readFileSync(join(client.clientRoot, 'package.json'), 'utf8'));
   manifest.scripts.meta = 'node -e "process.stdout.write(\'MUTABLE_CLIENT_SCRIPT_EXECUTED\\n\')"';
   writeJson(join(client.clientRoot, 'package.json'), manifest);
   const nested = join(client.clientRoot, 'readme', 'tasks');
+  const sessionId = 'installed-project-hook-session';
   const invocations = [
-    ['root', installedHook, { hook_event_name: 'SessionStart', source: 'startup' }],
+    ['root', installedHook, { hook_event_name: 'SessionStart', source: 'startup', session_id: sessionId }],
     ...installedHooks.SubagentStart.map((entry) => {
       const agentType = entry.matcher.slice(1, -1);
       return [agentType.slice('meta_'.length), entry.hooks[0].command,
-        { hook_event_name: 'SubagentStart', agent_type: agentType }];
+        { hook_event_name: 'SubagentStart', agent_type: agentType, session_id: sessionId }];
     }),
   ];
   for (const [profile, command, event] of invocations) {
@@ -566,6 +596,106 @@ test('opt-in Codex integration installs exact files, preserves unrelated config,
   }
   assert.equal(existsSync(join(nested, 'T0033_HOOK_INJECTED')), false);
   assert.equal(existsSync(join(client.clientRoot, 'T0033_HOOK_INJECTED')), false);
+});
+
+test('installed first hooks seed once while partial and read-only operations never initialize state', async () => {
+  for (const [label, profile, input] of [
+    ['malformed', 'root', '{'],
+    ['duplicate-key', 'root', '{"hook_event_name":"SessionStart","hook_event_name":"SubagentStart","source":"startup","session_id":"duplicate"}'],
+    ['missing-session', 'root', JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' })],
+    ['specialist-session-end', 'reviewer', JSON.stringify({ hook_event_name: 'SessionEnd', session_id: 'wrong-profile' })],
+  ]) {
+    const invalid = makeClient(`prompt-runtime-invalid-${label}`);
+    projectJson(invalid, ['init']);
+    const runtimePath = join(invalid.clientRoot, '.git', 'meta-framework', 'prompt-runtime');
+    const result = run(process.execPath,
+      [invalid.binary, 'hook', '--harness', 'codex', '--profile', profile], {
+        cwd: invalid.clientRoot,
+        input,
+      });
+    assert.equal(result.status, 0, `${label}: ${result.stderr}`);
+    assert.match(result.stdout, profile === 'root'
+      ? /META-FRAMEWORK-DEGRADED 1/u
+      : /META-FRAMEWORK-DELEGATED-PROMPT-FAILURE 1/u, label);
+    assert.equal(existsSync(runtimePath), false, `${label} seeded prompt state`);
+  }
+
+  const concurrent = makeClient('prompt-runtime-concurrent-seed');
+  projectJson(concurrent, ['init']);
+  const hookArgs = [concurrent.binary, 'hook', '--harness', 'codex', '--profile', 'root'];
+  const event = JSON.stringify({
+    hook_event_name: 'SessionStart', source: 'startup', session_id: 'concurrent-installed-seed',
+  });
+  const [left, right] = await Promise.all([
+    runAsync(process.execPath, hookArgs, { cwd: concurrent.clientRoot, input: event }),
+    runAsync(process.execPath, hookArgs, { cwd: concurrent.clientRoot, input: event }),
+  ]);
+  for (const [label, result] of [['left', left], ['right', right]]) {
+    assert.equal(result.status, 0, `${label}: ${result.stderr}`);
+    assert.equal(result.signal, null, label);
+    assert.match(result.stdout, /^META-FRAMEWORK-AGENT-PROMPT 1\n/u, `${label}: ${result.stderr}`);
+  }
+  assert.equal(left.stdout, right.stdout);
+  const seededStatus = run(process.execPath, [concurrent.binary, 'prompt-runtime', 'status'], {
+    cwd: concurrent.clientRoot,
+  });
+  assert.equal(seededStatus.status, 0, seededStatus.stderr);
+  const seeded = JSON.parse(seededStatus.stdout);
+  assert.equal(seeded.activeRevision, 1);
+  assert.equal(seeded.generations.length, 1);
+  assert.equal(seeded.privateSeeds, 0);
+  assert.equal(Object.hasOwn(seeded, 'runtimeRoot'), false);
+  assert.doesNotMatch(seededStatus.stdout, /prompt-runtime\/v1/u);
+  const installedLoader = run(process.execPath,
+    [concurrent.binary, 'prompt-runtime', 'install-bootstrap'], { cwd: concurrent.clientRoot });
+  assert.equal(installedLoader.status, 0, installedLoader.stderr);
+  const installedLoaderResult = JSON.parse(installedLoader.stdout);
+  assert.match(installedLoaderResult.relativePath, /^loaders\/[0-9a-f]{64}\.mjs$/u);
+  assert.equal(Object.hasOwn(installedLoaderResult, 'path'), false);
+
+  for (const [label, populate] of [
+    ['parent-only', (root) => mkdirSync(root, { recursive: true, mode: 0o700 })],
+    ['missing-child', (root) => {
+      for (const target of [root, join(root, 'v1'), join(root, 'v1', 'generations'),
+        join(root, 'v1', 'loaders')]) mkdirSync(target, { recursive: true, mode: 0o700 });
+    }],
+  ]) {
+    const partial = makeClient(`prompt-runtime-partial-${label}`);
+    projectJson(partial, ['init']);
+    const framework = join(partial.clientRoot, '.git', 'meta-framework');
+    const runtimeRoot = join(framework, 'prompt-runtime');
+    populate(runtimeRoot);
+    const makeExact = (target) => {
+      chmodSync(target, 0o700);
+      for (const name of readdirSync(target)) {
+        const child = join(target, name);
+        if (lstatSync(child).isDirectory()) makeExact(child);
+      }
+    };
+    makeExact(framework);
+    const before = treeDigest(framework);
+    const failed = run(process.execPath,
+      [partial.binary, 'hook', '--harness', 'codex', '--profile', 'root'], {
+        cwd: partial.clientRoot,
+        input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: `partial-${label}` }),
+      });
+    assert.equal(failed.status, 0, `${label}: ${failed.stderr}`);
+    assert.match(failed.stdout, /META-FRAMEWORK-DEGRADED 1/u, label);
+    assert.equal(treeDigest(framework), before, `${label} was repaired or seeded`);
+  }
+
+  const absent = makeClient('prompt-runtime-read-only-absent');
+  projectJson(absent, ['init']);
+  const runtimePath = join(absent.clientRoot, '.git', 'meta-framework', 'prompt-runtime');
+  for (const args of [['cleanup'], ['activate', 'invalid']]) {
+    const result = run(process.execPath, [absent.binary, 'prompt-runtime', ...args], { cwd: absent.clientRoot });
+    assert.notEqual(result.status, 0, args.join(' '));
+    assert.equal(existsSync(runtimePath), false, args.join(' '));
+  }
+  const status = run(process.execPath, [absent.binary, 'prompt-runtime', 'status'], { cwd: absent.clientRoot });
+  assert.equal(status.status, 0, status.stderr);
+  assert.equal(JSON.parse(status.stdout).initialized, false);
+  assert.equal(existsSync(runtimePath), false);
 });
 
 test('Codex integration preflight distinguishes partial and unsafe ownership states', () => {

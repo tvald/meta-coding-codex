@@ -30,6 +30,7 @@ results live only in the structured task store.
 | Keep recovery proposal-only, bounded, revision-aware, and conservative about uncertain effects or ownership. | [Decision 0020](decisions/0020-adopt-guarded-task-recovery-skill.md) |
 | Deliver future clients an immutable npm dependency with explicit package/client roots, derived attributable prompts, guarded extensions, and replacement-only updates. | [Decision 0021](decisions/0021-adopt-immutable-npm-framework-delivery.md) |
 | Use fixed-profile Codex lifecycle hooks and exact `meta_` custom agents only through collision-safe, opt-in client integration; preserve the portable fallback and disable child multi-agent tools with the schema-compatible feature flag. | [Decisions 0022](decisions/0022-adopt-codex-hook-prompt-injection.md) and [0023](decisions/0023-revise-codex-child-agent-disablement.md) |
+| Serve lifecycle prompts from validated immutable Git-common generations, pin sessions, require explicit ABA-safe activation, and degrade Root to the exact local fallback. | [Decision 0026](decisions/0026-adopt-transactional-prompt-bootstrap.md) |
 | Separate interactive design from command-launched autonomous implementation; use deterministic bounded ticks, concurrent isolated workers, one fenced writer, and fail-closed activation. | [Decision 0025](decisions/0025-adopt-concurrent-implementation-controller.md) |
 
 ## Known Global Dead Ends

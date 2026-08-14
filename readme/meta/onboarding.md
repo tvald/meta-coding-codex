@@ -35,8 +35,11 @@ task mutation.
    `ready_to_add_codex_integration`, `ready_to_complete_codex_integration`, or the
    idempotent `valid_current_codex_integration`, then run
    `project init --harness codex` when needed. Review `.codex/hooks.json` and all four
-   `meta_` manifests before trusting the project, then approve all five hook definitions
-   in the shared hook file. Confirm the running Codex release appears in `hook --version`;
+   `meta_` manifests before trusting the project, then approve the Root SessionStart,
+   four SubagentStart, and SessionEnd definitions in the shared hook file. The immutable
+   installed package may seed the Git-common prompt runtime only when it is canonically
+   absent; later package changes do not auto-activate prompts. Confirm the running Codex
+   release appears in `hook --version`;
    the adapter does not detect it automatically, so leave the optional integration
    disabled for an unverified version until its behavior is reviewed.
    Refuse and explicitly reconcile client-owned, stale, malformed, linked, or colliding

@@ -73,6 +73,26 @@ changed, linked, malformed, stale, or same-name targets are reported and refused
 than overwritten or merged. An exact-plus-absent framework prefix may be completed
 safely after interruption.
 
+Installed-client hooks seed one exact package generation only when the Git-common prompt
+runtime is canonically absent. Later package or prompt changes never auto-select a new
+generation. Framework source maintainers use the explicit transactional commands:
+
+```sh
+npm run --ignore-scripts --silent meta -- prompt-runtime build
+npm run --ignore-scripts --silent meta -- prompt-runtime install-bootstrap
+npm run --ignore-scripts --silent meta -- prompt-runtime status
+npm run --ignore-scripts --silent meta -- prompt-runtime activate GENERATION --expected-active TOKEN
+```
+
+`build` publishes an inactive candidate only after two stable full-matrix compilations,
+independent extension/core reserve checks, and a digest-bound passed lifecycle receipt.
+`status` returns the compiled prompt-set identity, any crash-left private candidate
+count, and the opaque active token required by `activate` or `rollback`. Existing
+sessions remain pinned to their original immutable generation.
+`cleanup` is a dry run unless `--apply` is explicit and considers only inactive,
+unreferenced generations at least 90 days old; it never expires session pins by age.
+Run `prompt-runtime --version` and the top-level `--help` for the bounded operator grammar.
+
 Syntax errors exit 2, refused or unsafe initialization exits 4, an active cooperative
 lock exits 5, and other runtime failures exit 1. A failed command writes no success
 envelope. Resolve a reported legacy, partial, prepared, or collision disposition through
@@ -110,13 +130,13 @@ should be merged.
 In a trusted project with the reviewed Codex integration, `SessionStart` injects the
 current compiled root profile for startup, resume, clear, and compaction. The generated
 `AGENTS.md` recognizes that envelope and does not duplicate-load it. Automatic source
-hooks invoke `node "$(git rev-parse --show-toplevel)/bin/meta-framework.mjs"`;
-installed-client hooks use the equivalent fixed dependency path below that Git root.
-The quoted root keeps subdirectory sessions and repository names containing shell
-metacharacters safe while bypassing mutable client npm scripts. `meta hook` remains the
-public CLI. If hooks are disabled, untrusted, or administratively restricted,
-`AGENTS.md` uses the checked-in local `agent-prompt` fallback and stops on failure.
-Claude continues to load its root profile through `CLAUDE.md`.
+hooks verify and invoke the exact digest-addressed standalone loader in the physical Git
+common directory; installed-client hooks invoke the exact package binary below the Git
+root. Both buffered wrappers discard partial child output and bypass mutable client npm
+scripts. `meta hook` remains the installed-package CLI. If hooks are disabled, untrusted,
+or administratively restricted, `AGENTS.md` uses the checked-in local `agent-prompt`
+fallback and stops on failure. Claude continues to load its root profile through
+`CLAUDE.md`.
 
 The adapter is live-tested only against the versions in `meta hook --version` (currently
 Codex 0.147.0). It does not inspect the running Codex version. Treat another version as
