@@ -123,8 +123,8 @@ async function lstatRegular(file, label, { maxBytes = MAX_RECORD_BYTES } = {}) {
     if (error.code === "ENOENT") fail("STORE_MISSING", `${label} is missing`);
     fail("PATH_UNSAFE", `${label} cannot be inspected`);
   });
-  if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1) {
-    fail("PATH_UNSAFE", `${label} must be one ordinary non-hard-linked file`);
+  if (!info.isFile() || info.isSymbolicLink()) {
+    fail("PATH_UNSAFE", `${label} must be one ordinary file`);
   }
   if (info.size < 2 || info.size > maxBytes) fail("RECORD_SIZE", `${label} has an invalid byte size`);
   return info;
@@ -273,7 +273,6 @@ export async function loadStore(context, {
     const shardPath = path.join(recordsRoot, shardEntry.name);
     await assertOrdinaryDirectoryTree(context.root, shardPath, "task record shard");
     const fileEntries = await boundedDirectoryEntries(shardPath, 1000, "task shard");
-    if (fileEntries.length === 0) fail("STORE_LAYOUT", "task record shards must not be empty");
     for (const fileEntry of fileEntries.sort((a, b) => a.name.localeCompare(b.name))) {
       if (fileEntry.isSymbolicLink()) fail("PATH_UNSAFE", "task shard contains a symbolic link");
       if (!fileEntry.isFile() || !/^T-(?:\d{4}|[1-9]\d{4,})\.json$/u.test(fileEntry.name)) {
@@ -353,19 +352,9 @@ export async function atomicWriteJson(file, value, { replacing = true, root = nu
   const stageParent = path.join(root, "readme", "tasks");
   const text = boundedCanonicalJson(value);
   await assertOrdinaryDirectoryTree(root, stageParent, "record staging directory");
-  await assertOrdinaryDirectoryTree(root, parent, "record parent");
-  if (replacing) {
-    await lstatRegularWithin(root, file, "record being replaced");
-  }
-  else {
-    const exists = await fs.lstat(file).then(() => true, (error) => error.code === "ENOENT" ? false : Promise.reject(error));
-    if (exists) fail("DESTINATION_COLLISION", "record destination already exists");
-  }
   const temporary = path.join(stageParent, `.framework-data-record-${randomUUID()}.tmp`);
   try {
     await durableWriteExclusive(temporary, text);
-    await syncDirectory(stageParent);
-    await assertOrdinaryDirectoryTree(root, stageParent, "record staging directory");
     await assertOrdinaryDirectoryTree(root, parent, "record parent");
     if (replacing) {
       await lstatRegularWithin(root, file, "record being replaced");
@@ -375,10 +364,8 @@ export async function atomicWriteJson(file, value, { replacing = true, root = nu
     }
     await fs.rename(temporary, file);
     await syncDirectory(parent);
-    await syncDirectory(stageParent);
   } catch (error) {
     await fs.unlink(temporary).catch(() => {});
-    await syncDirectory(stageParent).catch(() => {});
     if (error instanceof Error && error.name === "FrameworkDataError") throw error;
     fail("ATOMIC_WRITE_FAILED", "atomic record replacement failed");
   }
@@ -415,39 +402,19 @@ export async function addTask(context, loaded, task) {
   const shard = path.dirname(taskRecordPath(loaded.storeRoot, normalized.id));
   const recordsRoot = path.dirname(shard);
   await assertOrdinaryDirectoryTree(context.root, recordsRoot, "task records directory");
-  const shardExists = await fs.lstat(shard).then((info) => {
-    if (!info.isDirectory() || info.isSymbolicLink()) fail("PATH_UNSAFE", "task shard destination is unsafe");
-    return true;
-  }, (error) => error.code === "ENOENT" ? false : Promise.reject(error));
-  if (!shardExists) {
-    const stageParent = path.join(context.root, "readme", "tasks");
-    const stage = path.join(stageParent, `.framework-data-shard-${randomUUID()}`);
-    try {
-      await assertOrdinaryDirectoryTree(context.root, stageParent, "task shard staging directory");
-      await fs.mkdir(stage, { mode: 0o755 });
-      await durableWriteExclusive(path.join(stage, `${normalized.id}.json`), boundedCanonicalJson(normalized, "task record"));
-      await syncDirectory(stage);
-      await syncDirectory(stageParent);
-      await assertOrdinaryDirectoryTree(context.root, recordsRoot, "task records directory");
-      const collision = await fs.lstat(shard).then(() => true,
-        (error) => error.code === "ENOENT" ? false : Promise.reject(error));
-      if (collision) fail("DESTINATION_COLLISION", "task shard destination appeared before creation");
-      await fs.rename(stage, shard);
-      await syncDirectory(recordsRoot);
-      await syncDirectory(stageParent);
-    } catch (error) {
-      await fs.rm(stage, { recursive: true, force: true }).catch(() => {});
-      await syncDirectory(stageParent).catch(() => {});
-      if (error instanceof Error && error.name === "FrameworkDataError") throw error;
-      fail("ATOMIC_WRITE_FAILED", "atomic task shard creation failed");
-    }
-  } else {
-    await assertOrdinaryDirectoryTree(context.root, shard, "task shard destination");
-    await atomicWriteJson(taskRecordPath(loaded.storeRoot, normalized.id), normalized, {
-      replacing: false,
-      root: context.root,
-    });
+  const targetShard = path.basename(shard);
+  const shardHadTask = [...loaded.tasks.keys()].some((id) => shardForTaskId(id) === targetShard);
+  try {
+    await fs.mkdir(shard, { mode: 0o755 });
+  } catch (error) {
+    if (error.code !== "EEXIST") fail("ATOMIC_WRITE_FAILED", "task shard cannot be created");
   }
+  if (!shardHadTask) await syncDirectory(recordsRoot);
+  await assertOrdinaryDirectoryTree(context.root, shard, "task shard destination");
+  await atomicWriteJson(taskRecordPath(loaded.storeRoot, normalized.id), normalized, {
+    replacing: false,
+    root: context.root,
+  });
   return loadStore(context);
 }
 
@@ -531,7 +498,6 @@ export async function acquireLock(context) {
   const lockDirectory = lockPath(context);
   const ownerFile = path.join(lockDirectory, "owner.json");
   const token = randomUUID();
-  const ownerStage = path.join(parent, `.framework-data-owner-${token}.tmp`);
   await assertOrdinaryDirectoryTree(parent, parent, "worktree lock parent", { allowRoot: true });
   const owner = {
     token,
@@ -540,21 +506,16 @@ export async function acquireLock(context) {
   };
   safeText(owner.host, "lock owner host", { max: 256 });
   try {
-    await durableWriteExclusive(ownerStage, boundedCanonicalJson(owner, "lock owner"), 0o600);
-    await syncDirectory(parent);
     await fs.mkdir(lockDirectory, { mode: 0o700 });
   } catch (error) {
-    await fs.unlink(ownerStage).catch(() => {});
-    await syncDirectory(parent).catch(() => {});
     if (error.code === "EEXIST") fail("LOCK_BUSY", "framework-data lock is already held", 5);
     fail("LOCK_FAILED", "framework-data lock cannot be acquired", 5);
   }
   try {
-    await fs.rename(ownerStage, ownerFile);
+    await durableWriteExclusive(ownerFile, boundedCanonicalJson(owner, "lock owner"), 0o600);
     await syncDirectory(lockDirectory);
     await syncDirectory(parent);
   } catch {
-    await fs.unlink(ownerStage).catch(() => {});
     await fs.unlink(ownerFile).catch(() => {});
     await fs.rmdir(lockDirectory).catch(() => {});
     await syncDirectory(parent).catch(() => {});
@@ -618,23 +579,18 @@ async function readLockOwner(context, lockDirectory) {
   return validateLockOwner(parsed, read.text);
 }
 
-async function malformedLockOwnerIdentity(context, lockDirectory) {
+async function malformedLockOwnerClaim(context, lockDirectory) {
   await assertOrdinaryDirectoryTree(lockParent(context), lockDirectory, "framework-data lock");
   const ownerFile = path.join(lockDirectory, "owner.json");
   const info = await fs.lstat(ownerFile).catch(() =>
     fail("LOCK_OWNERSHIP", "framework-data lock owner cannot be inspected", 5));
-  if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || info.size > 4096) {
+  if (!info.isFile() || info.isSymbolicLink() || info.size > 4096) {
     fail("LOCK_OWNERSHIP", "framework-data lock owner is unsafe", 5);
   }
   const real = await fs.realpath(ownerFile).catch(() =>
     fail("LOCK_OWNERSHIP", "framework-data lock owner cannot be resolved", 5));
   if (real !== ownerFile) fail("LOCK_OWNERSHIP", "framework-data lock owner escapes its lexical location", 5);
-  return { kind: "malformed", dev: String(info.dev), ino: String(info.ino), size: info.size };
-}
-
-function sameIncompleteIdentity(left, right) {
-  return left?.kind === right?.kind && left?.dev === right?.dev && left?.ino === right?.ino &&
-    left?.size === right?.size;
+  return { kind: "malformed" };
 }
 
 export async function inspectLock(context) {
@@ -664,7 +620,7 @@ export async function inspectLock(context) {
       held: true,
       state: "incomplete",
       owner: null,
-      incomplete: await malformedLockOwnerIdentity(context, lockDirectory),
+      incomplete: await malformedLockOwnerClaim(context, lockDirectory),
     };
   }
 }
@@ -682,13 +638,6 @@ export async function recoverLock(context, expectedToken, { confirmOwnerNotLive 
   const parent = lockParent(context);
   const lockDirectory = lockPath(context);
   const quarantine = path.join(parent, `.framework-data-recovery-${randomUUID()}`);
-  const rechecked = await inspectLock(context);
-  const recheckedToken = rechecked.state === "incomplete" ? "incomplete" : rechecked.owner?.token;
-  if (!rechecked.held || recheckedToken !== expectedToken || rechecked.state !== inspected.state ||
-      (inspected.state === "incomplete" &&
-        !sameIncompleteIdentity(inspected.incomplete, rechecked.incomplete))) {
-    fail("LOCK_RECOVERY_STALE", "framework-data lock identity changed before recovery", 5);
-  }
   try {
     await fs.rename(lockDirectory, quarantine);
     await syncDirectory(parent);
@@ -701,9 +650,15 @@ export async function recoverLock(context, expectedToken, { confirmOwnerNotLive 
         if (entries.length !== 1 || entries[0] !== "owner.json") {
           fail("LOCK_RECOVERY_STALE", "malformed lock contents changed before recovery", 5);
         }
-        const identity = await malformedLockOwnerIdentity(context, quarantine);
-        if (!sameIncompleteIdentity(inspected.incomplete, identity)) {
-          fail("LOCK_RECOVERY_STALE", "malformed lock identity changed before recovery", 5);
+        let quarantinedOwner = null;
+        try {
+          quarantinedOwner = await readLockOwner(context, quarantine);
+        } catch (error) {
+          if (!(error instanceof Error) || error.name !== "FrameworkDataError") throw error;
+          await malformedLockOwnerClaim(context, quarantine);
+        }
+        if (quarantinedOwner !== null) {
+          fail("LOCK_RECOVERY_STALE", "incomplete lock became a valid owned lock before recovery", 5);
         }
         await fs.unlink(path.join(quarantine, "owner.json"));
       }

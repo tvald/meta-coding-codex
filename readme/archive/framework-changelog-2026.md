@@ -311,3 +311,30 @@
   fail before client mutation.
 - Review or sunset trigger: Package/client path confusion, package mutation, manifest or
   schema drift, bypassed lock integrity, unsafe Git discovery, or task CLI regression.
+
+## 2026-08-11: Adopt Deterministic Agent Prompt Views
+
+- Status: Adopted.
+- Evidence: T-0027 all-profile snapshots, packed parity, mutation and filesystem suite,
+  exact package audit, and independent Architect, Security, QA, and Reviewer gates; see
+  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Added 30 one-owner marked facets, five complete role profiles, narrow
+  Codex/Claude adapters, deterministic digest provenance, and bounded `docs`/`explain`.
+- Success signal: Source and installed clients produce identical attributable prompts
+  without package-path discovery, client state, provider data, or runtime synthesis.
+- Review or sunset trigger: Owner/profile drift, digest ambiguity, unsafe lookup,
+  harness semantic divergence, authority expansion, or output-budget exhaustion.
+
+## 2026-08-11: Adopt Package-Owned Provider Probes
+
+- Status: Adopted.
+- Evidence: T-0032 fixture and live normalized probes, exact package audit, full
+  regression suite, threat model, and independent Architect, Security, QA, and Reviewer
+  gates; see [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
+- Change: Replaced copied quota procedures with versioned package commands for normalized
+  Codex and Claude quota and delegation evidence, including strict schema drift,
+  credential/redaction, client-root executable, process-group, and safe-stop controls.
+- Success signal: Shared policy invokes one provider-neutral command and receives only
+  bounded evidence; malformed, unavailable, unsafe, or orphaning providers stop safely.
+- Review or sunset trigger: Credential or provider data leak, false-safe capacity,
+  capability-as-authority use, schema drift, client executable invocation, or orphan.

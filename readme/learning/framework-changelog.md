@@ -13,6 +13,21 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-14: Simplify File Task Store Recovery And Durability
+
+- Status: Revised.
+- Evidence: T-0039 counterfactual crash, lock, shard, hard-link, containment, and
+  targeted-Git-recovery cases under the accepted
+  [Decision 0024](../decisions/0024-revise-structured-task-store-for-adapters.md).
+- Change: Replaced staged lock-owner identity with one recoverable directory claim,
+  tolerated empty shards, removed special first-record staging and redundant source
+  directory flushes and path checks, and allowed safe hard-linked canonical records.
+- Success signal: Interrupted publication preserves either the old or new canonical
+  record; bounded explicit recovery retains exact valid-token comparison; initializer
+  preservation and both TaskStore adapters remain compatible.
+- Review or sunset trigger: Lost or partial task facts, unsafe path traversal, a removed
+  durability guard proving necessary, unbounded recovery, or backend conformance drift.
+
 ## 2026-08-13: Revise The Structured Task Store For Adapters
 
 - Status: Revised.
@@ -131,30 +146,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   before stdout on identity, lock, schema, filesystem, conflict, or budget drift.
 - Review or sunset trigger: Implicit discovery, extension execution, lock/root bypass,
   core shadowing, nondeterminism, provenance ambiguity, or output-budget exhaustion.
-
-## 2026-08-11: Adopt Deterministic Agent Prompt Views
-
-- Status: Adopted.
-- Evidence: T-0027 all-profile snapshots, packed parity, mutation and filesystem suite,
-  exact package audit, and independent Architect, Security, QA, and Reviewer gates; see
-  [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
-- Change: Added 30 one-owner marked facets, five complete role profiles, narrow
-  Codex/Claude adapters, deterministic digest provenance, and bounded `docs`/`explain`.
-- Success signal: Source and installed clients produce identical attributable prompts
-  without package-path discovery, client state, provider data, or runtime synthesis.
-- Review or sunset trigger: Owner/profile drift, digest ambiguity, unsafe lookup,
-  harness semantic divergence, authority expansion, or output-budget exhaustion.
-
-## 2026-08-11: Adopt Package-Owned Provider Probes
-
-- Status: Adopted.
-- Evidence: T-0032 fixture and live normalized probes, exact package audit, full
-  regression suite, threat model, and independent Architect, Security, QA, and Reviewer
-  gates; see [Decision 0021](../decisions/0021-adopt-immutable-npm-framework-delivery.md).
-- Change: Replaced copied quota procedures with versioned package commands for normalized
-  Codex and Claude quota and delegation evidence, including strict schema drift,
-  credential/redaction, client-root executable, process-group, and safe-stop controls.
-- Success signal: Shared policy invokes one provider-neutral command and receives only
-  bounded evidence; malformed, unavailable, unsafe, or orphaning providers stop safely.
-- Review or sunset trigger: Credential or provider data leak, false-safe capacity,
-  capability-as-authority use, schema drift, client executable invocation, or orphan.

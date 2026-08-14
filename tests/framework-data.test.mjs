@@ -282,13 +282,31 @@ test("doctor rejects duplicate, unknown, noncanonical, oversized, and unsupporte
     assert.equal(json(root, ["doctor"], 1).value.error.code, "SCHEMA_UNSUPPORTED");
 
     await fs.writeFile(control, original);
-    const hardLink = path.join(root, "control-hardlink.json");
-    await fs.link(control, hardLink);
-    assert.equal(json(root, ["doctor"], 1).value.error.code, "PATH_UNSAFE");
-    await fs.unlink(hardLink);
     await fs.writeFile(control, Buffer.from([0xc3, 0x28]));
     assert.equal(json(root, ["doctor"], 1).value.error.code, "UTF8_INVALID");
     await fs.writeFile(control, original);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("canonical record hard links do not couple atomic replacement", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const control = path.join(root, "readme", "tasks", "store", "control.json");
+    const hardLink = path.join(root, "control-hardlink.json");
+    const original = await fs.readFile(control);
+    await fs.link(control, hardLink);
+
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    const paused = json(root, [
+      "pause", "--expected-record-version", "1", "--reason", "Hard-link fixture", "--source", "Test",
+    ]).value.data;
+    assert.equal(paused.recordVersion, 2);
+    assert.deepEqual(await fs.readFile(hardLink), original);
+    assert.notDeepEqual(await fs.readFile(control), original);
     assert.equal(json(root, ["doctor"]).value.ok, true);
   } finally {
     await removeRepository(root);
@@ -1137,12 +1155,77 @@ test("worktree mutation lock permits readers, blocks writers, and retains explic
     await fs.writeFile(path.join(lock, "owner.json"), "{\n");
     const malformed = json(root, ["lock", "inspect"]).value.lock;
     assert.equal(malformed.state, "incomplete");
-    assert.equal(malformed.incomplete.kind, "malformed");
+    assert.deepEqual(malformed.incomplete, { kind: "malformed" });
     assert.equal(json(root, [
       "lock", "recover", "--expected-token", "incomplete", "--confirm-owner-not-live",
     ]).value.recovered.incomplete.kind, "malformed");
     assert.equal(json(root, ["doctor"]).value.ok, true);
   } finally {
+    await removeRepository(root);
+  }
+});
+
+test("interrupted lock ownership write leaves one bounded incomplete claim", { timeout: 15_000 }, async () => {
+  const root = await makeRepository();
+  let holder;
+  try {
+    json(root, ["init"]);
+    const gitDirectory = path.resolve(root,
+      execFileSync("git", ["rev-parse", "--git-dir"], { cwd: root, encoding: "utf8" }).trim());
+    const lock = path.join(gitDirectory, "framework-data.lock");
+    const storeModule = fileURLToPath(STORE_MODULE);
+    const script = `
+      import fs from "node:fs/promises";
+      const originalMkdir = fs.mkdir.bind(fs);
+      fs.mkdir = async (target, options) => {
+        const result = await originalMkdir(target, options);
+        if (target === ${JSON.stringify(lock)}) {
+          process.stdout.write("lock-claimed-before-owner-write\\n");
+          await new Promise(() => {});
+        }
+        return result;
+      };
+      const { acquireLock, repositoryContext } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      await acquireLock(await repositoryContext());
+    `;
+    holder = spawn(process.execPath, ["--input-type=module", "-e", script], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    await new Promise((resolve, reject) => {
+      let output = "";
+      let errorOutput = "";
+      holder.stdout.on("data", (chunk) => {
+        output += chunk;
+        if (output.includes("lock-claimed-before-owner-write\n")) resolve();
+      });
+      holder.stderr.on("data", (chunk) => { errorOutput += chunk; });
+      holder.once("error", reject);
+      holder.once("exit", (code, signal) => {
+        if (!output.includes("lock-claimed-before-owner-write\n")) {
+          reject(new Error(`lock claimant exited early ${code}/${signal}: ${errorOutput}`));
+        }
+      });
+    });
+    holder.kill("SIGKILL");
+    await new Promise((resolve, reject) => {
+      holder.once("exit", (code, signal) => signal === "SIGKILL" ? resolve() :
+        reject(new Error(`lock claimant exited ${code}/${signal}`)));
+    });
+    holder = null;
+
+    assert.deepEqual(await fs.readdir(lock), []);
+    assert.equal((await fs.readdir(gitDirectory))
+      .some((entry) => entry.startsWith(".framework-data-owner-")), false);
+    const inspected = json(root, ["lock", "inspect"]).value.lock;
+    assert.deepEqual(inspected.incomplete, { kind: "absent" });
+    json(root, [
+      "lock", "recover", "--expected-token", "incomplete", "--confirm-owner-not-live",
+    ]);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+  } finally {
+    holder?.kill("SIGKILL");
     await removeRepository(root);
   }
 });
@@ -2073,7 +2156,52 @@ test("malformed task state blocks ordinary commands without publication", async 
   }
 });
 
-test("failed first-record shard claim leaves no empty canonical shard", async () => {
+test("targeted Git recovery restores one named record without discarding another task fact", async () => {
+  const root = await makeRepository();
+  try {
+    json(root, ["init"]);
+    const retained = json(root, [
+      "task", "add", "--outcome", "Retain this uncommitted fact", "--authority-reference", "Test",
+    ]).value.data;
+    const restored = json(root, [
+      "task", "add", "--outcome", "Restore this record", "--authority-reference", "Test",
+    ]).value.data;
+    execFileSync("git", ["config", "user.name", "Framework Test"], { cwd: root });
+    execFileSync("git", ["config", "user.email", "framework-test@example.invalid"], { cwd: root });
+    execFileSync("git", ["add", "."], { cwd: root });
+    execFileSync("git", ["commit", "-qm", "task recovery baseline"], { cwd: root });
+
+    const amended = json(root, [
+      "task", "amend", retained.id, "--expected-record-version", "1",
+      "--outcome", "Authoritative uncommitted fact", "--authority-reference", "Test amendment",
+    ]).value.data;
+    const retainedRecord = taskPath(root, retained.id);
+    const retainedBytes = await fs.readFile(retainedRecord);
+    const restoredRecord = taskPath(root, restored.id);
+    const corrupt = JSON.parse(await fs.readFile(restoredRecord, "utf8"));
+    corrupt.unexpected = true;
+    await fs.writeFile(restoredRecord, `${JSON.stringify(corrupt, null, 2)}\n`);
+    assert.equal(json(root, ["doctor"], 1).value.error.code, "SCHEMA_INVALID");
+
+    const relative = path.relative(root, restoredRecord).split(path.sep).join("/");
+    const committed = execFileSync("git", ["show", `HEAD:${relative}`], { cwd: root });
+    assert.notDeepEqual(await fs.readFile(restoredRecord), committed);
+    execFileSync("git", ["restore", "--source", "HEAD", "--", relative], { cwd: root });
+
+    assert.deepEqual(await fs.readFile(restoredRecord), committed);
+    assert.deepEqual(await fs.readFile(retainedRecord), retainedBytes);
+    assert.equal(json(root, ["task", "get", retained.id]).value.data.outcome, amended.outcome);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    assert.deepEqual(execFileSync("git", ["diff", "--name-only"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim().split("\n"), [path.relative(root, retainedRecord)]);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("failed first-record publication leaves a valid empty shard that the next add fills", async () => {
   const root = await makeRepository();
   const records = path.join(root, "readme", "tasks", "store", "records");
   try {
@@ -2085,17 +2213,142 @@ test("failed first-record shard claim leaves no empty canonical shard", async ()
       await fs.writeFile(taskPath(root, task.id), `${JSON.stringify(task, null, 2)}\n`);
     }
     assert.equal(json(root, ["doctor"]).value.ok, true);
-    await fs.chmod(records, 0o555);
-    assert.match(run(root, [
+    const record = taskPath(root, "T-1001");
+    const storeModule = fileURLToPath(STORE_MODULE);
+    const task = generatedTask(1001);
+    const script = `
+      import fs from "node:fs/promises";
+      const originalRename = fs.rename.bind(fs);
+      fs.rename = async (source, target) => {
+        if (target === ${JSON.stringify(record)}) {
+          const error = new Error("injected first-record publication failure");
+          error.code = "EIO";
+          throw error;
+        }
+        return originalRename(source, target);
+      };
+      const { addTask, loadStore, repositoryContext, withLock } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      const context = await repositoryContext();
+      await withLock(context, async () => addTask(context, await loadStore(context), ${JSON.stringify(task)}));
+    `;
+    const failed = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
+      cwd: root,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    assert.notEqual(failed.status, 0);
+    const emptyShard = path.join(records, "0001");
+    assert.deepEqual(await fs.readdir(emptyShard), []);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    const added = json(root, [
       "task", "add", "--outcome", "First task in next shard", "--authority-reference", "Test",
-    ], 1).stderr, /ATOMIC_WRITE_FAILED/u);
-    await assert.rejects(fs.lstat(path.join(records, "0001")), { code: "ENOENT" });
-    assert.equal((await fs.readdir(path.join(root, "readme", "tasks")))
-      .some((entry) => entry.startsWith(".framework-data-shard-")), false);
-    await fs.chmod(records, 0o755);
+    ]).value.data;
+    assert.equal(added.id, "T-1001");
+    assert.deepEqual(await fs.readdir(emptyShard), ["T-1001.json"]);
+  } finally {
+    await removeRepository(root);
+  }
+});
+
+test("retry durably claims an inherited empty shard before publishing its first record", {
+  timeout: 15_000,
+}, async () => {
+  const root = await makeRepository();
+  const records = path.join(root, "readme", "tasks", "store", "records");
+  let writer;
+  try {
+    json(root, ["init"]);
+    await fs.mkdir(path.join(records, "0000"));
+    for (let number = 1; number <= 1000; number += 1) {
+      const task = generatedTask(number);
+      await fs.writeFile(taskPath(root, task.id), `${JSON.stringify(task, null, 2)}\n`);
+    }
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    const storeModule = fileURLToPath(STORE_MODULE);
+    const task = generatedTask(1001);
+    const interruptScript = `
+      import fs from "node:fs/promises";
+      const originalOpen = fs.open.bind(fs);
+      fs.open = async (target, ...args) => {
+        if (target === ${JSON.stringify(records)}) {
+          process.stdout.write("before-records-parent-sync\\n");
+          await new Promise(() => {});
+        }
+        return originalOpen(target, ...args);
+      };
+      const { addTask, loadStore, repositoryContext, withLock } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      const context = await repositoryContext();
+      await withLock(context, async () => addTask(context, await loadStore(context), ${JSON.stringify(task)}));
+    `;
+    writer = spawn(process.execPath, ["--input-type=module", "-e", interruptScript], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    await new Promise((resolve, reject) => {
+      let output = "";
+      let errorOutput = "";
+      writer.stdout.on("data", (chunk) => {
+        output += chunk;
+        if (output.includes("before-records-parent-sync\n")) resolve();
+      });
+      writer.stderr.on("data", (chunk) => { errorOutput += chunk; });
+      writer.once("error", reject);
+      writer.once("exit", (code, signal) => {
+        if (!output.includes("before-records-parent-sync\n")) {
+          reject(new Error(`shard writer exited early ${code}/${signal}: ${errorOutput}`));
+        }
+      });
+    });
+    writer.kill("SIGKILL");
+    await new Promise((resolve, reject) => {
+      writer.once("exit", (code, signal) => signal === "SIGKILL" ? resolve() :
+        reject(new Error(`shard writer exited ${code}/${signal}`)));
+    });
+    writer = null;
+    const emptyShard = path.join(records, "0001");
+    assert.deepEqual(await fs.readdir(emptyShard), []);
+    const interruptedLock = json(root, ["lock", "inspect"]).value.lock;
+    assert.equal(interruptedLock.state, "owned");
+    json(root, [
+      "lock", "recover", "--expected-token", interruptedLock.owner.token, "--confirm-owner-not-live",
+    ]);
+    const record = taskPath(root, task.id);
+
+    const retryScript = `
+      import fs from "node:fs/promises";
+      const originalOpen = fs.open.bind(fs);
+      fs.open = async (target, ...args) => {
+        if (target === ${JSON.stringify(records)}) {
+          const error = new Error("injected inherited-shard parent sync failure");
+          error.code = "EIO";
+          throw error;
+        }
+        return originalOpen(target, ...args);
+      };
+      const { addTask, loadStore, repositoryContext, withLock } =
+        await import(${JSON.stringify(new URL(`file://${storeModule}`).href)});
+      const context = await repositoryContext();
+      await withLock(context, async () => addTask(context, await loadStore(context), ${JSON.stringify(task)}));
+    `;
+    const failedRetry = spawnSync(process.execPath, ["--input-type=module", "-e", retryScript], {
+      cwd: root,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    assert.notEqual(failedRetry.status, 0);
+    await assert.rejects(fs.lstat(record), { code: "ENOENT" });
+    assert.deepEqual(await fs.readdir(emptyShard), []);
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+
+    const added = json(root, [
+      "task", "add", "--outcome", "Retry inherited shard", "--authority-reference", "Test",
+    ]).value.data;
+    assert.equal(added.id, task.id);
     assert.equal(json(root, ["doctor"]).value.ok, true);
   } finally {
-    await fs.chmod(records, 0o755).catch(() => {});
+    writer?.kill("SIGKILL");
     await removeRepository(root);
   }
 });
@@ -2139,14 +2392,18 @@ test("prospective aggregate caps reject control, add, and task writes before mut
   }
 });
 
-test("store directory inventories are bounded and empty shards are invalid", async () => {
+test("store directory inventories are bounded and empty shards are tolerated", async () => {
   const root = await makeRepository();
   try {
     json(root, ["init"]);
     const shard = path.join(root, "readme", "tasks", "store", "records", "0000");
     await fs.mkdir(shard);
-    assert.equal(json(root, ["doctor"], 1).value.error.code, "STORE_LAYOUT");
-    for (let index = 0; index <= 1000; index += 1) {
+    assert.equal(json(root, ["doctor"]).value.ok, true);
+    const added = json(root, [
+      "task", "add", "--outcome", "Fill the empty shard", "--authority-reference", "Test",
+    ]).value.data;
+    assert.equal(added.id, "T-0001");
+    for (let index = 0; index < 1000; index += 1) {
       await fs.writeFile(path.join(shard, `entry-${String(index).padStart(4, "0")}`), "x");
     }
     assert.equal(json(root, ["doctor"], 1).value.error.code, "STORE_SIZE");
