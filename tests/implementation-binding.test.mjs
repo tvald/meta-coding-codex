@@ -15,22 +15,49 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-import {
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const {
   IMPLEMENTATION_ROLE_PROFILES,
   ImplementationBindingError,
+  deriveControllerCwdIdentity,
+  publishControllerBindingDescriptor,
   readTrustedControllerBindingDescriptor,
   validateControllerBindingDescriptor,
   validateControllerSessionBinding,
   validateTrustedDescriptorObservation,
-} from '../lib/implementation-binding.mjs';
+} = await import('../lib/implementation-binding.mjs');
+const { issueSourceInstrumentedEffectCapability } =
+  await import('../lib/implementation-effect-capability.mjs');
 import {
   canonicalBytes,
   canonicalDigest,
   sha256Digest,
 } from '../lib/implementation-protocol.mjs';
+import { IMPLEMENTATION_ACTIVATION_DISPOSITION } from '../lib/implementation-activation.mjs';
 
 const digest = (character) => `sha256:${character.repeat(64)}`;
-const compiledPrompt = Buffer.from('META-FRAMEWORK-AGENT-PROMPT 1\n{"profile":"implementer"}', 'utf8');
+function makeCompiledPrompt(profile, body = `bounded ${profile} prompt\n`) {
+  const promptBody = Buffer.from(body, 'utf8');
+  const manifest = { profile, harness: 'codex' };
+  const embeddedDigest = sha256Digest(Buffer.concat([
+    canonicalBytes(manifest), Buffer.from('\n'), promptBody,
+  ]));
+  return {
+    profileDigest: embeddedDigest,
+    bytes: Buffer.concat([
+      Buffer.from('META-FRAMEWORK-AGENT-PROMPT 1\n'),
+      canonicalBytes({ ...manifest, digest: embeddedDigest }),
+      Buffer.from('\n'),
+      promptBody,
+    ]),
+  };
+}
+const implementerPrompt = makeCompiledPrompt('implementer');
+const profileDigest = implementerPrompt.profileDigest;
+const compiledPrompt = implementerPrompt.bytes;
 let descriptorSequence = 0;
 
 function binding(overrides = {}) {
@@ -59,11 +86,39 @@ function descriptor(overrides = {}) {
     launcherConnectionId: 'launcher_1',
     role: 'implementer',
     profile: 'implementer',
-    profileDigest: digest('b'),
+    profileDigest,
     promptDigest: sha256Digest(compiledPrompt),
-    cwdIdentity: digest('c'),
+    cwdIdentity: deriveControllerCwdIdentity(resolve('.')),
     descriptorPathIdentity: digest('0'),
     ...overrides,
+  };
+}
+
+function providerActivation(value) {
+  const { snapshotRevision: _snapshotRevision, ...activationBinding } = value.binding;
+  const receipt = {
+    schemaVersion: 1,
+    receiptId: 'activation_descriptor_write',
+    effectKind: 'provider_launch',
+    binding: activationBinding,
+    policyDigest: digest('7'),
+    evidenceDigest: digest('8'),
+    mechanism: { ...IMPLEMENTATION_ACTIVATION_DISPOSITION.supportedMechanism },
+    issuedAt: '2026-08-14T10:00:00Z',
+    expiresAt: '2026-08-14T10:15:00Z',
+    taskApproval: null,
+  };
+  return {
+    activationReceipt: receipt,
+    activationContext: {
+      receiptId: receipt.receiptId,
+      binding: { ...receipt.binding },
+      policyDigest: receipt.policyDigest,
+      evidenceDigest: receipt.evidenceDigest,
+      mechanism: { ...receipt.mechanism },
+      taskApproval: null,
+    },
+    now: '2026-08-14T10:05:00Z',
   };
 }
 
@@ -143,6 +198,7 @@ function validateBundle(bundle, overrides = {}) {
     event: event(bundle.trustedDescriptor),
     requestedProfile: bundle.descriptor.profile,
     compiledPrompt,
+    observedCwdIdentity: deriveControllerCwdIdentity(resolve('.')),
     ...overrides,
   });
 }
@@ -159,6 +215,30 @@ test('protected reader derives the only accepted trusted descriptor observation'
       (error) => error.code === 'TRUSTED_DESCRIPTOR_UNPROVEN');
   }));
 
+test('publisher creates one canonical protected descriptor with no-replace semantics', () =>
+  withTempRoot((root) => {
+    const draft = descriptor();
+    delete draft.descriptorPathIdentity;
+    const activation = providerActivation(draft);
+    const published = publishControllerBindingDescriptor({ directory: root, descriptor: draft,
+      effectCapability: issueSourceInstrumentedEffectCapability('provider_launch'), ...activation });
+    assert.equal(published.descriptorPath, join(root, `${draft.descriptorId}.json`));
+    assert.equal(statSync(published.descriptorPath).mode & 0o777, 0o600);
+    assert.equal(statSync(published.descriptorPath).nlink, 1);
+    assert.equal(published.descriptor.descriptorPathIdentity,
+      pathIdentity(published.descriptorPath, statSync(published.descriptorPath, { bigint: true })));
+    assert.deepEqual(readTrustedControllerBindingDescriptor(published.descriptorPath).descriptor,
+      published.descriptor);
+    assert.throws(() => publishControllerBindingDescriptor({ directory: root, descriptor: draft,
+      effectCapability: issueSourceInstrumentedEffectCapability('provider_launch'), ...activation }),
+      (error) => error.code === 'DESCRIPTOR_PUBLICATION_FAILED');
+    assert.throws(() => publishControllerBindingDescriptor({ directory: root,
+      descriptor: { ...draft, descriptorId: 'descriptor_2' } }),
+    (error) => error.code === 'ACTIVATION_REQUIRED');
+    assert.equal(readFileSync(published.descriptorPath, 'utf8'),
+      JSON.stringify(published.descriptor));
+  }));
+
 test('controller SessionStart binds exact task/run/revision/capsule/role/profile/prompt identity', () =>
   withTempRoot((root) => {
     const bundle = readTrustedControllerBindingDescriptor(writeDescriptor(root).descriptorPath);
@@ -171,6 +251,10 @@ test('controller SessionStart binds exact task/run/revision/capsule/role/profile
     assert.equal(result.binding.capsuleDigest, digest('a'));
     assert.equal(result.promptDigest, sha256Digest(compiledPrompt));
     assert.equal(result.descriptorDigest, canonicalDigest(bundle.descriptor));
+    assert.throws(() => validateBundle(bundle, { observedCwdIdentity: undefined }),
+      (error) => error.code === 'BINDING_SCHEMA_INVALID');
+    assert.throws(() => validateBundle(bundle, { observedCwdIdentity: digest('9') }),
+      (error) => error.code === 'CWD_IDENTITY_MISMATCH');
   }));
 
 test('exact role mapping rejects root-specialist confusion and prose profile invention', () =>
@@ -192,16 +276,18 @@ test('exact role mapping rejects root-specialist confusion and prose profile inv
     assert.throws(() => validateBundle(specialist, { requestedProfile: 'root' }),
       /profile does not match/u);
 
-    const rootPrompt = Buffer.from('META-FRAMEWORK-AGENT-PROMPT 1\n{"profile":"root"}', 'utf8');
+    const rootPrompt = makeCompiledPrompt('root');
     const rootBundle = readTrustedControllerBindingDescriptor(writeDescriptor(root, {
-      role: 'root_decision', profile: 'root', promptDigest: sha256Digest(rootPrompt),
+      role: 'root_decision', profile: 'root', profileDigest: rootPrompt.profileDigest,
+      promptDigest: sha256Digest(rootPrompt.bytes),
     }).descriptorPath);
     assert.equal(validateControllerSessionBinding({
       descriptor: rootBundle.descriptor,
       trustedDescriptor: rootBundle.trustedDescriptor,
       event: event(rootBundle.trustedDescriptor),
       requestedProfile: 'root',
-      compiledPrompt: rootPrompt,
+      compiledPrompt: rootPrompt.bytes,
+      observedCwdIdentity: deriveControllerCwdIdentity(resolve('.')),
     }).role, 'root_decision');
   }));
 
@@ -214,14 +300,23 @@ test('top-level jobs reject SubagentStart, event drift, prompt drift, and ambien
     assert.throws(() => validateBundle(bundle, {
       event: event(bundle.trustedDescriptor, { descriptorDigest: digest('9') }),
     }), (error) => error.code === 'SESSION_DESCRIPTOR_MISMATCH');
-    assert.throws(() => validateBundle(bundle, { compiledPrompt: 'different prompt' }),
+    assert.throws(() => validateBundle(bundle, {
+      compiledPrompt: makeCompiledPrompt('implementer', 'different prompt\n').bytes,
+    }),
       (error) => error.code === 'TRUSTED_DESCRIPTOR_MISMATCH');
+    const lines = compiledPrompt.toString('utf8').split('\n');
+    const noncanonicalPrompt = Buffer.from([
+      lines[0], JSON.stringify(JSON.parse(lines[1]), null, 2), ...lines.slice(2),
+    ].join('\n'));
+    assert.throws(() => validateBundle(bundle, { compiledPrompt: noncanonicalPrompt }),
+      (error) => error.code === 'PROMPT_INVALID');
     assert.throws(() => validateControllerSessionBinding({
       descriptor: bundle.descriptor,
       trustedDescriptor: { ...bundle.trustedDescriptor },
       event: event(bundle.trustedDescriptor),
       requestedProfile: 'implementer',
       compiledPrompt,
+      observedCwdIdentity: deriveControllerCwdIdentity(resolve('.')),
     }), (error) => error.code === 'TRUSTED_DESCRIPTOR_UNPROVEN');
   }));
 
@@ -230,7 +325,7 @@ test('resume and compact require the exact prior session and reject revision/pro
     const bundle = readTrustedControllerBindingDescriptor(writeDescriptor(root).descriptorPath);
     const startup = validateBundle(bundle);
     const previous = prior(startup);
-    for (const source of ['resume', 'compact']) {
+    for (const source of ['resume', 'clear', 'compact']) {
       const resumed = validateBundle(bundle, {
         event: event(bundle.trustedDescriptor, { source }),
         priorSession: previous,

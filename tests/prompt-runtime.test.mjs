@@ -8,9 +8,11 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
@@ -18,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { codexHookFailure, validateCodexFailureContract } from '../lib/hook-adapters.mjs';
+import { CONTROLLER_DESCRIPTOR_ENV } from '../lib/implementation-binding.mjs';
 import {
   activatePromptGeneration,
   buildPromptGeneration,
@@ -113,9 +116,12 @@ function specialistEvent(sessionId, profile) {
   }));
 }
 
-function runLoader(loader, profile, input) {
+function runLoader(loader, profile, input, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [loader, profile], { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [loader, profile], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      ...options,
+    });
     const stdout = [];
     const stderr = [];
     child.stdout.on('data', (chunk) => stdout.push(chunk));
@@ -129,6 +135,63 @@ function runLoader(loader, profile, input) {
     }));
     child.stdin.end(input);
   });
+}
+
+function controllerCwdIdentity(cwd = process.cwd()) {
+  const realpath = realpathSync(cwd);
+  const info = statSync(realpath, { bigint: true });
+  return digest(canonicalJson({
+    path: realpath,
+    dev: info.dev.toString(10),
+    ino: info.ino.toString(10),
+    mode: (info.mode & 0o777n).toString(10),
+  }));
+}
+
+function controllerDescriptor(common, promptBytes, overrides = {}) {
+  const descriptorPath = join(common, 'controller-binding.json');
+  const manifest = JSON.parse(promptBytes.toString('utf8').split('\n', 3)[1]);
+  let value = {
+    schemaVersion: 1,
+    descriptorId: 'descriptor_1',
+    binding: {
+      runId: 'run_0054', epoch: 0, snapshotRevision: 0,
+      taskId: 'T-0054', taskRevision: 2, taskRecordVersion: 8,
+      capsuleDigest: `sha256:${'a'.repeat(64)}`,
+      controlGeneration: 0, correctionGeneration: 0,
+    },
+    assignmentId: 'assignment_1',
+    attemptId: 'attempt_1',
+    jobId: 'job_1',
+    launcherConnectionId: 'launcher_1',
+    role: 'reviewer',
+    profile: 'reviewer',
+    profileDigest: manifest.digest,
+    promptDigest: digest(promptBytes),
+    cwdIdentity: controllerCwdIdentity(),
+    descriptorPathIdentity: `sha256:${'0'.repeat(64)}`,
+    ...overrides,
+  };
+  const provisional = canonicalJson(value);
+  writeFileSync(descriptorPath, provisional, { flag: 'wx', mode: 0o600 });
+  chmodSync(descriptorPath, 0o600);
+  const info = statSync(descriptorPath, { bigint: true });
+  value = {
+    ...value,
+    descriptorPathIdentity: digest(canonicalJson({
+      schemaVersion: 1,
+      kind: 'controller_binding_descriptor',
+      realpath: realpathSync(descriptorPath),
+      device: info.dev.toString(10),
+      inode: info.ino.toString(10),
+      size: Number(info.size),
+    })),
+  };
+  const final = canonicalJson(value);
+  assert.equal(final.length, provisional.length);
+  writeFileSync(descriptorPath, final, { flag: 'w', mode: 0o600 });
+  chmodSync(descriptorPath, 0o600);
+  return { descriptorPath, value, bytes: final };
 }
 
 test('capacity reserve accepts exact boundaries and rejects one byte beyond them', () => {
@@ -428,6 +491,105 @@ test('the installed standalone loader handles concurrent first pins and returns 
     assert.equal(linkedResult.stderr.length, 0);
     assert.equal(inspectPromptRuntime(runtime).pins, 8, 'unsafe loader created a session pin');
     rmSync(linkedLoader);
+  } finally {
+    removeRuntime(common);
+  }
+});
+
+test('controller capability binds a SessionStart to the descriptor role and v2 continuity pin', async () => {
+  const { common, runtime, build } = fixture();
+  try {
+    const generation = build('controller');
+    activatePromptGeneration(runtime, generation.generationDigest, {
+      expectedActive: inspectPromptRuntime(runtime).activeToken,
+    });
+    const installed = installPromptBootstrapLoader(
+      runtime,
+      readFileSync(new URL('../lib/prompt-bootstrap-loader.mjs', import.meta.url)),
+    );
+    const installedPath = promptBootstrapLoaderPath(runtime, installed.digest);
+    const reviewerPrompt = Buffer.from(prompt('reviewer', 'codex', 'controller'));
+    const descriptor = controllerDescriptor(common, reviewerPrompt);
+    const controllerEnvironment = {
+      ...process.env,
+      [CONTROLLER_DESCRIPTOR_ENV]: descriptor.descriptorPath,
+    };
+
+    const invalidTask = {
+      ...descriptor.value,
+      binding: { ...descriptor.value.binding, taskId: 'T-12a4' },
+    };
+    writeFileSync(descriptor.descriptorPath, canonicalJson(invalidTask), { flag: 'w', mode: 0o600 });
+    chmodSync(descriptor.descriptorPath, 0o600);
+    const invalidTaskStart = await runLoader(installedPath, 'root', sessionEvent('invalid-task'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(invalidTaskStart.status, 1);
+    assert.equal(invalidTaskStart.stdout.length, 0);
+    writeFileSync(descriptor.descriptorPath, descriptor.bytes, { flag: 'w', mode: 0o600 });
+    chmodSync(descriptor.descriptorPath, 0o600);
+
+    const startup = await runLoader(installedPath, 'root', sessionEvent('controller-session'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(startup.status, 0, startup.stderr.toString());
+    assert.ok(startup.stdout.equals(reviewerPrompt), 'role-derived reviewer profile was not served');
+    const pinName = readdirSync(join(runtime.root, 'sessions'))[0];
+    const pin = JSON.parse(readFileSync(join(runtime.root, 'sessions', pinName), 'utf8'));
+    assert.equal(pin.schemaVersion, 2);
+    assert.equal(pin.role, 'reviewer');
+    assert.equal(pin.profile, 'reviewer');
+
+    const clear = await runLoader(installedPath, 'root', sessionEvent('controller-session', 'clear'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(clear.status, 0);
+    assert.ok(clear.stdout.equals(reviewerPrompt));
+    const missingPrior = await runLoader(installedPath, 'root', sessionEvent('missing-controller', 'resume'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(missingPrior.status, 1);
+    assert.equal(missingPrior.stdout.length, 0);
+
+    const drifted = { ...descriptor.value, promptDigest: `sha256:${'9'.repeat(64)}` };
+    writeFileSync(descriptor.descriptorPath, canonicalJson(drifted), { flag: 'w', mode: 0o600 });
+    chmodSync(descriptor.descriptorPath, 0o600);
+    const drift = await runLoader(installedPath, 'root', sessionEvent('controller-session', 'compact'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(drift.status, 1);
+    assert.equal(drift.stdout.length, 0);
+
+    const cwdDrifted = { ...descriptor.value, cwdIdentity: `sha256:${'8'.repeat(64)}` };
+    writeFileSync(descriptor.descriptorPath, canonicalJson(cwdDrifted), { flag: 'w', mode: 0o600 });
+    chmodSync(descriptor.descriptorPath, 0o600);
+    const cwdDrift = await runLoader(installedPath, 'root', sessionEvent('controller-session', 'resume'), {
+      cwd: process.cwd(), env: controllerEnvironment,
+    });
+    assert.equal(cwdDrift.status, 1);
+    assert.equal(cwdDrift.stdout.length, 0);
+
+    writeFileSync(descriptor.descriptorPath, descriptor.bytes, { flag: 'w', mode: 0o600 });
+    chmodSync(descriptor.descriptorPath, 0o600);
+    const ended = await runLoader(installedPath, 'root', Buffer.from(JSON.stringify({
+      hook_event_name: 'SessionEnd', source: 'other', session_id: 'controller-session',
+    })), { cwd: process.cwd(), env: controllerEnvironment });
+    assert.equal(ended.status, 0);
+    assert.equal(inspectPromptRuntime(runtime).pins, 0);
+
+    assert.ok(serveRuntimePrompt(runtime, sessionEvent('controller-operator-retire'), 'root', {
+      controllerDescriptorPath: descriptor.descriptorPath,
+    }).equals(reviewerPrompt));
+    assert.equal(retireSessionPin(runtime, 'controller-operator-retire', {
+      expectedGeneration: generation.generationDigest,
+    }), true);
+    assert.equal(inspectPromptRuntime(runtime).pins, 0);
+
+    const interactive = serveRuntimePrompt(runtime, sessionEvent('interactive-session'), 'root');
+    assert.match(interactive.toString(), /controller:root:codex/u);
+    const interactivePin = JSON.parse(readFileSync(join(runtime.root, 'sessions',
+      readdirSync(join(runtime.root, 'sessions'))[0]), 'utf8'));
+    assert.equal(interactivePin.schemaVersion, 1);
   } finally {
     removeRuntime(common);
   }

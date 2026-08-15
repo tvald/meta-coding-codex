@@ -4,138 +4,192 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import {
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const {
   createReadOnlyImplementationAdapter,
   executeImplementationCommand,
   parseImplementationCommand,
-} from '../lib/implementation-cli.mjs';
-import {
-  acquireRunLock,
-  authorizeImplementationLedgerWrite,
-  initializeRun,
+} = await import('../lib/implementation-cli.mjs');
+const {
   openImplementationLedger,
-  publishEvent,
-  publishSnapshot,
   readRunStatus,
-} from '../lib/implementation-ledger.mjs';
-import { canonicalDigest } from '../lib/implementation-protocol.mjs';
+} = await import('../lib/implementation-ledger.mjs');
+const { canonicalDigest } = await import('../lib/implementation-protocol.mjs');
+const { createImplementationRuntime } = await import('../lib/implementation-runtime.mjs');
+const { planImplementationShadowStart, planImplementationStart } =
+  await import('../lib/implementation-supervisor.mjs');
+const { issueSourceInstrumentedEffectCapability } =
+  await import('../lib/implementation-effect-capability.mjs');
 
-const NOW = '2026-08-14T12:00:00Z';
-const digest = (character) => `sha256:${character.repeat(64)}`;
+const NOW = '2026-08-15T00:30:00Z';
+const digest = (label) => canonicalDigest({ label });
 const oid = (character) => character.repeat(40);
 const packageIdentity = Object.freeze({ name: '@tvald/meta-framework', version: '1.0.0' });
 
-function capsule() {
+function planInput(command = {
+  command: 'start', taskId: 'T-0054', expectedTaskRevision: 2,
+  harness: 'codex', maxConcurrency: 2, shadow: false,
+}) {
   return {
-    schemaVersion: 1, taskId: 'T-0054', taskRevision: 2, taskRecordVersion: 5,
-    storeId: 'task_store', storeGeneration: 'generation_1', createdAt: NOW,
-    authority: 'User authorized offline controller implementation.',
-    outcome: 'Exercise an offline run lifecycle.', acceptance: [], nonGoals: [], assumptions: [], decisions: [],
-    route: 'initiative', risk: 'critical', gateDigest: digest('a'), checkCatalogDigest: digest('b'),
-    detailDigests: [], baseCommit: oid('1'), baseStatusDigest: digest('c'),
-  };
-}
-
-function manifest(value) {
-  return {
-    schemaVersion: 1, runId: 'run_54', createdAt: NOW,
+    command,
     task: {
-      id: value.taskId, taskRevision: value.taskRevision, recordVersion: value.taskRecordVersion,
-      storeId: value.storeId, storeGeneration: value.storeGeneration,
+      id: 'T-0054', taskRevision: 2, recordVersion: 8, status: 'active',
+      outcome: 'Exercise the installed offline controller lifecycle.',
+      authority: 'User authorized T-0054.', route: 'initiative', risk: 'critical',
+      gateDigest: digest('gate'), acceptance: [], nonGoals: [], assumptions: [],
+      decisions: [], detailDigests: [], checkCatalogDigest: digest('checks'),
     },
-    capsuleDigest: canonicalDigest(value),
-    controller: { packageName: '@tvald/meta-framework', packageVersion: '1.0.0', protocolVersion: 1 },
-    provider: {
-      adapter: 'codex_exec_v1', adapterVersion: '1.0.0', harness: 'codex',
-      executableRealpath: '/bin/false', executableVersion: '0.147.0',
-    },
+    activeTaskId: 'T-0054',
+    store: { storeId: 'task_store', storeGeneration: digest('store') },
     repository: {
-      rootIdentity: digest('d'), objectFormat: 'sha1', baseCommit: oid('1'), baseTree: oid('2'),
-      canonicalWorktreeIdentity: digest('e'),
+      rootIdentity: digest('root'), objectFormat: 'sha1', baseCommit: oid('1'),
+      head: oid('1'), tree: oid('2'), statusDigest: digest('status'),
+      canonicalWorktreeIdentity: digest('worktree'),
     },
-    limits: {
-      backgroundWip: 3, rootWip: 1, maxEvents: 10_000,
-      maxDiagnosticBytes: 64 * 1024 * 1024, orientationBytes: 96 * 1024,
-    },
-    policyDigests: { promptRegistry: digest('f'), checks: digest('a'), resources: digest('b') },
+    provider: { adapter: 'codex_exec_v1', adapterVersion: '1.0.0', harness: 'codex',
+      executableRealpath: '/opt/codex', executableVersion: '0.147.0' },
+    controller: { packageName: '@tvald/meta-framework', packageVersion: '1.0.0' },
+    policies: { promptRegistry: digest('prompts'), checks: digest('checks'),
+      resources: digest('resources') },
+    quota: { disposition: 'proceed' }, approvals: { current: true }, observedAt: NOW,
   };
 }
 
-function activation(common, value) {
-  const receipt = {
-    schemaVersion: 1, receiptId: 'activation_ledger', effectKind: 'ledger_write',
-    binding: {
-      runId: 'run_54', epoch: 1, taskId: value.taskId, taskRevision: value.taskRevision,
-      taskRecordVersion: value.taskRecordVersion, capsuleDigest: canonicalDigest(value),
-      controlGeneration: 0, correctionGeneration: 0,
-    },
-    policyDigest: digest('a'), evidenceDigest: digest('b'),
-    mechanism: { platform: 'linux', filesystem: 'local', process: 'pidfd' },
-    issuedAt: '2026-08-14T11:55:00Z', expiresAt: '2026-08-14T12:15:00Z', taskApproval: null,
-  };
-  return {
-    gitCommonDirectory: common,
-    receipt,
-    current: {
-      receiptId: receipt.receiptId, binding: { ...receipt.binding }, policyDigest: receipt.policyDigest,
-      evidenceDigest: receipt.evidenceDigest, mechanism: { ...receipt.mechanism }, taskApproval: null,
-    },
-    now: NOW,
-  };
+async function captureByteTree(root) {
+  const captured = [];
+  async function visit(directory, relative) {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    entries.sort((left, right) => left.name.localeCompare(right.name, 'en'));
+    for (const entry of entries) {
+      const childRelative = relative === '' ? entry.name : `${relative}/${entry.name}`;
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        captured.push({ path: `${childRelative}/`, kind: 'directory' });
+        await visit(target, childRelative);
+      } else if (entry.isFile()) {
+        captured.push({
+          path: childRelative,
+          kind: 'file',
+          bytes: (await fs.readFile(target)).toString('base64'),
+        });
+      } else {
+        captured.push({ path: childRelative, kind: 'unsupported' });
+      }
+    }
+  }
+  await visit(root, '');
+  return captured;
 }
 
-test('offline ledger, operator reads, shadow planning, disable, and recovery preserve one run', async (t) => {
+test('offline runtime, operator reads, shadow planning, disable, and recovery preserve one run', async (t) => {
   const common = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-e2e-'));
   t.after(() => fs.rm(common, { recursive: true, force: true }));
-  const value = capsule();
-  const capability = await authorizeImplementationLedgerWrite(activation(common, value));
+  const input = planInput();
+  const planned = planImplementationStart(input);
+  const capability = issueSourceInstrumentedEffectCapability('journal_write');
   const ledger = await openImplementationLedger(common, { create: true, writeCapability: capability });
-  await initializeRun(ledger, { manifest: manifest(value), capsule: value });
-  const lock = await acquireRunLock(ledger, 'run_54', { epoch: 1, acquiredAt: NOW });
-  const fence = { lockToken: lock.token, epoch: lock.epoch };
-  const snapshot = {
-    schemaVersion: 1, runId: 'run_54', revision: 1, previousDigest: null,
-    epoch: 1, controlGeneration: 0, phase: 'waiting',
-  };
-  await publishSnapshot(ledger, 'run_54', snapshot, fence);
-  await publishEvent(ledger, 'run_54', {
-    schemaVersion: 1, eventId: 'event_1', sequence: 1,
-    binding: {
-      runId: 'run_54', epoch: 1, snapshotRevision: 1, taskId: 'T-0054', taskRevision: 2,
-      taskRecordVersion: 5, capsuleDigest: canonicalDigest(value), controlGeneration: 0,
-      correctionGeneration: 0,
-    },
-    kind: 'snapshot_published', subject: { kind: 'detail', id: 'snapshot_1', digest: digest('c') },
-    causationId: null, correlationId: 'run_54',
-    producer: { kind: 'controller', connectionId: null }, dedupeKey: 'snapshot_1', observedAt: NOW,
-    payload: { kind: 'detail', id: 'snapshot_1', digest: digest('c') },
-  }, fence);
-  await lock.release();
+  const runtime = createImplementationRuntime({ ledger, clock: () => NOW });
+  await runtime.start(input);
 
-  const adapter = createReadOnlyImplementationAdapter(common);
-  const statusCommand = parseImplementationCommand(['status', 'run_54', '--json']);
-  const before = await executeImplementationCommand(statusCommand, { packageIdentity, adapter });
+  const adapter = createReadOnlyImplementationAdapter(common, {
+    shadowStart(command) { return planImplementationShadowStart(planInput(command)); },
+  });
+  const before = await executeImplementationCommand(parseImplementationCommand([
+    'status', planned.runId, '--json',
+  ]), { packageIdentity, adapter });
   assert.equal(before.state, 'nonterminal');
-  assert.equal(before.snapshot.phase, 'waiting');
-  const events = await executeImplementationCommand(parseImplementationCommand(['events', 'run_54']), {
-    packageIdentity, adapter,
-  });
+  assert.equal(before.phase, 'dormant');
+  assert.equal(before.snapshotRevision, 2);
+  assert.equal(before.epoch, 1);
+  assert.equal(before.controlGeneration, 0);
+  assert.equal(before.correctionGeneration, 0);
+  assert.equal(before.taskRecordVersion, 8);
+  assert.equal(before.counts.events, 1);
+  assert.equal(before.cacheMatches, true);
+  assert.equal(before.issue, null);
+  assert.deepEqual(before.stop, { requested: false, mode: null, reasonDigest: null });
+  assert.deepEqual(before.reconciliation, { required: false, reasonCode: null });
+  assert.deepEqual(before, await executeImplementationCommand(parseImplementationCommand([
+    'status', planned.runId,
+  ]), { packageIdentity, adapter }));
+
+  const lock = await executeImplementationCommand(parseImplementationCommand([
+    'lock', 'inspect', planned.runId,
+  ]), { packageIdentity, adapter });
+  assert.equal(lock.held, true);
+  assert.equal(typeof lock.recoveryToken, 'string');
+  assert.equal(Object.hasOwn(before, 'manifest'), false);
+  assert.equal(Object.hasOwn(before, 'snapshot'), false);
+  assert.equal(Object.hasOwn(before, 'lock'), false);
+  assert.equal(JSON.stringify(before).includes(lock.recoveryToken), false);
+  assert.equal(JSON.stringify(before).includes('/opt/codex'), false);
+  const events = await executeImplementationCommand(parseImplementationCommand([
+    'events', planned.runId,
+  ]), { packageIdentity, adapter });
   assert.equal(events.events.length, 1);
-  const doctor = await executeImplementationCommand(parseImplementationCommand(['doctor', 'run_54']), {
-    packageIdentity, adapter,
-  });
+  const doctor = await executeImplementationCommand(parseImplementationCommand([
+    'doctor', planned.runId,
+  ]), { packageIdentity, adapter });
   assert.deepEqual({ ok: doctor.ok, eventCount: doctor.eventCount }, { ok: true, eventCount: 1 });
 
   const shadow = await executeImplementationCommand(parseImplementationCommand([
     'T-0054', '--expected-task-revision', '2', '--harness', 'codex', '--shadow',
   ]), { packageIdentity, adapter });
   assert.equal(shadow.effectAuthority, false);
+  assert.equal(shadow.runId, planned.runId);
+  await runtime.release(planned.runId);
+  const ledgerRoot = path.join(common, 'meta-framework', 'implementation', 'v1');
+  const bytesBeforeDenial = await captureByteTree(ledgerRoot);
   await assert.rejects(() => executeImplementationCommand(parseImplementationCommand([
-    'stop', 'run_54', '--expected-control-generation', '0', '--reason', 'offline disable proof',
+    'stop', planned.runId, '--expected-control-generation', '0', '--reason', 'offline disable proof',
   ]), { packageIdentity, adapter }), (error) => error.code === 'ACTIVATION_DISABLED');
+  assert.deepEqual(await captureByteTree(ledgerRoot), bytesBeforeDenial);
 
   const reopened = await openImplementationLedger(common);
-  const after = await readRunStatus(reopened, 'run_54');
-  assert.deepEqual(after.snapshot, before.snapshot);
+  const after = await readRunStatus(reopened, planned.runId);
+  assert.equal(after.snapshot.revision, before.snapshotRevision);
+  assert.equal(after.snapshot.phase, before.phase);
   assert.equal(after.lock.held, false);
+});
+
+test('operator status derives immutable state when the snapshot cache lags a durable event', async (t) => {
+  const common = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-status-replay-'));
+  t.after(() => fs.rm(common, { recursive: true, force: true }));
+  const input = planInput();
+  const planned = planImplementationStart(input);
+  const capability = issueSourceInstrumentedEffectCapability('journal_write');
+  let snapshotStages = 0;
+  const ledger = await openImplementationLedger(common, {
+    create: true,
+    writeCapability: capability,
+    hooks: {
+      publicationCut(cut, details) {
+        if (cut === 'after-stage-sync' && details.label === 'run snapshot' &&
+            ++snapshotStages === 2) {
+          throw new Error('cut:ready-cache');
+        }
+      },
+    },
+  });
+  const runtime = createImplementationRuntime({ ledger, clock: () => NOW });
+  await assert.rejects(runtime.start(input), /cut:ready-cache/u);
+  await runtime.release(planned.runId);
+
+  const adapter = createReadOnlyImplementationAdapter(common);
+  const status = await executeImplementationCommand(parseImplementationCommand([
+    'status', planned.runId, '--json',
+  ]), { packageIdentity, adapter });
+  assert.equal(status.state, 'nonterminal');
+  assert.equal(status.phase, 'dormant');
+  assert.equal(status.snapshotRevision, 2);
+  assert.equal(status.counts.events, 1);
+  assert.equal(status.cachedSnapshotRevision, 1);
+  assert.equal(status.cacheMatches, false);
+  assert.deepEqual(status.issue, { code: 'SNAPSHOT_CACHE_MISMATCH' });
+  assert.equal(Object.hasOwn(status, 'manifest'), false);
+  assert.equal(Object.hasOwn(status, 'snapshot'), false);
+  assert.equal(Object.hasOwn(status, 'lock'), false);
 });

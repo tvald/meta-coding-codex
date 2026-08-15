@@ -10,6 +10,10 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const reducerPath = path.join(repositoryRoot, 'lib', 'implementation-reducer.mjs');
 const protocolPath = path.join(repositoryRoot, 'lib', 'implementation-protocol.mjs');
 const workspacePath = path.join(repositoryRoot, 'lib', 'implementation-workspace.mjs');
+const activationPath = path.join(repositoryRoot, 'lib', 'implementation-activation.mjs');
+const bindingPath = path.join(repositoryRoot, 'lib', 'implementation-binding.mjs');
+const providerPath = path.join(repositoryRoot, 'lib', 'implementation-provider.mjs');
+const effectCapabilityPath = path.join(repositoryRoot, 'lib', 'implementation-effect-capability.mjs');
 
 const bindingLiteral = `{
   runId: 'run_1', epoch: 1, snapshotRevision: 2,
@@ -118,13 +122,13 @@ test('sticky stop invariant', () => {
       !Array.isArray(protectedPaths) || changedPaths.length > 10_000 || ownership.writePaths.length > 128) {
     fail('OWNERSHIP_INVALID', 'workspace ownership input is invalid');
   }
+  const effectiveProtected = effectiveProtectedPaths(protectedPaths);
   const writes = [...new Set(ownership.writePaths)].sort();
   const changed = [...new Set(changedPaths)].sort();
   for (const owned of writes) pathParts(owned, 'ownership path');
-  for (const protectedPath of protectedPaths) pathParts(protectedPath, 'protected path');
   for (const candidate of changed) {
     pathParts(candidate, 'changed path');
-    if (protectedPaths.some((protectedPath) => pathContains(protectedPath, candidate) ||
+    if (effectiveProtected.some((protectedPath) => pathContains(protectedPath, candidate) ||
         pathContains(candidate, protectedPath))) return false;
     if (!writes.some((owned) => pathContains(owned, candidate))) return false;
   }
@@ -173,12 +177,20 @@ for (const mutant of mutants) {
     const moduleName = path.basename(sourcePath);
     const copiedModule = path.join(directory, moduleName);
     const copiedProtocol = path.join(directory, 'implementation-protocol.mjs');
+    const copiedActivation = path.join(directory, 'implementation-activation.mjs');
+    const copiedBinding = path.join(directory, 'implementation-binding.mjs');
+    const copiedProvider = path.join(directory, 'implementation-provider.mjs');
+    const copiedEffectCapability = path.join(directory, 'implementation-effect-capability.mjs');
     const mutantModuleName = moduleName.replace(/\.mjs$/u, '-mutant.mjs');
     const mutantModule = path.join(directory, mutantModuleName);
     const invariantPath = path.join(directory, 'invariant.test.mjs');
     const mutantInvariantPath = path.join(directory, 'mutant-invariant.test.mjs');
     await copyFile(sourcePath, copiedModule);
     await copyFile(protocolPath, copiedProtocol);
+    await copyFile(activationPath, copiedActivation);
+    await copyFile(bindingPath, copiedBinding);
+    await copyFile(providerPath, copiedProvider);
+    await copyFile(effectCapabilityPath, copiedEffectCapability);
     await writeFile(invariantPath, mutant.invariant, 'utf8');
 
     const baseline = runInvariant(invariantPath);

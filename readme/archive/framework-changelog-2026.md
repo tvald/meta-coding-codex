@@ -1,5 +1,22 @@
 # Framework Changelog Archive: 2026
 
+## 2026-08-11: Retire Copied-Core Delivery
+
+- Status: Adopted.
+- Evidence: T-0030's frozen architecture and security contract, the exact reviewed
+  pre-npm snapshot at `c90211b9a2cd888a1796dbd584384fd1f9eaa132`, and its 49-entry
+  data-only transition manifest; final verification remains in the T-0030 quality record.
+- Change: Retired ZIP, moving-release, and curl delivery artifacts; removed the
+  client-side changelog seed; retained source-only discovery bundles outside the npm
+  tarball; and documented exact package replacement, rollback, upstream contribution,
+  and conservative copied-client transition guidance.
+- Success signal: Every supported client path uses the immutable local npm dependency,
+  while old copied clients receive only bounded provenance guidance and inert ownership
+  data rather than executable cleanup.
+- Review or sunset trigger: A live copied-core path, mutable installed package, client
+  framework log, ambiguous legacy deletion, source-bundle tarball leak, or replacement
+  path that does not bind manifest and lockfile together.
+
 ## 2026-08-11: Adopt Thin Harness Bootstraps And Guarded Client Initialization
 
 - Status: Adopted.

@@ -1,12 +1,14 @@
 # Concurrent Implementation Controller Protocol
 
-Status: Design contract for Decision 0025
+Status: Implementation contract for Decisions 0025 and 0027
 
 Version: 1
 
 This is the canonical serialization and reducer contract for the concurrent
-implementation controller. Decision 0025 owns the architecture and activation choice;
-the threat model owns risks; the T-0053 quality record owns verification.
+implementation controller. Decision 0025 owns the architecture and default-disabled live
+activation; Decision 0027 owns the two-fence resume grammar and bounded stop-control
+authority; the threat model owns risks; the T-0054 quality record owns implementation
+verification.
 
 ## Encoding And Common Types
 
@@ -42,24 +44,27 @@ type ResourceClaim = {
   namespace: string | null
 }
 type RefKind = "assignment" | "attempt" | "operation" | "event" | "candidate" |
-  "check_receipt" | "resource_receipt" | "launch_receipt" | "model_result" |
-  "terminal_receipt" | "evidence" | "detail" | "decision"
-type OperationKind = "activate_task" | "launch_job" | "interrupt_job" |
+  "check_receipt" | "resource_receipt" | "process_receipt" | "launch_receipt" |
+  "model_result" | "terminal_receipt" | "evidence" | "detail" | "decision"
+type OperationKind = "activate_task" | "launch_job" | "allocate_workspace" |
+  "interrupt_job" |
   "freeze_attempt" | "ingest_attempt" | "create_candidate" |
   "integrate_candidate" | "run_check" | "allocate_resource" |
   "cleanup_resource" | "publish_candidate" | "close_task" |
   "create_completion_commit" | "advance_target_ref" | "cleanup_workspace"
 type EventKind = "control_accepted" | "orientation_published" |
-  "root_decision_accepted" | "operation_transition" | "provider_observed" |
-  "result_observed" | "wake_due" | "snapshot_published" | "terminal_published"
+  "root_decision_accepted" | "attempt_transition" | "operation_transition" |
+  "provider_observed" | "result_observed" | "wake_due" | "snapshot_published" |
+  "terminal_published"
 ```
 
-The supervisor stamps `Binding`; raw model proposals contain no `Binding`. A
-supervisor-authored record or receipt is current only when every binding field equals the
-canonical snapshot, except that a receipt may name its earlier snapshot revision while
-all authority, control, task, capsule, and correction fields still match. A task revision
-mismatch stales the entire run. Epoch or control mismatch rejects effects. Correction
-mismatch stales only affected assignments, candidates, and checks.
+The supervisor stamps `Binding`; raw model proposals contain no `Binding`. A mutable
+authority record is current only when every binding field equals the canonical snapshot.
+Causally fan-in immutable evidence, including receipts and candidates, may name its
+earlier snapshot revision while all authority, control, task, capsule, and correction
+fields still match. A task revision mismatch stales the entire run. Epoch or control
+mismatch rejects effects. Correction mismatch stales only affected assignments,
+candidates, and checks.
 
 ## File Layout And Publication
 
@@ -81,6 +86,18 @@ flush before advancing `snapshot.json`. Events notify only after their causal re
 durable. Control requests are the only multi-writer files; they are exclusive-created,
 exact-run/generation bound, and become effective only after supervisor validation and an
 event. Recovery ignores the snapshot cache and reduces immutable records again.
+When that derived cache is missing, corrupt, or disagrees with immutable replay, only the
+current lock holder may replace it, and only after rechecking the exact raw cache digest
+observed before an atomic stage/rename/directory-flush repair. Cache repair never changes
+records, events, controls, or run identity.
+
+For a Ready task, run initialization and the epoch-one lock precede task mutation. The
+controller then publishes the exact Ready-source/Active-target activation detail and an
+`activate_task` Operation v1 before invoking the task CLI CAS. It always observes the
+task afterward. Exact Active postcondition publishes the receipt, Operation v2, causal
+event, and derived cache; exact unchanged Ready may retry the same operation; any other
+task/store observation reconciles. A restart discovers this pre-mutation run before
+planning from the newer Active observation, so response loss never creates a second run.
 
 ## Canonical Records
 
@@ -174,9 +191,11 @@ type Candidate = {
 `changedPaths`, ownership, tree, patch, process, and exit facts are supervisor-derived.
 Worker-declared copies are diagnostic only. Paths are sorted and unique; a write claim
 conflicts when either path is equal to or a segment-prefix of the other. Candidates cannot
-include task store, controller, hook, agent, or Git administrative paths unless the Root
-assignment explicitly owns an otherwise-authorized project document and the supervisor's
-closed protected-path policy allows it.
+include mandatory agent instructions, harness configuration, Git administration,
+prompts, framework policy, task-store entry/state, the project cursor, package manifests,
+lock/inventory, validation scripts, controller sources, or any other path in the closed
+protected-path policy. Caller-supplied protected paths only add restrictions; assignment
+ownership and Root decisions cannot subtract the mandatory set.
 
 ```ts
 type CheckReceipt = {
@@ -192,6 +211,14 @@ type ResourceReceipt = {
   resourceKey: string; action: "allocate" | "observe_collision" | "cleanup";
   ownershipTokenDigest: Digest | null; observedIdentityDigest: Digest | null;
   outcome: "succeeded" | "failed" | "ambiguous"; evidence: Ref[]; observedAt: string;
+}
+
+type ProcessReceipt = {
+  schemaVersion: 1; receiptId: string; binding: Binding; attemptId: string;
+  requestId: string; launcherConnectionId: string; processDomainId: string;
+  processIdentityDigest: Digest; action: "observe" | "interrupt";
+  state: "running" | "empty" | "ambiguous"; descendantsComplete: boolean;
+  membersDigest: Digest; evidence: Ref[]; observedAt: string;
 }
 
 type TerminalReceipt = {
@@ -231,6 +258,12 @@ type LaunchReceipt = {
   modelResult: Ref | null; outcome: "running" | "exited" | "ambiguous";
 }
 
+type RootLaunchIntent = {
+  schemaVersion: 1; recordType: "root_launch_intent";
+  orientation: Ref; orientationDigest: Digest;
+  request: LaunchRequest; requestDigest: Digest;
+}
+
 type WorkerResult = {
   schemaVersion: 1; disposition: "completed" | "partial" | "blocked" | "failed";
   summary: string; changedPathsClaim: string[]; checks: {
@@ -239,12 +272,28 @@ type WorkerResult = {
   findings: { severity: string; summary: string; evidenceDigest: Digest | null }[];
   risks: string[]; knowledgeProposals: string[]; followUp: string[];
 }
+
+type RootModelResult = {
+  schemaVersion: 1; recordType: "root_decision_result";
+  worker: WorkerResult; proposal: RootDecisionProposal;
+  orientationDigest: Digest; promptDigest: Digest; rawResultDigest: Digest;
+}
 ```
 
-Provider JSONL and `WorkerResult` are notifications. The launcher creates `LaunchReceipt`
-from the held process/transport and wraps the model-result reference with the current
-binding. Conflicting terminal results for one request become ambiguous. A worker cannot
-assert trusted paths, checks, integration, task completion, or producer identity.
+Provider JSONL, `WorkerResult`, and `RootModelResult` are notifications. Before a Root
+spawn, the controller persists one closed `RootLaunchIntent`; its request digest is the
+canonical digest of the full request, and the `launch_job` Operation binds that digest
+and intent ref. The intent names the exact latest durable orientation, Root role,
+assignment/attempt/request, static profile, dynamic prompt, environment, permissions,
+base tree, and deadline. Its provider adapter and executable version equal the immutable
+run manifest, and its cwd identity equals the allocated attempt workspace root. The
+launcher creates `LaunchReceipt` from the held
+process/transport and wraps the model-result reference with the current binding.
+Acceptance requires the intent to precede launch, the terminal receipt request and
+environment to match it, and the Root envelope prompt/orientation/proposal to match both
+the intent and current durable orientation. Conflicting terminal results for one request
+become ambiguous. A worker cannot assert trusted paths, checks, integration, task
+completion, or producer identity.
 
 ```ts
 type AssignmentProposal = {
@@ -261,6 +310,7 @@ type AssignmentProposal = {
 type RootDecisionProposal = { schemaVersion: 1; rationale: string } & (
   | { kind: "declare_assignments"; assignments: AssignmentProposal[] }
   | { kind: "integrate_candidate"; candidateId: string }
+  | { kind: "reject_candidate"; candidateId: string; evidence: Ref[] }
   | { kind: "request_correction"; supersededAssignmentIds: string[];
       assignments: AssignmentProposal[]; affectedCheckIds: string[] }
   | { kind: "schedule_gates"; candidateId: string;
@@ -278,17 +328,17 @@ type RootDecisionProposal = { schemaVersion: 1; rationale: string } & (
 type RootDecision = {
   schemaVersion: 1; decisionId: string; binding: Binding;
   orientationDigest: Digest; proposalDigest: Digest;
-  source: { launchReceipt: Ref; modelResult: Ref };
+  source: { launchIntent: Ref; launchReceipt: Ref; modelResult: Ref };
   proposal: RootDecisionProposal; derivedAssignments: Ref[]; acceptedAt: string;
 }
 ```
 
 The proposal union is closed and has no binding, assignment ID, executable, shell, Git,
 arbitrary task mutation, provider configuration, or approval-grant variant. The
-supervisor validates a raw proposal against the exact orientation named by the Root job's
-current `LaunchReceipt`, computes `proposalDigest` over its JCS bytes, and verifies that
-`source.modelResult` equals that receipt's model-result reference. It then stamps the
-current binding, publishes canonical `Assignment` records with policy-derived IDs,
+supervisor validates a raw proposal against the exact current orientation and the Root
+job's durable launch intent and terminal receipt, computes `proposalDigest` over its JCS
+bytes, and verifies that `source.modelResult` equals that receipt's model-result reference.
+It then stamps the current binding, publishes canonical `Assignment` records with policy-derived IDs,
 profiles, base, permissions, and deadlines, records their references in
 `derivedAssignments`, and publishes `RootDecision`. Same-decision proposal dependencies
 resolve by `proposalId`; unresolved, duplicate, cyclic, or conflicting proposals reject
@@ -337,7 +387,7 @@ not reuse assignments in a new run.
 | `launch_intended` | `running`, `terminal_observed`, `ambiguous`, `stale`, `quarantined` | Matching launch receipt; trustworthy pre-run exit with empty process domain; indeterminate launch; proved no live process after binding change; or identity/emptiness unproved |
 | `running` | `terminal_observed`, `ambiguous`, `stale`, `quarantined` | Exact process domain is empty plus terminal provider/exit observation; connection/process evidence conflicts; empty domain after interruption for a binding change; or identity/emptiness unproved |
 | `ambiguous` | `running`, `terminal_observed`, `stale`, `quarantined` | Held launcher connection and exact live process prove the current job; empty domain plus trusted terminal observation; empty domain plus binding change; or explicit reconciliation cannot prove identity/emptiness |
-| `terminal_observed` | `frozen`, `stale`, `quarantined` | Empty process domain and exact workspace identity; binding change; or failed identity check |
+| `terminal_observed` | `frozen`, `accepted`, `rejected`, `stale`, `quarantined` | Empty process domain and exact workspace identity; exact accepted Root result disposition for a no-candidate analysis attempt; binding change; or failed identity check |
 | `frozen` | `ingested`, `stale`, `quarantined` | NUL-safe actual-diff capture and ownership validation; binding change; or unsafe/unknown paths |
 | `ingested` | `accepted`, `rejected`, `stale`, `quarantined` | Current accepted Root decision; current rejection decision; binding change; or conflicting evidence |
 | `accepted`, `rejected`, `stale` | `cleanup_pending`, `quarantined` | Immutable required evidence and exact cleanup intent; or cleanup preconditions unproved |
@@ -347,6 +397,23 @@ not reuse assignments in a new run.
 No other attempt edge is legal. In particular, recovery from `ambiguous` cannot allocate
 or relaunch that attempt; it must prove one of the four observations above. A retry always
 allocates a new attempt ID and workspace, and never overlaps unresolved ownership.
+
+Every attempt edge is carried by an immutable `attempt_transition` detail containing the
+new and previous Attempt refs, one closed observation code, exact ordered evidence refs,
+and its observation time. The reducer validates the complete evidence set before any
+causal record or event is published. Workspace allocation requires an observed-success
+`allocate_workspace` Operation and the exact workspace `ResourceReceipt`. Launch intent
+precedes spawn; running and terminal observations bind the same launch and process
+identity; an empty domain is authoritative only when `descendantsComplete` is true.
+Incomplete or conflicting process evidence quarantines instead of proving termination.
+`frozen` is a read-only inspection boundary, while `ingest_attempt` is the separately
+journaled Git effect bound to that inspection and exact frozen Attempt ref. Every changed
+ordinary file is opened without following links, bounded, hashed over its exact bytes,
+and checked for stable descriptor/name identity before and after the read. Frozen
+evidence is a closed canonical value that survives restart; a new ingestion reopens and
+revalidates exact identity and content, while replay of a durable terminal ingestion
+receipt performs no filesystem or Git effect. Cleanup intent precedes cleanup and
+`cleaned` requires both the exact workspace cleanup operation and resource receipt.
 
 Operations move `intended -> started -> observed_succeeded|observed_failed`; intent may
 move directly to an observed state when the postcondition already exists. Either
@@ -371,4 +438,41 @@ the same key with another digest is corruption and forces reconciliation.
   for the exact action and boundary may unblock that operation.
 - Finalization requires no live writer, a current final decision, exact candidate and
   required check receipts, expected canonical task/Git state, explicit staged paths/tree,
-  and the forward-recovery journal defined by Decision 0025.
+  the forward-recovery journal defined by Decision 0025, and fresh exact authorization
+  immediately before every synchronous or asynchronous effect boundary. A caller-supplied
+  boundary authorizer is defense in depth, not an activation issuer.
+
+## Operator Controls And Activation
+
+`stop` publishes one bounded append-only request only when the named run already exists
+and its immutable replay has the caller's exact control generation. Its deterministic
+request ID covers run, generation, and reason; an exact retry reuses the original bytes
+even after the supervisor accepts it. The stop-control capability cannot initialize a
+run, publish lifecycle records or events, acquire or recover a lock, accept the request,
+signal a process, or clean any resource.
+
+After durable publication, an operator may send a best-effort wake hint to the current
+run owner. The ephemeral endpoint is bound to the ledger-root identity, run ID, lock
+token, and epoch. Its bounded request ID payload is never authority: the receiver
+subscribes before replay, coalesces hints, and resolves only after immutable replay finds
+a current-generation durable control. An absent, stale, unreachable, duplicated, or
+spoofed hint cannot roll back the request, trigger a fallback signal, or authorize an
+effect.
+
+`resume` requires both `expectedEpoch` and `expectedControlGeneration`. Acceptance occurs
+only under the current run lock after prior effects are reconciled; it rotates the epoch
+and advances the control generation before new effects. Start, resume, clean, lock
+recovery, provider, signal, workspace, Git, task, final-ref, and other forward effects
+remain separately deny-by-default. Receipt validation is not a trust issuer. The
+installed package has no general live activation source until a later accepted decision
+defines protected issuance, recognition, delivery, revocation, and containment evidence.
+No shipped library namespace may convert caller-supplied receipt/current objects into an
+opaque Git, task, journal, or final-ref capability. Disposable-Git mechanics may be
+exercised only through source-test instrumentation excluded from package bytes; the
+original installed module retains no issuer.
+
+A shipped offline composer may join a caller-supplied already-open branded ledger,
+runtime, application service, and explicit leaf ports. It must identify itself as
+`offline_injected`, expose no issuer, open no ledger, accept no receipt-shaped activation
+shortcut, and remain unreachable from the installed command's forward paths. This proves
+package-owned protocol/lifecycle interoperability without claiming live authority.

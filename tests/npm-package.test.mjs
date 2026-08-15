@@ -19,6 +19,9 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import { forbiddenLifecycleScripts, validateManifest } from '../scripts/check-npm-package.mjs';
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
 
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const npmEnvironment = (cache) => ({
@@ -100,6 +103,69 @@ function normalizeFrameworkLock(clientRoot, version) {
   assert.equal(installed.version, version);
   assert.match(installed.integrity, /^sha512-/u);
   writeJson(lockPath, lock);
+}
+
+let sourceImplementationModulesPromise;
+
+function sourceImplementationModules() {
+  sourceImplementationModulesPromise ??= Promise.all([
+    import('../lib/implementation-effect-capability.mjs'),
+    import('../lib/implementation-ledger.mjs'),
+    import('../lib/implementation-protocol.mjs'),
+    import('../lib/implementation-runtime.mjs'),
+    import('../lib/implementation-supervisor.mjs'),
+  ]).then(([effect, ledger, protocol, runtime, supervisor]) => ({
+    effect, ledger, protocol, runtime, supervisor,
+  }));
+  return sourceImplementationModulesPromise;
+}
+
+async function seedSourceImplementationRun(gitCommonDirectory, selectedRecord) {
+  const { effect, ledger, protocol, runtime, supervisor } = await sourceImplementationModules();
+  const digest = (label) => protocol.canonicalDigest({ label });
+  const oid = (character) => character.repeat(40);
+  const now = '2026-08-15T03:20:00Z';
+  const input = {
+    command: {
+      command: 'start', taskId: selectedRecord.id,
+      expectedTaskRevision: selectedRecord.taskRevision, harness: 'codex',
+      maxConcurrency: 2, shadow: false,
+    },
+    task: {
+      id: selectedRecord.id, taskRevision: selectedRecord.taskRevision,
+      recordVersion: selectedRecord.recordVersion, status: 'active',
+      outcome: 'Exercise installed stop publication.', authority: 'Packed fixture.',
+      route: 'quick_change', risk: 'low', gateDigest: digest('gate'), acceptance: [],
+      nonGoals: [], assumptions: [], decisions: [], detailDigests: [],
+      checkCatalogDigest: digest('checks'),
+    },
+    activeTaskId: selectedRecord.id,
+    store: { storeId: 'task_store', storeGeneration: digest('store') },
+    repository: {
+      rootIdentity: digest('root'), objectFormat: 'sha1', baseCommit: oid('1'),
+      head: oid('1'), tree: oid('2'), statusDigest: digest('status'),
+      canonicalWorktreeIdentity: digest('worktree'),
+    },
+    provider: {
+      adapter: 'codex_exec_v1', adapterVersion: '1.0.0', harness: 'codex',
+      executableRealpath: '/opt/codex', executableVersion: '0.147.0',
+    },
+    controller: { packageName: '@tvald/meta-framework', packageVersion: '1.0.0' },
+    policies: {
+      promptRegistry: digest('prompts'), checks: digest('checks'), resources: digest('resources'),
+    },
+    quota: { disposition: 'proceed' }, approvals: { current: true }, observedAt: now,
+  };
+  const plan = supervisor.planImplementationStart(input);
+  const writeCapability = effect.issueSourceInstrumentedEffectCapability('journal_write');
+  const opened = await ledger.openImplementationLedger(gitCommonDirectory, {
+    create: true,
+    writeCapability,
+  });
+  const service = runtime.createImplementationRuntime({ ledger: opened, clock: () => now });
+  await service.start(input);
+  await service.release(plan.runId);
+  return plan.runId;
 }
 
 test('base package CLI reports version and bounds unknown commands', () => {
@@ -295,7 +361,7 @@ test('package audit never reflects untrusted npm output', { skip: process.platfo
   }
 });
 
-test('packed dependency installs without scripts and runs through the explicit local alias path', () => {
+test('packed dependency installs without scripts and runs through the explicit local alias path', async () => {
   const workRoot = mkdtempSync(join(tmpdir(), 'meta-framework-client-'));
   try {
     const packDirectory = join(workRoot, 'pack');
@@ -347,25 +413,181 @@ test('packed dependency installs without scripts and runs through the explicit l
     ], { cwd: clientDirectory, env: npmEnvironment(cache) });
     assert.equal(implementationVersion.status, 0, implementationVersion.stderr);
     assert.equal(JSON.parse(implementationVersion.stdout).implementationController.liveEffects,
-      'disabled_without_activation_receipt');
+      'disabled_no_protected_issuer');
+
+    const implementationApis = run(process.execPath, ['--input-type=module', '--eval', `
+      import fs from 'node:fs/promises';
+      import os from 'node:os';
+      import path from 'node:path';
+      import { pathToFileURL } from 'node:url';
+      const root = path.resolve('node_modules/meta-framework/lib');
+      const names = ['implementation-application.mjs', 'implementation-launch.mjs',
+        'implementation-operator.mjs', 'implementation-pipeline.mjs',
+        'implementation-process.mjs', 'implementation-runtime.mjs'];
+      const modules = await Promise.all(names.map((name) => import(pathToFileURL(path.join(root, name)))));
+      const composer = await import(pathToFileURL(
+        path.join(root, 'implementation-application-composer.mjs')));
+      const git = await import(pathToFileURL(path.join(root, 'implementation-git.mjs')));
+      const ledger = await import(pathToFileURL(path.join(root, 'implementation-ledger.mjs')));
+      const effect = await import(pathToFileURL(path.join(root, 'implementation-effect-capability.mjs')));
+      let gitForgeryCode = null;
+      try {
+        git.writeIndexTree({ repositoryRoot: '/does-not-exist',
+          gitExecutable: '/does-not-exist', capability: { authorized: true } });
+      } catch (error) {
+        gitForgeryCode = error?.code ?? null;
+      }
+      const forgedCapability = Object.freeze({
+        schemaVersion: 1, receiptId: 'receipt_forged', effectKind: 'journal_write',
+      });
+      let effectForgeryCode = null;
+      try {
+        effect.assertImplementationEffectCapability(forgedCapability, 'journal_write');
+      } catch (error) {
+        effectForgeryCode = error?.code ?? null;
+      }
+      const denialRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'packed-ledger-denial-'));
+      let ledgerForgeryCode = null;
+      try {
+        await ledger.openImplementationLedger(denialRoot, {
+          create: true, writeCapability: forgedCapability,
+        });
+      } catch (error) {
+        ledgerForgeryCode = error?.code ?? null;
+      }
+      const forgedLedgerEntries = await fs.readdir(denialRoot);
+      await fs.rm(denialRoot, { recursive: true, force: true });
+      process.stdout.write(JSON.stringify({
+        application: typeof modules[0].createImplementationApplicationService,
+        launch: typeof modules[1].prepareCodexControllerLaunch,
+        operator: typeof modules[2].createImplementationOperatorAdapter,
+        pipeline: typeof modules[3].createImplementationPipeline,
+        process: typeof modules[4].createLocalImplementationProcessLauncher,
+        runtime: typeof modules[5].createImplementationRuntime,
+        composer: typeof composer.createOfflineImplementationApplicationComposition,
+        composerIssuer: typeof composer.authorizeImplementationEffect,
+        gitIssuer: typeof git.authorizeProtectedImplementationEffect,
+        ledgerIssuer: typeof ledger.authorizeImplementationLedgerWrite,
+        effectIssuer: typeof effect.issueSourceInstrumentedEffectCapability,
+        gitForgeryCode,
+        effectForgeryCode,
+        ledgerForgeryCode,
+        forgedLedgerEntries,
+      }) + '\\n');
+    `], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(implementationApis.status, 0, implementationApis.stderr);
+    assert.deepEqual(JSON.parse(implementationApis.stdout), {
+      application: 'function', launch: 'function', operator: 'function',
+      pipeline: 'function', process: 'function', runtime: 'function', composer: 'function',
+      composerIssuer: 'undefined',
+      gitIssuer: 'undefined', ledgerIssuer: 'undefined', effectIssuer: 'undefined',
+      gitForgeryCode: 'ACTIVATION_DENIED', effectForgeryCode: 'ACTIVATION_DENIED',
+      ledgerForgeryCode: 'WRITE_CAPABILITY_REQUIRED', forgedLedgerEntries: [],
+    });
 
     normalizeFrameworkLock(clientDirectory, '1.0.0');
     const initialized = run('git', ['init', '--quiet'], { cwd: clientDirectory });
     assert.equal(initialized.status, 0, initialized.stderr);
+    writeFileSync(join(clientDirectory, '.gitignore'), 'node_modules/\n');
+    writeFileSync(join(clientDirectory, 'AGENTS.md'), '# Agent Instructions\n');
+    mkdirSync(join(clientDirectory, 'readme', 'tasks'), { recursive: true });
+    writeFileSync(join(clientDirectory, 'readme', 'README.md'), `# Project State
+
+## Maintenance Cadence
+
+- Last maintenance pass: 2026-08-14
+- Next trigger: 2026-09-13 or 10 repository-changing completions
+`);
+    writeFileSync(join(clientDirectory, 'readme', 'tasks', 'README.md'),
+      '# Task Store\n\nUse `npm run --ignore-scripts --silent meta -- tasks doctor` and ' +
+      '`npm run --ignore-scripts --silent meta -- tasks startup`.\n');
+    const taskStore = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'tasks', 'init',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(taskStore.status, 0, taskStore.stderr);
+    const addedTask = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'tasks', 'task', 'add',
+      '--outcome', 'Exercise packed implementation shadow planning',
+      '--authority-reference', 'T-0054 packed fixture',
+      '--accepted-date', '2026-08-14',
+      '--status', 'ready',
+      '--route', 'quick_change',
+      '--risk', 'low',
+      '--next-safe-action', 'Select the packed shadow fixture',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(addedTask.status, 0, addedTask.stderr);
+    const addedRecord = JSON.parse(addedTask.stdout).data;
+    assert.equal(addedRecord.id, 'T-0001');
+    const selectedTask = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'tasks', 'task', 'select',
+      addedRecord.id, '--expected-record-version', String(addedRecord.recordVersion),
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(selectedTask.status, 0, selectedTask.stderr);
+    const selectedRecord = JSON.parse(selectedTask.stdout).data;
+    for (const [name, value] of [['user.name', 'Meta Framework Fixture'], ['user.email', 'fixture@example.invalid']]) {
+      const configured = run('git', ['config', name, value], { cwd: clientDirectory });
+      assert.equal(configured.status, 0, configured.stderr);
+    }
+    const staged = run('git', ['add', '--all'], { cwd: clientDirectory });
+    assert.equal(staged.status, 0, staged.stderr);
+    const committed = run('git', ['commit', '--quiet', '-m', 'Initialize packed client fixture'], {
+      cwd: clientDirectory,
+    });
+    assert.equal(committed.status, 0, committed.stderr);
     const shadow = run('npm', [
-      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'T-0054',
-      '--expected-task-revision', '2', '--harness', 'codex', '--shadow',
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', selectedRecord.id,
+      '--expected-task-revision', String(selectedRecord.taskRevision), '--harness', 'codex', '--shadow',
     ], { cwd: clientDirectory, env: npmEnvironment(cache) });
     assert.equal(shadow.status, 0, shadow.stderr);
-    assert.equal(JSON.parse(shadow.stdout).effectAuthority, false);
+    const shadowPlan = JSON.parse(shadow.stdout);
+    assert.equal(shadowPlan.effectAuthority, false);
+    assert.equal(shadowPlan.disposition, 'shadow_quiesced');
+    assert.equal(shadowPlan.hypotheticalIntents.some(({ kind }) => kind === 'root_tick'), false);
+    assert.equal(shadowPlan.plan.reason, 'quota_unavailable');
     assert.equal(existsSync(join(clientDirectory, '.git', 'meta-framework')), false);
     const live = run('npm', [
-      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'T-0054',
-      '--expected-task-revision', '2', '--harness', 'codex',
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', selectedRecord.id,
+      '--expected-task-revision', String(selectedRecord.taskRevision), '--harness', 'codex',
     ], { cwd: clientDirectory, env: npmEnvironment(cache) });
     assert.equal(live.status, 1);
     assert.match(live.stderr, /ACTIVATION_DISABLED/u);
     assert.equal(existsSync(join(clientDirectory, '.git', 'meta-framework')), false);
+
+    const runId = await seedSourceImplementationRun(join(clientDirectory, '.git'), selectedRecord);
+    assert.match(runId, /^[a-z][a-z0-9_-]{0,63}$/u);
+    const stopArgs = [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'stop', runId,
+      '--expected-control-generation', '0', '--reason', 'Installed exact stop proof.',
+    ];
+    const stopped = run('npm', stopArgs, { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(stopped.status, 0, stopped.stderr);
+    assert.equal(JSON.parse(stopped.stdout).disposition, 'stop_requested');
+    const implementationTree = join(clientDirectory, '.git', 'meta-framework');
+    const stoppedDigest = treeDigest(implementationTree);
+    const duplicateStop = run('npm', stopArgs, { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(duplicateStop.status, 0, duplicateStop.stderr);
+    assert.equal(JSON.parse(duplicateStop.stdout).disposition, 'stop_already_requested');
+    assert.equal(treeDigest(implementationTree), stoppedDigest);
+    const deniedForwardCommands = [
+      ['clean', runId],
+      ['resume', runId, '--expected-epoch', '1', '--expected-control-generation', '0'],
+      ['lock', 'recover', runId, '--expected-token', 'incomplete', '--confirm-owner-not-live'],
+    ];
+    for (const command of deniedForwardCommands) {
+      const denied = run('npm', [
+        'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', ...command,
+      ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+      assert.equal(denied.status, 1);
+      assert.match(denied.stderr, /ACTIVATION_DISABLED/u);
+      assert.equal(treeDigest(implementationTree), stoppedDigest);
+    }
+    const absentStop = run('npm', [
+      'run', '--ignore-scripts', '--silent', 'meta', '--', 'implement', 'stop', 'missing_run',
+      '--expected-control-generation', '0', '--reason', 'Do not create this run.',
+    ], { cwd: clientDirectory, env: npmEnvironment(cache) });
+    assert.equal(absentStop.status, 1);
+    assert.match(absentStop.stderr, /RUN_NOT_FOUND/u);
+    assert.equal(treeDigest(implementationTree), stoppedDigest);
 
     const installedManifest = JSON.parse(readFileSync(join(clientDirectory, 'node_modules/meta-framework/package.json'), 'utf8'));
     assert.equal(installedManifest.name, '@tvald/meta-framework');

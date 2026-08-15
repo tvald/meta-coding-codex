@@ -376,12 +376,12 @@ test('project version is rootless and exposes the exact initializer compatibilit
       schemaVersion: 1,
       package: { name: '@tvald/meta-framework', version: '1.0.0' },
       projectInit: {
-        version: '1.2.0',
+        version: '1.3.0',
         envelopeVersions: [1],
         bootstrapVersions: [1],
         stateTemplateVersions: [1],
         optionalHarnesses: ['codex'],
-        codexIntegrationConfigVersions: [2],
+        codexIntegrationConfigVersions: [3],
       },
     });
     for (const args of [[], ['--help'], ['init', '--force'], ['preflight', 'extra'],
@@ -406,7 +406,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.2.0',
+      version: '1.3.0',
       disposition: 'fresh',
       bootstrapVersion: 1,
       stateTemplateVersion: 1,
@@ -420,7 +420,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.2.0',
+      version: '1.3.0',
       result: 'initialized',
       created: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
       preserved: [],
@@ -460,7 +460,7 @@ test('packed fresh init creates exact minimal client bytes and is invariant and 
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     projectInit: {
-      version: '1.2.0',
+      version: '1.3.0',
       result: 'already_initialized',
       created: [],
       preserved: ['AGENTS.md', 'CLAUDE.md', 'readme/README.md', 'readme/tasks/README.md', 'readme/tasks/store/'],
@@ -532,7 +532,7 @@ test('opt-in Codex integration installs exact files, preserves unrelated config,
   const preflight = projectJson(client, ['preflight', '--harness', 'codex']).value.projectInit;
   assert.equal(preflight.disposition, 'ready_to_add_codex_integration');
   assert.equal(preflight.harness, 'codex');
-  assert.equal(preflight.integrationConfigVersion, 2);
+  assert.equal(preflight.integrationConfigVersion, 3);
   assert.deepEqual(preflight.integration,
     Object.fromEntries(CODEX_INTEGRATION_PATHS.map((relative) => [relative, 'absent'])));
 
@@ -713,6 +713,9 @@ test('Codex integration preflight distinguishes partial and unsafe ownership sta
   const cases = [
     ['stale', 'stale_framework_owned', (target) => writeFileSync(target,
       CODEX_INTEGRATION_FILES['.codex/hooks.json'].replace('"timeout": 30', '"timeout": 29'))],
+    ['legacy-v2', 'stale_framework_owned', (target) => writeFileSync(target,
+      CODEX_INTEGRATION_FILES['.codex/hooks.json'].replace(
+        'meta-framework-codex-integration:v3', 'meta-framework-codex-integration:v2'))],
     ['client', 'client_owned', (target) => writeFileSync(target, '{"hooks":{}}\n')],
     ['malformed', 'malformed', (target) => writeFileSync(target,
       Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('{"hooks":{}}\n')]))],

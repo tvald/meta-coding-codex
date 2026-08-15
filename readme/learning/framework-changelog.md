@@ -13,6 +13,20 @@ Review sunset triggers during the scheduled hygiene pass in
 
 Archived entries: [2026](../archive/framework-changelog-2026.md).
 
+## 2026-08-15: Revise Controller Activation And Complete Offline Lifecycle
+
+- Status: Revised; protected live effects remain disabled.
+- Evidence: T-0054 closed protocol/runtime/application, crash, concurrency, package,
+  resource, adversarial, and independent gate evidence; see
+  [Decision 0027](../decisions/0027-revise-controller-operator-activation.md).
+- Change: Added the durable application lifecycle, exact attempt/workspace/Git pipeline,
+  Root launch/result provenance, replay-authoritative external stop wake-up, two-fence
+  resume, issuerless protected-effect boundary, and shipped injected offline composer.
+- Success signal: The complete offline lifecycle replays without blind effects; packed
+  clients expose only reads/shadow/non-amplifying stop and reject forged forward authority.
+- Review or sunset trigger: A live issuer proposal, missed durable stop, stale/wrong Root
+  result, descendant-completeness proof, sandbox/Git escape, or package authority drift.
+
 ## 2026-08-14: Adopt Transactional Prompt Bootstrap Activation
 
 - Status: Adopted.
@@ -133,20 +147,3 @@ Archived entries: [2026](../archive/framework-changelog-2026.md).
   copied policy, package mutation, unsafe execution, compatibility drift, or rollback loss.
 - Review or sunset trigger: A public version appears, registry/release evidence changes,
   rollback drifts, a supported runtime fails, or publication prerequisites are authorized.
-
-## 2026-08-11: Retire Copied-Core Delivery
-
-- Status: Adopted.
-- Evidence: T-0030's frozen architecture and security contract, the exact reviewed
-  pre-npm snapshot at `c90211b9a2cd888a1796dbd584384fd1f9eaa132`, and its 49-entry
-  data-only transition manifest; final verification remains in the T-0030 quality record.
-- Change: Retired ZIP, moving-release, and curl delivery artifacts; removed the
-  client-side changelog seed; retained source-only discovery bundles outside the npm
-  tarball; and documented exact package replacement, rollback, upstream contribution,
-  and conservative copied-client transition guidance.
-- Success signal: Every supported client path uses the immutable local npm dependency,
-  while old copied clients receive only bounded provenance guidance and inert ownership
-  data rather than executable cleanup.
-- Review or sunset trigger: A live copied-core path, mutable installed package, client
-  framework log, ambiguous legacy deletion, source-bundle tarball leak, or replacement
-  path that does not bind manifest and lockfile together.

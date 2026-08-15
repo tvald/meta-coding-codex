@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const {
   CODEX_ENVIRONMENT_ALLOWLIST,
+  CONTROLLER_DESCRIPTOR_ENV,
   CODEX_EXEC_ADAPTER,
   CODEX_EXECUTABLE_VERSION,
   ImplementationProviderError,
@@ -11,19 +16,23 @@ import {
   executeCodexExecPlan,
   initialProviderTerminalState,
   observeProviderTerminal,
+  parseRootDecisionResult,
   parseWorkerResult,
   planCodexExecLaunch,
   planProcessInterrupt,
   sanitizeCodexEnvironment,
   validateCodexExecutableIdentity,
   validateLaunchRequest,
-} from '../lib/implementation-provider.mjs';
+} = await import('../lib/implementation-provider.mjs');
+const { issueSourceInstrumentedEffectCapability } =
+  await import('../lib/implementation-effect-capability.mjs');
 import {
   IMPLEMENTATION_ACTIVATION_DISPOSITION,
 } from '../lib/implementation-activation.mjs';
 import { canonicalDigest, sha256Digest } from '../lib/implementation-protocol.mjs';
 
 const digest = (character) => `sha256:${character.repeat(64)}`;
+const protectedProvider = () => issueSourceInstrumentedEffectCapability('provider_launch');
 const prompt = Buffer.from('Perform one bounded implementation assignment.', 'utf8');
 const environment = {
   PATH: '/usr/bin:/bin',
@@ -35,6 +44,11 @@ const environment = {
   npm_config_token: 'DO_NOT_INHERIT',
 };
 const sanitizedEnvironment = sanitizeCodexEnvironment(environment);
+const controllerDescriptorPath = '/ledger/descriptors/job_1.json';
+const launchEnvironment = Object.freeze({
+  ...sanitizedEnvironment,
+  [CONTROLLER_DESCRIPTOR_ENV]: controllerDescriptorPath,
+});
 
 function binding(overrides = {}) {
   return {
@@ -71,7 +85,7 @@ function launchRequest(overrides = {}) {
     approvalPolicy: 'never',
     network: false,
     nestedAgents: false,
-    environmentDigest: canonicalDigest(sanitizedEnvironment),
+    environmentDigest: canonicalDigest(launchEnvironment),
     deadlineAt: '2026-08-14T12:00:00Z',
     ...overrides,
   };
@@ -95,6 +109,7 @@ function plan(overrides = {}) {
     cwd: { realpath: '/worktrees/attempt_1', identity: digest('b') },
     outputSchema: { path: '/ledger/schema/worker-result.json', digest: digest('d') },
     finalOutputPath: '/ledger/spool/job_1/final.json',
+    controllerDescriptorPath,
     prompt,
     environment,
     ...overrides,
@@ -113,6 +128,17 @@ function workerResult(overrides = {}) {
     knowledgeProposals: [],
     followUp: [],
     ...overrides,
+  };
+}
+
+function rootProposal() {
+  return {
+    schemaVersion: 1,
+    rationale: 'No new observation requires work.',
+    kind: 'wait',
+    reasonCode: 'stable_wait',
+    wakeOn: ['task_changed'],
+    deadlineAt: null,
   };
 }
 
@@ -193,15 +219,25 @@ test('Codex launch plan closes version, cwd, sandbox, schema, argv, and environm
   assert.equal(value.cwd, '/worktrees/attempt_1');
   assert.equal(value.process.shell, false);
   assert.equal(value.process.detached, true);
-  assert.deepEqual(Object.keys(value.env).sort(), ['CODEX_HOME', 'HOME', 'LANG', 'PATH']);
-  assert.deepEqual(Object.keys(value.env).every((name) => CODEX_ENVIRONMENT_ALLOWLIST.includes(name)), true);
+  assert.deepEqual(Object.keys(value.env).sort(), [
+    'CODEX_HOME', 'HOME', 'LANG', CONTROLLER_DESCRIPTOR_ENV, 'PATH',
+  ].sort());
+  assert.deepEqual(Object.keys(value.env)
+    .filter((name) => name !== CONTROLLER_DESCRIPTOR_ENV)
+    .every((name) => CODEX_ENVIRONMENT_ALLOWLIST.includes(name)), true);
+  assert.equal(value.env[CONTROLLER_DESCRIPTOR_ENV], '/ledger/descriptors/job_1.json');
+  assert.equal(value.environmentDigest, canonicalDigest(value.env));
+  assert.equal(value.controllerDescriptorPath, controllerDescriptorPath);
+  assert.equal(value.controllerDescriptorPathDigest, sha256Digest(Buffer.from(controllerDescriptorPath)));
   assert.doesNotMatch(JSON.stringify(value.env), /DO_NOT_INHERIT|DO_NOT_EXPOSE/u);
   assert.deepEqual(value.args, [
     'exec', '--strict-config', '--ignore-user-config', '--ignore-rules',
     '--cd', '/worktrees/attempt_1', '--sandbox', 'workspace-write',
     '--config', 'approval_policy="never"',
     '--config', 'sandbox_workspace_write.network_access=false',
-    '--config', 'web_search="disabled"', '--disable', 'multi_agent', '--json',
+    '--config', 'web_search="disabled"',
+    '--config', `shell_environment_policy.filters.${CONTROLLER_DESCRIPTOR_ENV}="exclude"`,
+    '--disable', 'multi_agent', '--json',
     '--color', 'never', '--output-schema', '/ledger/schema/worker-result.json',
     '--output-last-message', '/ledger/spool/job_1/final.json', '--ephemeral', '-',
   ]);
@@ -215,6 +251,10 @@ test('Codex launch plan closes version, cwd, sandbox, schema, argv, and environm
     /cwd identity is stale/u);
   assert.throws(() => plan({ outputSchema: { path: '/ledger/schema/worker-result.json', digest: digest('9') } }),
     /schema digest is stale/u);
+  assert.throws(() => plan({ controllerDescriptorPath: 'relative.json' }),
+    /controller descriptor path/u);
+  assert.throws(() => plan({ controllerDescriptorPath: '/ledger/descriptors/substituted.json' }),
+    /descriptor capability is stale/u);
 });
 
 test('Codex executable identity must be one absolute resolved realpath at 0.147.0', () => {
@@ -260,6 +300,28 @@ test('typed worker results use a closed bounded diagnostic-only shape', () => {
   ])), /byte-order mark/u);
   assert.throws(() => parseWorkerResult(Buffer.alloc(128 * 1024 + 1, 0x20)),
     (error) => error.code === 'MODEL_RESULT_LIMIT');
+});
+
+test('Root final bytes bind one WorkerResult and one closed decision proposal', () => {
+  const value = { ...workerResult(), proposal: rootProposal() };
+  const bytes = JSON.stringify(value);
+  assert.deepEqual(parseRootDecisionResult(bytes, {
+    orientationDigest: digest('9'), promptDigest: sha256Digest(prompt),
+  }), {
+    schemaVersion: 1,
+    recordType: 'root_decision_result',
+    worker: workerResult(),
+    proposal: rootProposal(),
+    orientationDigest: digest('9'),
+    promptDigest: sha256Digest(prompt),
+    rawResultDigest: sha256Digest(Buffer.from(bytes)),
+  });
+  assert.throws(() => parseWorkerResult(JSON.stringify(value)), /unknown or missing fields/u);
+  assert.throws(() => parseRootDecisionResult(JSON.stringify({
+    ...value,
+    proposal: { ...value.proposal, inventedAuthority: true },
+  }), { orientationDigest: digest('9'), promptDigest: sha256Digest(prompt) }),
+  /proposal is invalid/u);
 });
 
 test('duplicate terminals no-op while conflicts or live descendants become ambiguous', () => {
@@ -315,6 +377,14 @@ test('fake launcher cannot run without activation and conforms when explicitly a
     };
   };
 
+  await assert.rejects(() => executeCodexExecPlan({
+    plan: {
+      ...value,
+      env: { ...value.env, [CONTROLLER_DESCRIPTOR_ENV]: '/ambient/substitution.json' },
+    },
+    launcher,
+  }), (error) => error.code === 'LAUNCHER_INVALID');
+  assert.equal(invocation, null);
   await assert.rejects(() => executeCodexExecPlan({ plan: value, launcher }),
     (error) => error.code === 'ACTIVATION_REQUIRED');
   assert.equal(invocation, null);
@@ -341,6 +411,7 @@ test('fake launcher cannot run without activation and conforms when explicitly a
   const observed = await executeCodexExecPlan({
     plan: value,
     launcher,
+    effectCapability: protectedProvider(),
     activationReceipt: activeReceipt,
     activationContext: activationContext(activeReceipt),
     now: '2026-08-14T10:05:00Z',
@@ -362,6 +433,7 @@ test('fake launcher cannot run without activation and conforms when explicitly a
       terminalObservation: terminal(finalBytes, { stdoutDigest: digest('9') }),
       processEvidence: emptyProcessEvidence(),
     }),
+    effectCapability: protectedProvider(),
     activationReceipt: activeReceipt,
     activationContext: activationContext(activeReceipt),
     now: '2026-08-14T10:05:00Z',
@@ -376,6 +448,7 @@ test('fake launcher cannot run without activation and conforms when explicitly a
       terminalObservation: terminal(finalBytes, { exitCode: 1, modelResultDigest: null }),
       processEvidence: emptyProcessEvidence(),
     }),
+    effectCapability: protectedProvider(),
     activationReceipt: activeReceipt,
     activationContext: activationContext(activeReceipt),
     now: '2026-08-14T10:05:00Z',
@@ -383,4 +456,35 @@ test('fake launcher cannot run without activation and conforms when explicitly a
   assert.equal(failed.result, null);
   assert.equal(failed.modelResultDigest, null);
   assert.equal(failed.terminal.outcome, 'exited');
+});
+
+test('Root provider execution returns the proposal bound into the final result bytes', async () => {
+  const orientationDigest = digest('9');
+  const rootPlan = plan({ request: launchRequest({ role: 'root_decision' }),
+    rootOrientationDigest: orientationDigest });
+  const finalBytes = Buffer.from(JSON.stringify({ ...workerResult(), proposal: rootProposal() }));
+  const stdout = Buffer.from('{"type":"turn.completed"}\n');
+  const activeReceipt = activationReceipt();
+  const observed = await executeCodexExecPlan({
+    plan: rootPlan,
+    launcher: async () => ({
+      stdoutChunks: [stdout], stderrChunks: [], finalResultBytes: finalBytes,
+      terminalObservation: terminal(finalBytes), processEvidence: emptyProcessEvidence(),
+    }),
+    effectCapability: protectedProvider(),
+    activationReceipt: activeReceipt,
+    activationContext: activationContext(activeReceipt),
+    now: '2026-08-14T10:05:00Z',
+  });
+  assert.deepEqual(observed.result, {
+    schemaVersion: 1,
+    recordType: 'root_decision_result',
+    worker: workerResult(),
+    proposal: rootProposal(),
+    orientationDigest,
+    promptDigest: sha256Digest(prompt),
+    rawResultDigest: sha256Digest(finalBytes),
+  });
+  assert.equal('proposal' in observed, false);
+  assert.equal(observed.modelResultDigest, sha256Digest(finalBytes));
 });

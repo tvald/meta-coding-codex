@@ -32,6 +32,7 @@ results live only in the structured task store.
 | Use fixed-profile Codex lifecycle hooks and exact `meta_` custom agents only through collision-safe, opt-in client integration; preserve the portable fallback and disable child multi-agent tools with the schema-compatible feature flag. | [Decisions 0022](decisions/0022-adopt-codex-hook-prompt-injection.md) and [0023](decisions/0023-revise-codex-child-agent-disablement.md) |
 | Serve lifecycle prompts from validated immutable Git-common generations, pin sessions, require explicit ABA-safe activation, and degrade Root to the exact local fallback. | [Decision 0026](decisions/0026-adopt-transactional-prompt-bootstrap.md) |
 | Separate interactive design from command-launched autonomous implementation; use deterministic bounded ticks, concurrent isolated workers, one fenced writer, and fail-closed activation. | [Decision 0025](decisions/0025-adopt-concurrent-implementation-controller.md) |
+| Require epoch plus control-generation fencing for resume, keep emergency stop publication non-amplifying, redact normal status, and treat receipt validation as non-issuing until a later protected activation decision. | [Decision 0027](decisions/0027-revise-controller-operator-activation.md) |
 
 ## Known Global Dead Ends
 

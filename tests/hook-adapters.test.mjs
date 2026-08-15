@@ -5,7 +5,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { codexHookFailure, validateCodexFailureContract } from '../lib/hook-adapters.mjs';
+import {
+  codexControllerHookFailure,
+  codexHookFailure,
+  validateCodexFailureContract,
+} from '../lib/hook-adapters.mjs';
+import { CONTROLLER_DESCRIPTOR_ENV } from '../lib/implementation-binding.mjs';
 import {
   CLIENT_HOOK_COMMAND,
   CODEX_INTEGRATION_FILES,
@@ -19,13 +24,14 @@ const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const binary = join(sourceRoot, 'bin', 'meta-framework.mjs');
 const profiles = ['implementer', 'qa', 'reviewer', 'root', 'security'];
 
-function run(args, input = '') {
+function run(args, input = '', options = {}) {
   return spawnSync(process.execPath, [binary, ...args], {
     cwd: sourceRoot,
     encoding: 'utf8',
     input,
     timeout: 30_000,
     maxBuffer: 2 * 1024 * 1024,
+    ...options,
   });
 }
 
@@ -79,10 +85,10 @@ test('hook version exposes the closed Codex compatibility contract', () => {
     schemaVersion: 1,
     package: { name: '@tvald/meta-framework', version: '1.0.0' },
     hookAdapter: {
-      version: '1.1.0',
+      version: '1.2.0',
       envelopeVersions: [1],
       hookEventSchemaVersions: [1],
-      integrationConfigVersions: [2],
+      integrationConfigVersions: [3],
       harnesses: ['codex'],
       profiles,
       testedCodexVersions: ['0.147.0'],
@@ -111,6 +117,24 @@ test('Root degraded diagnostics expose only closed public reason codes', () => {
     assert.match(failure.systemMessage, /\(PROMPT_UNAVAILABLE\)/u);
     assert.doesNotMatch(JSON.stringify(failure), new RegExp(reason.replaceAll('/', '\\/'), 'u'));
   }
+});
+
+test('controller hook failures stop before tools and never degrade to interactive Root', () => {
+  const expected = codexControllerHookFailure();
+  const result = run(['hook', '--harness', 'codex', '--profile', 'root'],
+    JSON.stringify(eventFor('root', 'controller-failure')), {
+      env: { ...process.env, [CONTROLLER_DESCRIPTOR_ENV]: '/untrusted/missing-descriptor.json' },
+    });
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, '');
+  assert.equal(result.stdout, expected);
+  const failure = JSON.parse(result.stdout);
+  assert.equal(failure.continue, false);
+  assert.equal(failure.hookSpecificOutput.hookEventName, 'SessionStart');
+  assert.match(failure.hookSpecificOutput.additionalContext,
+    /META-FRAMEWORK-CONTROLLER-PROMPT-FAILURE 1/u);
+  assert.match(failure.hookSpecificOutput.additionalContext, /Stop before tools/u);
+  assert.doesNotMatch(result.stdout, /META-FRAMEWORK-DEGRADED|missing-descriptor/u);
 });
 
 test('the package hook serves fixed profiles from one pinned generation', () => {
@@ -186,7 +210,7 @@ test('source and client Codex adapters bind fixed profiles through immutable buf
   assert.deepEqual(Object.keys(SOURCE_CODEX_INTEGRATION_FILES), CODEX_INTEGRATION_PATHS);
   const hooks = JSON.parse(readFileSync(join(sourceRoot, '.codex', 'hooks.json'), 'utf8'));
   const handler = hooks.hooks.SessionStart[0].hooks[0];
-  assert.equal(hooks.description, 'meta-framework-codex-integration:v2');
+  assert.equal(hooks.description, 'meta-framework-codex-integration:v3');
   assert.equal(hooks.hooks.SessionStart[0].matcher, 'startup|resume|clear|compact');
   assert.equal(handler.command, SOURCE_HOOK_COMMAND);
   assert.equal(handler.additionalContextLimit, 0);
@@ -222,8 +246,24 @@ test('source and client Codex adapters bind fixed profiles through immutable buf
       maxBuffer: 2 * 1024 * 1024,
     });
     assert.equal(result.status, 0, `${profile}: ${result.stderr}`);
-    assert.equal(JSON.parse(result.stdout.split('\n', 2)[1]).profile, profile);
+    if (result.stdout.startsWith('META-FRAMEWORK-AGENT-PROMPT 1\n')) {
+      assert.equal(JSON.parse(result.stdout.split('\n', 2)[1]).profile, profile);
+    } else {
+      assert.equal(result.stdout, codexHookFailure(profile),
+        'uninstalled reviewed loader digest must use the exact literal fallback');
+    }
   }
+
+  const controllerFailure = spawnSync('/bin/sh', ['-c', handler.command], {
+    cwd: join(sourceRoot, 'readme'),
+    encoding: 'utf8',
+    input: JSON.stringify(eventFor('root', 'source-controller-failure')),
+    env: { ...process.env, [CONTROLLER_DESCRIPTOR_ENV]: '/untrusted/missing-descriptor.json' },
+    timeout: 30_000,
+  });
+  assert.equal(controllerFailure.status, 0);
+  assert.equal(controllerFailure.stdout, codexControllerHookFailure());
+  assert.doesNotMatch(controllerFailure.stdout, /META-FRAMEWORK-DEGRADED/u);
 
   const retired = spawnSync('/bin/sh', ['-c', hooks.hooks.SessionEnd[0].hooks[0].command], {
     cwd: sourceRoot,
@@ -283,6 +323,17 @@ test('trusted wrappers discard child partial output and provide literal stage-ze
     assert.equal(missing.status, 0);
     assert.equal(missing.stderr, '');
     assert.equal(missing.stdout, codexHookFailure('root'));
+
+    const missingNode = spawnSync('/bin/sh', ['-c', sourceHooks.hooks.SessionStart[0].hooks[0].command], {
+      cwd: missingRoot,
+      encoding: 'utf8',
+      input: JSON.stringify(eventFor('root', 'missing-node-controller')),
+      env: { PATH: '/nonexistent', [CONTROLLER_DESCRIPTOR_ENV]: '/untrusted/descriptor.json' },
+    });
+    assert.equal(missingNode.status, 0);
+    assert.equal(missingNode.stderr, '');
+    assert.equal(missingNode.stdout, codexControllerHookFailure());
+    assert.doesNotMatch(missingNode.stdout, /META-FRAMEWORK-DEGRADED/u);
 
     assert.equal(spawnSync('git', ['init', '-q'], { cwd: linkedLoaderRoot }).status, 0);
     const loaderDirectory = join(linkedLoaderRoot, '.git', 'meta-framework', 'prompt-runtime', 'v1', 'loaders');

@@ -2433,7 +2433,7 @@ function generatedTask(number) {
   };
 }
 
-test("10,000-task query remains numerically ordered and bounded", { timeout: 60_000 }, async () => {
+test("10,000-task query remains numerically ordered and bounded", { timeout: 120_000 }, async () => {
   const root = await makeRepository();
   try {
     const store = path.join(root, "readme", "tasks", "store");

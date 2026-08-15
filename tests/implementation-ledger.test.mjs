@@ -4,11 +4,16 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import {
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const ledgerModule = await import('../lib/implementation-ledger.mjs');
+const {
   IMPLEMENTATION_LEDGER_LIMITS,
   ImplementationLedgerError,
   acquireRunLock,
-  authorizeImplementationLedgerWrite,
+  authorizeImplementationControlWrite,
   initializeRun,
   inspectRunLock,
   openImplementationLedger,
@@ -16,12 +21,15 @@ import {
   publishEvent,
   publishRecord,
   publishSnapshot,
+  repairSnapshotCache,
   readEvents,
   readRunStatus,
   rebuildSnapshot,
   recoverRunLock,
   replayRun,
-} from '../lib/implementation-ledger.mjs';
+} = ledgerModule;
+const { issueSourceInstrumentedEffectCapability } =
+  await import('../lib/implementation-effect-capability.mjs');
 import {
   canonicalBytes,
   canonicalDigest,
@@ -137,9 +145,7 @@ async function fixture(t, { publicationCut = null } = {}) {
     },
     policyDigests: { promptRegistry: DIGEST_A, checks: DIGEST_B, resources: DIGEST_A },
   };
-  const writeCapability = await authorizeImplementationLedgerWrite(
-    activationInput(common, capsule),
-  );
+  const writeCapability = issueSourceInstrumentedEffectCapability('journal_write');
   const ledger = await openImplementationLedger(common, {
     hooks: publicationCut === null ? null : { publicationCut },
     create: true,
@@ -191,7 +197,7 @@ function event(capsule, sequence, overrides = {}) {
   };
 }
 
-function initialSnapshot() {
+function initialSnapshot(overrides = {}) {
   return {
     schemaVersion: 1,
     runId: 'run-1',
@@ -200,6 +206,46 @@ function initialSnapshot() {
     epoch: 1,
     controlGeneration: 0,
     phase: 'preflight',
+    taskRecordVersion: 2,
+    correctionGeneration: 0,
+    integration: { candidateId: null, tree: OID_B, privateHead: OID_A },
+    eventCursor: 0,
+    assignments: [],
+    attempts: [],
+    operations: [],
+    checks: [],
+    resources: [],
+    pendingWakeReasons: [],
+    stop: { requested: false, mode: null, reasonDigest: null },
+    reconciliation: { required: false, reasonCode: null, refs: [] },
+    updatedAt: NOW,
+    ...overrides,
+  };
+}
+
+function attemptValue(capsule, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    attemptId: 'attempt-1',
+    assignmentId: 'assignment-1',
+    attemptNumber: 1,
+    recordVersion: 1,
+    previousDigest: null,
+    binding: binding(capsule),
+    state: 'allocated',
+    workspace: {
+      workspaceId: 'workspace-1',
+      rootIdentity: DIGEST_A,
+      kind: 'linked_worktree',
+      baseTree: OID_B,
+    },
+    launchRequestId: null,
+    processDomainId: null,
+    result: null,
+    candidateId: null,
+    observedAt: NOW,
+    terminalReason: null,
+    ...overrides,
   };
 }
 
@@ -223,34 +269,28 @@ test('read-only open is non-mutating and cleanly reports an absent ledger', asyn
   assert.deepEqual(await fs.readdir(common), []);
 });
 
-test('missing, expired, and stale activation receipts cannot create ledger authority', async (t) => {
+test('the shipped ledger has no issuer and receipt-shaped values cannot create write authority', async (t) => {
   const common = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-ledger-denied-'));
   t.after(() => fs.rm(common, { recursive: true, force: true }));
-  const capsule = capsuleValue();
-  await assert.rejects(authorizeImplementationLedgerWrite({ gitCommonDirectory: common }), (error) =>
-    hasCode('ACTIVATION_DENIED')(error) && error.activationCode === 'ACTIVATION_DISABLED');
-
-  const expired = activationInput(common, capsule, { now: '2026-08-14T12:15:00Z' });
-  await assert.rejects(authorizeImplementationLedgerWrite(expired), (error) =>
-    hasCode('ACTIVATION_DENIED')(error) && error.activationCode === 'ACTIVATION_EXPIRED');
-
-  const stale = activationInput(common, capsule);
-  stale.current.binding.epoch += 1;
-  await assert.rejects(authorizeImplementationLedgerWrite(stale), (error) =>
-    hasCode('ACTIVATION_DENIED')(error) && error.activationCode === 'ACTIVATION_STALE');
+  assert.equal(ledgerModule.authorizeImplementationLedgerWrite, undefined);
+  const activation = activationInput(common, capsuleValue());
+  for (const forged of [null, {}, activation.receipt, activation.current, { authorized: true }]) {
+    await assert.rejects(openImplementationLedger(common, {
+      create: true, writeCapability: forged,
+    }), hasCode('WRITE_CAPABILITY_REQUIRED'));
+  }
   assert.deepEqual(await fs.readdir(common), []);
 });
 
-test('opaque capabilities reject forgeries and bind activation to one physical ledger', async (t) => {
+test('source-only opaque journal capabilities reject forgeries and cross-effect substitution', async (t) => {
   const first = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-ledger-scope-a-'));
   const second = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-ledger-scope-b-'));
   t.after(() => Promise.all([
     fs.rm(first, { recursive: true, force: true }),
     fs.rm(second, { recursive: true, force: true }),
   ]));
-  const capsule = capsuleValue();
-  const activation = activationInput(first, capsule);
-  const capability = await authorizeImplementationLedgerWrite(activation);
+  const activation = activationInput(first, capsuleValue());
+  const capability = issueSourceInstrumentedEffectCapability('journal_write');
   assert.deepEqual(Object.keys(capability), []);
 
   for (const forged of [true, {}, activation.receipt, { authorized: true }]) {
@@ -262,8 +302,8 @@ test('opaque capabilities reject forgeries and bind activation to one physical l
   assert.deepEqual(await fs.readdir(first), []);
   await assert.rejects(openImplementationLedger(second, {
     create: true,
-    writeCapability: capability,
-  }), hasCode('WRITE_CAPABILITY_SCOPE'));
+    writeCapability: issueSourceInstrumentedEffectCapability('provider_launch'),
+  }), hasCode('WRITE_CAPABILITY_REQUIRED'));
   assert.deepEqual(await fs.readdir(second), []);
 
   await openImplementationLedger(first, { create: true, writeCapability: capability });
@@ -288,6 +328,98 @@ test('opaque capabilities reject forgeries and bind activation to one physical l
   }), hasCode('WRITE_CAPABILITY_REQUIRED'));
 });
 
+test('opaque stop-control authority is non-creating, ledger-scoped, and non-amplifying', async (t) => {
+  const absent = await fs.mkdtemp(path.join(os.tmpdir(), 'implementation-control-absent-'));
+  t.after(() => fs.rm(absent, { recursive: true, force: true }));
+  await assert.rejects(authorizeImplementationControlWrite({ gitCommonDirectory: absent }),
+    hasCode('LEDGER_MISSING'));
+  assert.deepEqual(await fs.readdir(absent), []);
+
+  const first = await initialized(t);
+  const second = await initialized(t);
+  const capability = await authorizeImplementationControlWrite({
+    gitCommonDirectory: first.common,
+  });
+  assert.deepEqual(Object.keys(capability), []);
+  for (const forged of [{}, true, { authorized: true }]) {
+    await assert.rejects(openImplementationLedger(first.common, {
+      controlCapability: forged,
+    }), hasCode('CONTROL_CAPABILITY_REQUIRED'));
+  }
+  await assert.rejects(openImplementationLedger(second.common, {
+    controlCapability: capability,
+  }), hasCode('CONTROL_CAPABILITY_SCOPE'));
+  await assert.rejects(openImplementationLedger(first.common, {
+    create: true,
+    controlCapability: capability,
+  }), hasCode('WRITE_CAPABILITY_REQUIRED'));
+  await assert.rejects(openImplementationLedger(first.common, {
+    writeCapability: first.writeCapability,
+    controlCapability: capability,
+  }), hasCode('ARGUMENT_INVALID'));
+
+  const control = await openImplementationLedger(first.common, { controlCapability: capability });
+  const stop = {
+    schemaVersion: 1,
+    requestId: 'stop-control-1',
+    runId: 'run-1',
+    expectedControlGeneration: 0,
+    kind: 'stop',
+    requestedAt: NOW,
+    reason: 'Publish the bounded emergency checkpoint.',
+  };
+  assert.equal((await publishControlRequest(control, 'run-1', stop)).created, true);
+  assert.equal((await publishControlRequest(control, 'run-1', stop)).created, false);
+  await assert.rejects(publishControlRequest(control, 'run-1', {
+    ...stop,
+    reason: 'Conflicting stop bytes.',
+  }), hasCode('DUPLICATE_CONFLICT'));
+  await assert.rejects(publishControlRequest(control, 'run-1', {
+    schemaVersion: 1,
+    requestId: 'resume-control-1',
+    runId: 'run-1',
+    expectedEpoch: 1,
+    expectedControlGeneration: 0,
+    kind: 'resume',
+    requestedAt: NOW,
+  }), hasCode('CONTROL_CAPABILITY_SCOPE'));
+
+  const mutationAttempts = [
+    () => initializeRun(control, { manifest: first.manifest, capsule: first.capsule }),
+    () => publishRecord(control, 'run-1', {}),
+    () => publishEvent(control, 'run-1', {}),
+    () => publishSnapshot(control, 'run-1', {}),
+    () => acquireRunLock(control, 'run-1', { epoch: 1 }),
+    () => recoverRunLock(control, 'run-1', {
+      expectedToken: 'incomplete',
+      confirmOwnerNotLive: true,
+    }),
+  ];
+  for (const attempt of mutationAttempts) {
+    await assert.rejects(attempt(), hasCode('WRITE_CAPABILITY_REQUIRED'));
+  }
+
+  let cut = true;
+  const crashy = await openImplementationLedger(first.common, {
+    controlCapability: capability,
+    hooks: {
+      publicationCut(boundary, details) {
+        if (cut && boundary === 'after-publication' &&
+            details.label === 'control request stop-control-crash') {
+          throw new Error('control publication cut');
+        }
+      },
+    },
+  });
+  const crashStop = { ...stop, requestId: 'stop-control-crash' };
+  await assert.rejects(publishControlRequest(crashy, 'run-1', crashStop),
+    /control publication cut/u);
+  cut = false;
+  assert.equal((await publishControlRequest(crashy, 'run-1', crashStop)).created, false);
+  assert.deepEqual(await fs.readFile(path.join(runRoot(first.common), 'control',
+    'stop-control-crash.json')), canonicalBytes(crashStop));
+});
+
 test('run initialization publishes exact JCS atomically and is idempotent', async (t) => {
   const { common, ledger, manifest, capsule } = await fixture(t);
   const first = await initializeRun(ledger, { manifest, capsule });
@@ -304,6 +436,26 @@ test('run initialization publishes exact JCS atomically and is idempotent', asyn
   conflict.createdAt = '2026-08-14T12:00:01Z';
   await assert.rejects(initializeRun(ledger, { manifest: conflict, capsule }), hasCode('RUN_CONFLICT'));
   assert.deepEqual(await fs.readFile(path.join(root, 'manifest.json')), canonicalBytes(manifest));
+});
+
+test('initialization rejects unknown, missing, and invalid manifest or capsule fields before publication', async (t) => {
+  const { common, ledger, manifest, capsule } = await fixture(t);
+  await assert.rejects(initializeRun(ledger, {
+    manifest: { ...manifest, authorityFromModel: true }, capsule,
+  }), hasCode('RECORD_INVALID'));
+  const missingCapsule = structuredClone(capsule);
+  delete missingCapsule.authority;
+  await assert.rejects(initializeRun(ledger, {
+    manifest, capsule: missingCapsule,
+  }), hasCode('RECORD_INVALID'));
+  await assert.rejects(initializeRun(ledger, {
+    manifest: {
+      ...manifest,
+      repository: { ...manifest.repository, objectFormat: 'future_hash' },
+    },
+    capsule,
+  }), hasCode('RECORD_INVALID'));
+  await assert.rejects(fs.access(runRoot(common)), { code: 'ENOENT' });
 });
 
 test('run initialization publication cuts are retry-safe', async (t) => {
@@ -347,6 +499,21 @@ test('descriptor anchoring rejects symlinked common roots and linked record file
   await assert.rejects(replayRun(ledger, 'run-1'), hasCode('PATH_UNSAFE'));
 });
 
+test('owned ledger entries reject a different effective owner', {
+  skip: typeof process.geteuid !== 'function' || process.geteuid() !== 0,
+}, async (t) => {
+  const { common, ledger } = await initialized(t);
+  const { lock, fence } = await heldLock(ledger);
+  t.after(() => lock.release().catch(() => {}));
+  await publishRecord(ledger, 'run-1', {
+    kind: 'detail', id: 'owner-check', version: 1,
+    value: { schemaVersion: 1, note: 'owner-bound' },
+  }, fence);
+  const record = path.join(runRoot(common), 'records', 'detail', 'owner-check', '1.json');
+  await fs.chown(record, 65_534, 65_534);
+  await assert.rejects(replayRun(ledger, 'run-1'), hasCode('PATH_UNSAFE'));
+});
+
 test('exclusive run locks expose token and epoch without inferring owner death', async (t) => {
   const { ledger } = await initialized(t);
   const results = await Promise.allSettled([
@@ -387,16 +554,10 @@ test('lock recovery requires confirmation and the exact observed token', async (
 });
 
 test('record publication is fenced, chained, idempotent, and conflict preserving', async (t) => {
-  const { common, ledger } = await initialized(t);
+  const { common, ledger, capsule } = await initialized(t);
   const { lock, fence } = await heldLock(ledger);
   t.after(() => lock.release().catch(() => {}));
-  const firstValue = {
-    schemaVersion: 1,
-    attemptId: 'attempt-1',
-    recordVersion: 1,
-    previousDigest: null,
-    state: 'allocated',
-  };
+  const firstValue = attemptValue(capsule);
   const first = await publishRecord(ledger, 'run-1', {
     kind: 'attempt', id: 'attempt-1', version: 1, value: firstValue,
   }, fence);
@@ -433,6 +594,28 @@ test('record publication is fenced, chained, idempotent, and conflict preserving
   await assert.rejects(publishRecord(ledger, 'run-1', {
     kind: 'detail', id: 'detail-2', version: 1, value: { schemaVersion: 1 },
   }, fence), hasCode('LOCK_STALE'));
+});
+
+test('typed record publication rejects unknown, missing, invalid-enum, and stale provenance fields', async (t) => {
+  const { common, ledger, capsule } = await initialized(t);
+  const { lock, fence } = await heldLock(ledger);
+  t.after(() => lock.release().catch(() => {}));
+  const value = attemptValue(capsule);
+  const missing = structuredClone(value);
+  delete missing.workspace;
+  const mutations = [
+    { ...value, untrustedProducer: 'model' },
+    missing,
+    { ...value, state: 'relaunched' },
+    { ...value, binding: { ...value.binding, taskRevision: value.binding.taskRevision + 1 } },
+  ];
+  for (const mutation of mutations) {
+    await assert.rejects(publishRecord(ledger, 'run-1', {
+      kind: 'attempt', id: 'attempt-1', version: 1, value: mutation,
+    }, fence), hasCode('RECORD_INVALID'));
+  }
+  await assert.rejects(fs.access(path.join(runRoot(common), 'records', 'attempt', 'attempt-1')),
+    { code: 'ENOENT' });
 });
 
 test('immutable publication cuts leave either no record or the exact final record', async (t) => {
@@ -489,6 +672,24 @@ test('events enforce sequence and semantic dedupe and expose bounded reads', asy
   }), hasCode('ARGUMENT_INVALID'));
 });
 
+test('event publication rejects closed-shape, enum, and binding mutants', async (t) => {
+  const { ledger, capsule } = await initialized(t);
+  const { lock, fence } = await heldLock(ledger);
+  t.after(() => lock.release().catch(() => {}));
+  const value = event(capsule, 1);
+  const missing = structuredClone(value);
+  delete missing.payload;
+  for (const mutation of [
+    { ...value, providerVerdict: 'trusted' },
+    missing,
+    { ...value, kind: 'effect_authorized' },
+    { ...value, binding: { ...value.binding, capsuleDigest: DIGEST_B } },
+  ]) {
+    await assert.rejects(publishEvent(ledger, 'run-1', mutation, fence), hasCode('RECORD_INVALID'));
+  }
+  assert.equal((await readEvents(ledger, 'run-1')).events.length, 0);
+});
+
 test('control requests are exact append-only multi-writer records', async (t) => {
   const { common, ledger } = await initialized(t);
   const request = {
@@ -509,12 +710,39 @@ test('control requests are exact append-only multi-writer records', async (t) =>
   assert.deepEqual(await fs.readFile(path.join(runRoot(common), 'control', 'stop-1.json')),
     canonicalBytes(request));
 
-  const competing = { ...request, requestId: 'resume-1', kind: 'resume' };
+  const competing = {
+    schemaVersion: 1,
+    requestId: 'resume-1',
+    runId: 'run-1',
+    expectedEpoch: 1,
+    expectedControlGeneration: 0,
+    kind: 'resume',
+    requestedAt: NOW,
+  };
   const results = await Promise.all([
     publishControlRequest(ledger, 'run-1', competing),
     publishControlRequest(ledger, 'run-1', competing),
   ]);
   assert.deepEqual(results.map(({ created }) => created).sort(), [false, true]);
+});
+
+test('control publication rejects unknown, missing, and unsupported request variants', async (t) => {
+  const { common, ledger } = await initialized(t);
+  const request = {
+    schemaVersion: 1, requestId: 'stop-1', runId: 'run-1', expectedControlGeneration: 0,
+    kind: 'stop', requestedAt: NOW, reason: 'Checkpoint.',
+  };
+  const missing = structuredClone(request);
+  delete missing.reason;
+  for (const mutation of [
+    { ...request, expectedEpoch: 1 },
+    missing,
+    { ...request, kind: 'pause' },
+  ]) {
+    await assert.rejects(publishControlRequest(ledger, 'run-1', mutation),
+      hasCode('RECORD_INVALID'));
+  }
+  assert.deepEqual(await fs.readdir(path.join(runRoot(common), 'control')), []);
 });
 
 test('snapshot publication uses a stale-safe digest chain and atomic replacement', async (t) => {
@@ -540,6 +768,25 @@ test('snapshot publication uses a stale-safe digest chain and atomic replacement
   assert.deepEqual(await fs.readFile(path.join(runRoot(common), 'snapshot.json')), canonicalBytes(second));
 });
 
+test('snapshot publication rejects unknown, missing, invalid-enum, and stale task fields', async (t) => {
+  const { common, ledger } = await initialized(t);
+  const { lock, fence } = await heldLock(ledger);
+  t.after(() => lock.release().catch(() => {}));
+  const value = initialSnapshot();
+  const missing = structuredClone(value);
+  delete missing.stop;
+  for (const mutation of [
+    { ...value, modelState: 'trusted' },
+    missing,
+    { ...value, phase: 'paused' },
+    { ...value, taskRecordVersion: value.taskRecordVersion - 1 },
+  ]) {
+    await assert.rejects(publishSnapshot(ledger, 'run-1', mutation, fence),
+      hasCode('RECORD_INVALID'));
+  }
+  await assert.rejects(fs.access(path.join(runRoot(common), 'snapshot.json')), { code: 'ENOENT' });
+});
+
 test('replay rebuilds from immutable records and ignores a corrupt snapshot cache', async (t) => {
   const { common, ledger, capsule } = await initialized(t);
   const { lock, fence } = await heldLock(ledger);
@@ -553,6 +800,7 @@ test('replay rebuilds from immutable records and ignores a corrupt snapshot cach
     schemaVersion: 1,
     requestId: 'resume-1',
     runId: 'run-1',
+    expectedEpoch: 1,
     expectedControlGeneration: 0,
     kind: 'resume',
     requestedAt: NOW,
@@ -574,6 +822,57 @@ test('replay rebuilds from immutable records and ignores a corrupt snapshot cach
   const status = await readRunStatus(readOnly, 'run-1');
   assert.equal(status.state, 'reconciliation_required');
   assert.equal(status.snapshot, null);
+  assert.match(status.snapshotDigest, /^sha256:[0-9a-f]{64}$/u);
+  await assert.rejects(repairSnapshotCache(ledger, 'run-1', rebuilt, fence, {
+    expectedDigest: DIGEST_A,
+  }), hasCode('SNAPSHOT_STALE'));
+  const repaired = await repairSnapshotCache(ledger, 'run-1', rebuilt, fence, {
+    expectedDigest: status.snapshotDigest,
+  });
+  assert.equal(repaired.repaired, true);
+  const repairedStatus = await readRunStatus(readOnly, 'run-1');
+  assert.equal(repairedStatus.state, 'nonterminal');
+  assert.deepEqual(repairedStatus.snapshot, rebuilt);
+});
+
+test('replay rejects malformed typed records, events, and controls as reconciliation evidence', async (t) => {
+  await t.test('typed record', async (t) => {
+    const { common, ledger, capsule } = await initialized(t);
+    const directory = path.join(runRoot(common), 'records', 'attempt', 'attempt-1');
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 });
+    await fs.writeFile(path.join(directory, '1.json'), canonicalBytes({
+      ...attemptValue(capsule),
+      state: 'relaunched',
+    }), { mode: 0o600 });
+    await assert.rejects(replayRun(ledger, 'run-1'), (error) =>
+      hasCode('RECORD_CORRUPT')(error) && error.reconciliationRequired);
+  });
+
+  await t.test('event', async (t) => {
+    const { common, ledger, capsule } = await initialized(t);
+    await fs.writeFile(path.join(runRoot(common), 'events', '1.json'), canonicalBytes({
+      ...event(capsule, 1),
+      effectAuthority: true,
+    }), { mode: 0o600 });
+    await assert.rejects(replayRun(ledger, 'run-1'), (error) =>
+      hasCode('RECORD_CORRUPT')(error) && error.reconciliationRequired);
+  });
+
+  await t.test('control', async (t) => {
+    const { common, ledger } = await initialized(t);
+    await fs.writeFile(path.join(runRoot(common), 'control', 'resume-1.json'), canonicalBytes({
+      schemaVersion: 1,
+      requestId: 'resume-1',
+      runId: 'run-1',
+      expectedEpoch: 1,
+      expectedControlGeneration: 0,
+      kind: 'resume',
+      requestedAt: NOW,
+      reason: 'unexpected field',
+    }), { mode: 0o600 });
+    await assert.rejects(replayRun(ledger, 'run-1'), (error) =>
+      hasCode('RECORD_CORRUPT')(error) && error.reconciliationRequired);
+  });
 });
 
 test('unknown v2 state is preserved and fails closed', async (t) => {

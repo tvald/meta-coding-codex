@@ -1,26 +1,32 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, lstatSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { canonicalDigest } from '../lib/implementation-protocol.mjs';
-import {
+import { workspaceIdentity } from '../lib/implementation-workspace.mjs';
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const {
   ImplementationGitError,
   applyCandidateTree,
-  authorizeProtectedImplementationEffect,
   changedPathsBetweenTrees,
   compareAndSwapRef,
   createCompletionCommit,
   indexMatchesTree,
+  ingestAttemptCandidate,
   integratePrivateCandidate,
   observeCandidateFacts,
   observeRef,
+  issueSourceInstrumentedTestCapability,
   stageExactPaths,
   worktreePathsMatchTree,
-} from '../lib/implementation-git.mjs';
+} = await import('../lib/implementation-git.mjs');
 
 const git = realpathSync(resolve(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim()));
 const digest = (character) => `sha256:${character.repeat(64)}`;
@@ -63,42 +69,7 @@ function repository(t) {
 }
 
 function activation(effectKind) {
-  const activationBinding = {
-    runId: binding.runId,
-    epoch: binding.epoch,
-    taskId: binding.taskId,
-    taskRevision: binding.taskRevision,
-    taskRecordVersion: binding.taskRecordVersion,
-    capsuleDigest: binding.capsuleDigest,
-    controlGeneration: binding.controlGeneration,
-    correctionGeneration: binding.correctionGeneration,
-  };
-  const receipt = {
-    schemaVersion: 1,
-    receiptId: `activation_${effectKind}`,
-    effectKind,
-    binding: activationBinding,
-    policyDigest: digest('b'),
-    evidenceDigest: digest('c'),
-    mechanism: { platform: 'linux', filesystem: 'local', process: 'pidfd' },
-    issuedAt: '2026-08-14T10:00:00Z',
-    expiresAt: '2026-08-14T10:15:00Z',
-    taskApproval: null,
-  };
-  const current = {
-    receiptId: receipt.receiptId,
-    binding: { ...activationBinding },
-    policyDigest: receipt.policyDigest,
-    evidenceDigest: receipt.evidenceDigest,
-    mechanism: { ...receipt.mechanism },
-    taskApproval: null,
-  };
-  return authorizeProtectedImplementationEffect({
-    effectKind,
-    receipt,
-    current,
-    now: '2026-08-14T10:05:00Z',
-  });
+  return issueSourceInstrumentedTestCapability(effectKind);
 }
 
 function patchDigest(root, fromTree, toTree) {
@@ -152,6 +123,65 @@ const metadata = Object.freeze({
   message: 'Integrate private candidate\n',
 });
 
+test('frozen attempt files are ingested into a private candidate without trusting worker Git state', (t) => {
+  const { root, baseCommit } = repository(t);
+  const workspaceRoot = realpathSync(mkdtempSync(join(tmpdir(), 'implementation-attempt-')));
+  t.after(() => rmSync(workspaceRoot, { recursive: true, force: true }));
+  mkdirSync(join(workspaceRoot, 'src'));
+  writeFileSync(join(workspaceRoot, 'src', 'a.txt'), 'attempt change\n');
+  const info = lstatSync(join(workspaceRoot, 'src', 'a.txt'));
+  const entry = {
+    path: 'src/a.txt',
+    kind: 'file',
+    identity: canonicalDigest({ dev: info.dev, ino: info.ino, mode: info.mode & 0o777, size: info.size }),
+    contentDigest: `sha256:${createHash('sha256').update('attempt change\n').digest('hex')}`,
+  };
+  const workspace = workspaceIdentity(workspaceRoot);
+  const inspection = {
+    workspaceIdentity: workspace,
+    changedPaths: ['src/a.txt'],
+    entries: [entry],
+    ownershipDigest: digest('d'),
+    inspectionDigest: canonicalDigest({ workspace, changedPaths: ['src/a.txt'], entries: [entry] }),
+  };
+  const processExpectation = {
+    processDomainId: 'domain_1', launcherConnectionId: 'launcher_1',
+    processIdentityDigest: digest('e'),
+  };
+  const processEvidence = {
+    schemaVersion: 1, ...processExpectation, state: 'empty', descendantsComplete: true,
+    members: [], observedAt: '2026-08-14T10:05:00Z',
+  };
+  const result = ingestAttemptCandidate({
+    repositoryRoot: root, workspaceRoot, gitExecutable: git, binding,
+    candidateId: 'candidate_ingested', attemptId: 'attempt_1', baseCommit, inspection,
+    processExpectation, processEvidence, allowedPaths: ['src'],
+    createdAt: '2026-08-14T10:06:00Z', commitMetadata: metadata,
+    capability: activation('git_admin'),
+  });
+  assert.deepEqual(result.changedPaths, ['src/a.txt']);
+  assert.equal(command(root, ['show', `${result.tree}:src/a.txt`]), 'attempt change');
+  assert.equal(command(root, ['rev-parse', 'refs/heads/main']), baseCommit);
+  assert.throws(() => ingestAttemptCandidate({
+    repositoryRoot: root, workspaceRoot, gitExecutable: git, binding,
+    candidateId: 'candidate_unproved', attemptId: 'attempt_1', baseCommit, inspection,
+    processExpectation, processEvidence: { ...processEvidence, descendantsComplete: false },
+    allowedPaths: ['src'], createdAt: '2026-08-14T10:06:00Z', commitMetadata: metadata,
+    capability: activation('git_admin'),
+  }), /not empty/u);
+
+  const replacement = `${'x'.repeat(Buffer.byteLength('attempt change\n') - 1)}\n`;
+  assert.equal(Buffer.byteLength(replacement), Buffer.byteLength('attempt change\n'));
+  writeFileSync(join(workspaceRoot, 'src', 'a.txt'), replacement);
+  assert.throws(() => ingestAttemptCandidate({
+    repositoryRoot: root, workspaceRoot, gitExecutable: git, binding,
+    candidateId: 'candidate_same_size_stale', attemptId: 'attempt_1', baseCommit, inspection,
+    processExpectation, processEvidence, allowedPaths: ['src'],
+    createdAt: '2026-08-14T10:06:00Z', commitMetadata: metadata,
+    capability: activation('git_admin'),
+  }), (error) => error.code === 'GIT_WORKSPACE_STALE');
+});
+
 test('private candidates integrate two disjoint changes without moving the canonical ref', (t) => {
   const { root, baseCommit, baseTree } = repository(t);
   const first = branchCandidate(root, 'candidate_a', baseCommit, 'src/a.txt', 'a1\n', 'attempt_1');
@@ -187,6 +217,41 @@ test('private candidates integrate two disjoint changes without moving the canon
     allowedPaths: ['src'], ownershipDigest: digest('d'), createdAt: '2026-08-14T10:08:00Z',
     commitMetadata: { ...metadata, timestamp: '2026-08-14T10:08:00Z' }, capability,
   }).outcome, 'already_integrated');
+});
+
+test('candidate integration tolerates snapshot fan-in but rejects authority-generation drift', (t) => {
+  const { root, baseCommit, baseTree } = repository(t);
+  const incoming = branchCandidate(root, 'candidate_a', baseCommit, 'src/a.txt', 'a1\n', 'attempt_1');
+  command(root, ['checkout', '--quiet', 'main']);
+  const initial = integrationBase(root, baseCommit, baseTree);
+  const currentBinding = { ...binding, snapshotRevision: binding.snapshotRevision + 4 };
+  const common = {
+    repositoryRoot: root,
+    gitExecutable: git,
+    currentCandidate: initial,
+    incomingCandidate: incoming,
+    expectedPrivateHead: initial.privateCommit,
+    binding: currentBinding,
+    candidateId: 'candidate_integrated',
+    producerAttempts: ['attempt_1'],
+    allowedPaths: ['src'],
+    ownershipDigest: digest('d'),
+    createdAt: '2026-08-14T10:06:00Z',
+    commitMetadata: metadata,
+    capability: activation('git_admin'),
+  };
+  const integrated = integratePrivateCandidate(common);
+  assert.equal(integrated.outcome, 'integrated');
+  assert.deepEqual(integrated.candidate.binding, currentBinding);
+
+  assert.throws(() => integratePrivateCandidate({
+    ...common,
+    incomingCandidate: {
+      ...incoming,
+      binding: { ...incoming.binding, controlGeneration: incoming.binding.controlGeneration + 1 },
+    },
+    candidateId: 'candidate_stale_authority',
+  }), (error) => error.code === 'GIT_STALE_BINDING');
 });
 
 test('integration rejects stale private heads, stale bases, conflicts, and forged candidate facts', (t) => {
@@ -249,6 +314,31 @@ test('effects deny serializable lookalikes and target refs use expected-old-OID 
     repositoryRoot: root, gitExecutable: git, refName: 'refs/heads/main',
     expectedOldOid: baseCommit, newOid: another, capability,
   }), (error) => error.code === 'GIT_STALE_REF');
+});
+
+test('the shipped source namespace exposes no issuer and rejects receipt-shaped capabilities', async () => {
+  const shipped = await import('../lib/implementation-git.mjs?shipped-surface');
+  assert.equal('authorizeProtectedImplementationEffect' in shipped, false);
+  assert.equal('issueSourceInstrumentedTestCapability' in shipped, false);
+  assert.throws(() => shipped.compareAndSwapRef({
+    repositoryRoot: '/unreachable',
+    gitExecutable: '/unreachable/git',
+    refName: 'refs/heads/main',
+    expectedOldOid: '1'.repeat(40),
+    newOid: '2'.repeat(40),
+    capability: {
+      schemaVersion: 1,
+      receiptId: 'activation_forged',
+      effectKind: 'final_ref',
+      binding,
+      policyDigest: digest('b'),
+      evidenceDigest: digest('c'),
+      mechanism: { platform: 'linux', filesystem: 'local', process: 'pidfd' },
+      issuedAt: '2026-08-14T10:00:00Z',
+      expiresAt: '2026-08-14T10:15:00Z',
+      taskApproval: null,
+    },
+  }), (error) => error.code === 'ACTIVATION_DENIED');
 });
 
 test('candidate apply, exact staging, and commit-tree preserve exact repository facts', (t) => {

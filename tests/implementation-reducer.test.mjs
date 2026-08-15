@@ -146,6 +146,22 @@ test('attempt ambiguity recovery requires a proved observation and never relaunc
   assert.deepEqual(Object.keys(transitionTables().attempt.quarantined), []);
 });
 
+test('terminal observed attempts may disposition an exact non-candidate result', () => {
+  const terminal = { ...attempt('terminal_observed'), recordVersion: 4 };
+  assert.equal(transitionAttempt(terminal, {
+    expectedRecordVersion: 4,
+    nextState: 'accepted',
+    observation: 'result_accepted',
+    observedAt: now,
+  }).state, 'accepted');
+  assert.equal(transitionAttempt(terminal, {
+    expectedRecordVersion: 4,
+    nextState: 'rejected',
+    observation: 'result_rejected',
+    observedAt: now,
+  }).state, 'rejected');
+});
+
 test('operation effects require intent and idempotency conflicts force reconciliation', () => {
   const completed = transitionOperation(operation(), {
     expectedRecordVersion: 1,
@@ -204,7 +220,11 @@ function rootDecision(id, rationale = 'wait safely') {
     binding,
     orientationDigest: digest('orientation'),
     proposalDigest: canonicalDigest(proposal),
-    source: { launchReceipt: ref('launch_receipt', 'launch_1'), modelResult: ref('model_result', 'result_1') },
+    source: {
+      launchIntent: ref('detail', 'root_launch_1'),
+      launchReceipt: ref('launch_receipt', 'launch_1'),
+      modelResult: ref('model_result', 'result_1'),
+    },
     proposal,
     derivedAssignments: [],
     acceptedAt: now,

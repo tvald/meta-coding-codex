@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "T-0054",
-  "recordVersion": 6,
+  "recordVersion": 9,
   "taskRevision": 2,
   "outcome": "Implement Decision 0025's concurrent command-launched implementation controller through the nine ordered slices, including canonical protocol and reducer, execution ledger, Codex exec provider and exact role binding, deterministic concurrent scheduler, isolated worker workspaces, single Git integration and finalization writer, verification DAG and resource controls, operator CLI, recovery, packaging, shadow and live activation gates, tests, documentation, and state-preserving rollback",
   "authority": {
     "reference": "User instruction on 2026-08-14 to proceed with implementation of the accepted full concurrent controller design",
     "acceptedDate": "2026-08-14"
   },
-  "status": "blocked",
+  "status": "done",
   "dependencies": [
     "T-0053"
   ],
@@ -21,10 +21,9 @@
     "implementation"
   ],
   "gate": {
-    "kind": "blocker",
-    "summary": "The live SessionStart prompt path is unsafe while the framework modifies prompt-bearing sources; T-0055 must establish a last-known-good bootstrap and non-blocking Root fallback first"
+    "kind": "none"
   },
-  "nextSafeAction": "Resume only after T-0055 completes; then reconcile commit 9ed2d59 against the T-0054 execution note and rerun all required verification gates before further controller work",
+  "nextSafeAction": null,
   "details": [
     {
       "label": "execution-note",
@@ -43,5 +42,9 @@
       "path": "readme/threat-models/2026-08-14-concurrent-implementation-controller.md"
     }
   ],
-  "completion": null
+  "completion": {
+    "completedAt": "2026-08-15",
+    "repositoryChanged": true,
+    "evidence": "Offline/default-deny controller complete: implementation 270 passed/1 privileged-owner skip; package 357 passed/1 same skip; packed client 13/13; full suite exit 0 with 457 passed/1 skip; package audit 87 files, 346338 bytes, sha256 bb70221d1257dbb99f205972bd1125a95c7232622fd9ff92b91513d7411286d8; doctor 9/9; Reviewer, QA, and Security approved. Live effects remain disabled by Decision 0027."
+  }
 }

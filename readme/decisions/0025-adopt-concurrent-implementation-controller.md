@@ -14,7 +14,9 @@ Supersedes:
 
 Superseded by:
 
-- None
+- [Decision 0027](0027-revise-controller-operator-activation.md), only for the
+  two-fence resume grammar and the split between non-amplifying stop publication and
+  separately activated forward effects.
 
 ## Context
 
@@ -39,7 +41,7 @@ meta implement TASK --expected-task-revision N --harness codex [--max-concurrenc
 meta implement status RUN [--json]
 meta implement events RUN [--after SEQUENCE] [--limit COUNT]
 meta implement stop RUN --expected-control-generation N --reason TEXT
-meta implement resume RUN --expected-epoch N
+meta implement resume RUN --expected-epoch N --expected-control-generation N
 meta implement clean RUN
 meta implement lock inspect RUN
 meta implement lock recover RUN --expected-token TOKEN --confirm-owner-not-live

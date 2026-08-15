@@ -51,7 +51,7 @@ Usage:
   meta-framework implement events RUN [--after SEQUENCE] [--limit COUNT]
   meta-framework implement doctor RUN
   meta-framework implement stop RUN --expected-control-generation N --reason TEXT
-  meta-framework implement resume RUN --expected-epoch N
+  meta-framework implement resume RUN --expected-epoch N --expected-control-generation N
   meta-framework implement clean RUN
   meta-framework implement lock inspect RUN
   meta-framework implement lock recover RUN --expected-token TOKEN --confirm-owner-not-live
@@ -417,6 +417,9 @@ try {
       fail('invalid or unsupported hook command; run --help');
     } else {
       const hooks = await import('../lib/hook-adapters.mjs');
+      const controllerDescriptorPath = Object.hasOwn(process.env, 'META_FRAMEWORK_CONTROLLER_DESCRIPTOR')
+        ? process.env.META_FRAMEWORK_CONTROLLER_DESCRIPTOR
+        : null;
       let input = null;
       let validatedEvent = null;
       let sessionEndIntent = false;
@@ -435,7 +438,9 @@ try {
           if (location.state === 'ready') {
             const runtime = promptRuntime.openPromptRuntime(clientRuntime.context.commonDir);
             const { retirePromptSession } = await import('../lib/prompt-bootstrap-loader.mjs');
-            retirePromptSession(input, { runtimeRoot: runtime.root });
+            retirePromptSession(input, {
+              runtimeRoot: runtime.root, controllerDescriptorPath,
+            });
           }
         } else {
           let runtime;
@@ -465,11 +470,15 @@ try {
             });
             runtime = seeded.runtime;
           }
-          process.stdout.write(promptRuntime.serveRuntimePrompt(runtime, input, options['--profile']));
+          process.stdout.write(promptRuntime.serveRuntimePrompt(runtime, input, options['--profile'], {
+            controllerDescriptorPath,
+          }));
         }
       } catch (error) {
         if (!sessionEndIntent) {
-          process.stdout.write(hooks.codexHookFailure(options['--profile'], error?.code));
+          process.stdout.write(controllerDescriptorPath === null
+            ? hooks.codexHookFailure(options['--profile'], error?.code)
+            : hooks.codexControllerHookFailure());
         }
       }
     }
@@ -569,10 +578,36 @@ try {
     const command = implementation.parseImplementationCommand(args.slice(1));
     let adapter = null;
     if (!['version', 'help'].includes(command.command)) {
-      const { repositoryContext } = await import('../readme/meta/framework-data/store.mjs');
+      const {
+        activeTask,
+        loadStore,
+        repositoryContext,
+      } = await import('../readme/meta/framework-data/store.mjs');
       const context = await repositoryContext();
       validateClientRuntimeRoots({ packageRuntime, context });
-      adapter = implementation.createReadOnlyImplementationAdapter(context.commonDir);
+      const readOnlyAdapter = implementation.createReadOnlyImplementationAdapter(context.commonDir, {
+        async shadowStart(shadowCommand) {
+          const [loaded, supervisor] = await Promise.all([
+            loadStore(context),
+            import('../lib/implementation-supervisor.mjs'),
+          ]);
+          return supervisor.planProjectImplementationShadowStart({
+            command: shadowCommand,
+            task: loaded.tasks.get(shadowCommand.taskId) ?? null,
+            activeTaskId: activeTask(loaded.tasks)?.id ?? null,
+            taskStorePaused: loaded.control.pause !== null,
+            storeGeneration: loaded.digest,
+            repositoryRoot: context.root,
+            observedAt: new Date().toISOString(),
+          });
+        },
+      });
+      const { createImplementationOperatorAdapter } =
+        await import('../lib/implementation-operator.mjs');
+      adapter = createImplementationOperatorAdapter({
+        gitCommonDirectory: context.commonDir,
+        readOnlyAdapter,
+      });
     }
     const result = await implementation.executeImplementationCommand(command, {
       packageIdentity: identity,

@@ -6,19 +6,25 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-import {
-  authorizeProtectedImplementationEffect,
+import { validateTerminalReceipt } from '../lib/implementation-protocol.mjs';
+import { installImplementationCapabilityFixture } from './implementation-capability-fixture.mjs';
+
+installImplementationCapabilityFixture();
+
+const {
   changedPathsBetweenTrees,
+  issueSourceInstrumentedTestCapability,
   protectedImplementationCapabilityAllows,
-} from '../lib/implementation-git.mjs';
-import {
+} = await import('../lib/implementation-git.mjs');
+const {
   FINALIZATION_BOUNDARIES,
   ImplementationFinalizationError,
   observeFinalizationPostconditions,
-  runFinalization,
+  runFinalization: runFinalizationWithoutBoundary,
+  runFinalizationAsync: runFinalizationAsyncWithoutBoundary,
   selectFinalizationBoundary,
   validateFinalizationPlan,
-} from '../lib/implementation-finalization.mjs';
+} = await import('../lib/implementation-finalization.mjs');
 
 const git = realpathSync(resolve(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim()));
 const digest = (character) => `sha256:${character.repeat(64)}`;
@@ -27,6 +33,22 @@ const binding = Object.freeze({
   taskRecordVersion: 5, capsuleDigest: digest('a'), controlGeneration: 0,
   correctionGeneration: 0,
 });
+
+const allowCurrentBoundary = () => true;
+const runFinalization = (options) => runFinalizationWithoutBoundary({
+  authorizeBoundary: allowCurrentBoundary,
+  ...options,
+});
+const runFinalizationAsync = (options) => runFinalizationAsyncWithoutBoundary({
+  authorizeBoundary: allowCurrentBoundary,
+  ...options,
+});
+
+function assertValidTerminalReceipt(receipt) {
+  assert.equal(validateTerminalReceipt(receipt), receipt);
+  assert.equal(receipt.taskRecordVersion, 6);
+  assert.deepEqual(receipt.binding, { ...binding, taskRecordVersion: 6 });
+}
 
 function command(root, args, { input = undefined } = {}) {
   return execFileSync(git, args, {
@@ -56,41 +78,7 @@ function patchDigest(root, fromTree, toTree) {
 }
 
 function activation(effectKind) {
-  const activationBinding = {
-    runId: binding.runId,
-    epoch: binding.epoch,
-    taskId: binding.taskId,
-    taskRevision: binding.taskRevision,
-    taskRecordVersion: binding.taskRecordVersion,
-    capsuleDigest: binding.capsuleDigest,
-    controlGeneration: binding.controlGeneration,
-    correctionGeneration: binding.correctionGeneration,
-  };
-  const receipt = {
-    schemaVersion: 1,
-    receiptId: `activation_${effectKind}`,
-    effectKind,
-    binding: activationBinding,
-    policyDigest: digest('b'),
-    evidenceDigest: digest('c'),
-    mechanism: { platform: 'linux', filesystem: 'local', process: 'pidfd' },
-    issuedAt: '2026-08-14T10:00:00Z',
-    expiresAt: '2026-08-14T10:15:00Z',
-    taskApproval: null,
-  };
-  return authorizeProtectedImplementationEffect({
-    effectKind,
-    receipt,
-    current: {
-      receiptId: receipt.receiptId,
-      binding: { ...activationBinding },
-      policyDigest: receipt.policyDigest,
-      evidenceDigest: receipt.evidenceDigest,
-      mechanism: { ...receipt.mechanism },
-      taskApproval: null,
-    },
-    now: '2026-08-14T10:05:00Z',
-  });
+  return issueSourceInstrumentedTestCapability(effectKind);
 }
 
 function fixture(t) {
@@ -222,6 +210,37 @@ function fixture(t) {
   return { root, baseCommit, baseTree, candidateTree, plan, taskPort, journalPort, capabilities };
 }
 
+function asyncPorts(value, { loseAfterAppend = () => false } = {}) {
+  let lossPending = true;
+  const events = [];
+  const taskPort = {
+    async observe(request) {
+      await Promise.resolve();
+      return value.taskPort.observe(request);
+    },
+    async close(request, capability) {
+      await Promise.resolve();
+      value.taskPort.close(request, capability);
+    },
+  };
+  const journalPort = {
+    async read(finalizationId) {
+      await Promise.resolve();
+      return value.journalPort.read(finalizationId);
+    },
+    async append(record, capability) {
+      await Promise.resolve();
+      value.journalPort.append(record, capability);
+      events.push(`journal:${record.boundary ?? record.kind}:${record.phase ?? 'published'}`);
+      if (lossPending && loseAfterAppend(record)) {
+        lossPending = false;
+        throw new Error(`simulated journal response loss at ${record.idempotencyKey}`);
+      }
+    },
+  };
+  return { taskPort, journalPort, events };
+}
+
 test('a validated finalization applies, closes through the injected CAS port, commits, CAS-publishes, and receipts', (t) => {
   const value = fixture(t);
   assert.equal(validateFinalizationPlan(value.plan), value.plan);
@@ -238,13 +257,35 @@ test('a validated finalization applies, closes through the injected CAS port, co
   assert.equal(result.disposition, 'succeeded');
   assert.deepEqual(result.boundariesApplied, FINALIZATION_BOUNDARIES);
   assert.equal(result.receipt.disposition, 'succeeded');
-  assert.equal(result.receipt.taskRecordVersion, 6);
+  assertValidTerminalReceipt(result.receipt);
   assert.equal(value.taskPort.closeCalls, 1);
   assert.equal(command(value.root, ['rev-parse', 'HEAD']), result.receipt.finalCommit);
   assert.equal(command(value.root, ['rev-parse', 'HEAD^{tree}']), result.receipt.finalTree);
   assert.equal(command(value.root, ['status', '--porcelain']), '');
   assert.equal(readFileSync(join(value.root, 'src', 'feature.txt'), 'utf8'), 'after\n');
   assert.equal(readFileSync(join(value.root, 'task.json'), 'utf8'), '{"status":"done","version":6}\n');
+});
+
+test('sync and async finalization require current boundary authorization before effects', async (t) => {
+  const syncValue = fixture(t);
+  assert.throws(() => runFinalizationWithoutBoundary({
+    plan: syncValue.plan, repositoryRoot: syncValue.root, gitExecutable: git,
+    taskPort: syncValue.taskPort, journalPort: syncValue.journalPort,
+    capabilities: syncValue.capabilities,
+  }), (error) => error.code === 'FINALIZATION_AUTHORITY_REVOKED');
+  assert.equal(command(syncValue.root, ['rev-parse', 'HEAD']), syncValue.baseCommit);
+  assert.equal(syncValue.taskPort.closeCalls, 0);
+
+  const asyncValue = fixture(t);
+  const asyncValuePorts = asyncPorts(asyncValue);
+  await assert.rejects(runFinalizationAsyncWithoutBoundary({
+    plan: asyncValue.plan, repositoryRoot: asyncValue.root, gitExecutable: git,
+    taskPort: asyncValuePorts.taskPort,
+    journalPort: asyncValuePorts.journalPort,
+    capabilities: asyncValue.capabilities,
+  }), (error) => error.code === 'FINALIZATION_AUTHORITY_REVOKED');
+  assert.equal(command(asyncValue.root, ['rev-parse', 'HEAD']), asyncValue.baseCommit);
+  assert.equal(asyncValue.taskPort.closeCalls, 0);
 });
 
 for (const crashBoundary of FINALIZATION_BOUNDARIES) {
@@ -271,6 +312,7 @@ for (const crashBoundary of FINALIZATION_BOUNDARIES) {
       hooks: { beforeEffect(boundary) { effects.push(boundary); } },
     });
     assert.equal(recovered.disposition, 'succeeded');
+    assertValidTerminalReceipt(recovered.receipt);
     assert.equal(effects.filter((boundary) => boundary === crashBoundary).length, 1,
       'an effect whose response was lost must not be repeated');
     assert.equal(value.taskPort.closeCalls, 1);
@@ -279,6 +321,13 @@ for (const crashBoundary of FINALIZATION_BOUNDARIES) {
 }
 
 test('stale task CAS, stale target ref, unknown worktree dirt, and fake capabilities fail before effects', (t) => {
+  const skippedVersion = fixture(t);
+  assert.throws(() => validateFinalizationPlan({
+    ...skippedVersion.plan,
+    task: { ...skippedVersion.plan.task,
+      completedRecordVersion: skippedVersion.plan.task.expectedRecordVersion + 2 },
+  }), (error) => error.code === 'FINALIZATION_INVALID');
+
   const staleTask = fixture(t);
   staleTask.taskPort.replace({
     taskId: 'T-0054', taskRevision: 2, recordVersion: 7, status: 'active',
@@ -319,6 +368,31 @@ test('stale task CAS, stale target ref, unknown worktree dirt, and fake capabili
   }), (error) => error.code === 'ACTIVATION_DENIED');
 });
 
+test('finalization accepts an earlier candidate snapshot only while effect authority is current', (t) => {
+  const value = fixture(t);
+  const earlierCandidate = {
+    ...value.plan.candidate,
+    binding: {
+      ...value.plan.candidate.binding,
+      snapshotRevision: value.plan.binding.snapshotRevision - 1,
+    },
+  };
+  assert.doesNotThrow(() => validateFinalizationPlan({
+    ...value.plan,
+    candidate: earlierCandidate,
+  }));
+  assert.throws(() => validateFinalizationPlan({
+    ...value.plan,
+    candidate: {
+      ...earlierCandidate,
+      binding: {
+        ...earlierCandidate.binding,
+        controlGeneration: value.plan.binding.controlGeneration + 1,
+      },
+    },
+  }), (error) => error.code === 'FINALIZATION_STALE');
+});
+
 test('known open-task dirt is preserved until the injected close port replaces it', (t) => {
   const value = fixture(t);
   writeFileSync(join(value.root, 'task.json'), '{"status":"active","version":5,"handoff":true}\n');
@@ -353,3 +427,211 @@ test('task close response loss is observed and never invokes the close port twic
   assert.equal(recovered.disposition, 'succeeded');
   assert.equal(value.taskPort.closeCalls, 1);
 });
+
+test('async finalization awaits durable ports and returns the exact published terminal receipt', async (t) => {
+  const value = fixture(t);
+  const ports = asyncPorts(value);
+  const result = await runFinalizationAsync({
+    plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+    taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+    hooks: {
+      async beforeEffect(boundary) {
+        await Promise.resolve();
+        ports.events.push(`effect:${boundary}:before`);
+      },
+      async afterEffect(boundary) {
+        await Promise.resolve();
+        ports.events.push(`effect:${boundary}:after`);
+      },
+    },
+  });
+  assert.equal(result.disposition, 'succeeded');
+  assert.deepEqual(result.boundariesApplied, FINALIZATION_BOUNDARIES);
+  assertValidTerminalReceipt(result.receipt);
+  const records = await ports.journalPort.read(value.plan.finalizationId);
+  const published = records.find((record) => record.kind === 'terminal_receipt');
+  assert.deepEqual(result.receipt, published.receipt);
+  for (const boundary of FINALIZATION_BOUNDARIES) {
+    const intent = ports.events.indexOf(`journal:${boundary}:intent`);
+    const before = ports.events.indexOf(`effect:${boundary}:before`);
+    assert.notEqual(intent, -1);
+    assert.ok(before > intent);
+    if (boundary !== 'terminal_receipt') {
+      const after = ports.events.indexOf(`effect:${boundary}:after`);
+      assert.ok(after > before);
+      assert.ok(ports.events.indexOf(`journal:${boundary}:observed`) > after);
+    } else {
+      assert.ok(ports.events.indexOf('journal:terminal_receipt:published') > before);
+    }
+  }
+  assert.equal(value.taskPort.closeCalls, 1);
+  assert.equal(command(value.root, ['status', '--porcelain']), '');
+});
+
+for (const revokedBoundary of FINALIZATION_BOUNDARIES) {
+  test(`async authority revocation prevents the ${revokedBoundary} effect and exact retry resumes`, async (t) => {
+    const value = fixture(t);
+    const ports = asyncPorts(value);
+    const contexts = [];
+    let revokePending = true;
+    await assert.rejects(runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      async authorizeBoundary(context) {
+        await Promise.resolve();
+        assert.equal(Object.isFrozen(context), true);
+        assert.equal(context.plan, value.plan);
+        contexts.push(context);
+        if (revokePending && context.boundary === revokedBoundary) {
+          revokePending = false;
+          return false;
+        }
+        return true;
+      },
+    }), (error) => error instanceof ImplementationFinalizationError &&
+      error.code === 'FINALIZATION_AUTHORITY_REVOKED');
+    const revokedContext = contexts.findLast((context) => context.boundary === revokedBoundary);
+    assert.equal(revokedContext.observation.task.state,
+      FINALIZATION_BOUNDARIES.indexOf(revokedBoundary) > FINALIZATION_BOUNDARIES.indexOf('task_close') ?
+        'closed' : 'open');
+    if (revokedContext.observation.task.state === 'closed') {
+      assert.equal(revokedContext.observation.task.value.recordVersion,
+        value.plan.task.completedRecordVersion);
+      assert.equal(revokedContext.observation.task.value.taskRevision, value.plan.task.taskRevision);
+    }
+    const afterRevocation = observeFinalizationPostconditions({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: value.taskPort, journalPort: value.journalPort,
+      gitAdminCapability: value.capabilities.gitAdmin,
+    });
+    assert.equal(selectFinalizationBoundary(value.plan, afterRevocation), revokedBoundary,
+      'revoked boundary effect must not have happened');
+    const recovered = await runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      async authorizeBoundary(context) {
+        if (context.observation.task.state === 'closed') {
+          assert.equal(context.observation.task.value.recordVersion,
+            value.plan.task.completedRecordVersion);
+          assert.equal(context.observation.task.value.taskRevision, value.plan.task.taskRevision);
+        }
+        return true;
+      },
+    });
+    assert.equal(recovered.disposition, 'succeeded');
+    assert.equal(recovered.boundariesApplied[0], revokedBoundary);
+    assertValidTerminalReceipt(recovered.receipt);
+    assert.equal(value.taskPort.closeCalls, 1);
+  });
+}
+
+test('async boundary-authorizer response loss after task close retries before the same effect', async (t) => {
+  const value = fixture(t);
+  const ports = asyncPorts(value);
+  let responseLossPending = true;
+  let completionAuthorizations = 0;
+  await assert.rejects(runFinalizationAsync({
+    plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+    taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+    async authorizeBoundary({ boundary, observation }) {
+      await Promise.resolve();
+      if (boundary === 'completion_commit') {
+        completionAuthorizations += 1;
+        assert.equal(observation.task.state, 'closed');
+        assert.equal(observation.task.value.recordVersion, value.plan.task.completedRecordVersion);
+        if (responseLossPending) {
+          responseLossPending = false;
+          throw new Error('simulated boundary-authorizer response loss');
+        }
+      }
+      return true;
+    },
+  }), /boundary-authorizer response loss/u);
+  const afterLoss = observeFinalizationPostconditions({
+    plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+    taskPort: value.taskPort, journalPort: value.journalPort,
+    gitAdminCapability: value.capabilities.gitAdmin,
+  });
+  assert.equal(selectFinalizationBoundary(value.plan, afterLoss), 'completion_commit');
+  const recovered = await runFinalizationAsync({
+    plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+    taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+    async authorizeBoundary({ boundary, observation }) {
+      if (boundary === 'completion_commit') {
+        completionAuthorizations += 1;
+        assert.equal(observation.task.state, 'closed');
+      }
+      return true;
+    },
+  });
+  assert.equal(recovered.disposition, 'succeeded');
+  assert.equal(recovered.boundariesApplied[0], 'completion_commit');
+  assert.equal(completionAuthorizations, 2);
+  assert.equal(value.taskPort.closeCalls, 1);
+  assertValidTerminalReceipt(recovered.receipt);
+});
+
+for (const crashBoundary of FINALIZATION_BOUNDARIES) {
+  test(`async recovery does not repeat an effect after response loss at ${crashBoundary}`, async (t) => {
+    const value = fixture(t);
+    const ports = asyncPorts(value);
+    const effects = [];
+    let crashPending = true;
+    await assert.rejects(runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      hooks: {
+        async beforeEffect(boundary) {
+          await Promise.resolve();
+          effects.push(boundary);
+        },
+        async afterEffect(boundary) {
+          await Promise.resolve();
+          if (crashPending && boundary === crashBoundary) {
+            crashPending = false;
+            throw new Error(`simulated async response loss after ${boundary}`);
+          }
+        },
+      },
+    }), new RegExp(crashBoundary, 'u'));
+    const recovered = await runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      hooks: { async beforeEffect(boundary) { effects.push(boundary); } },
+    });
+    assert.equal(recovered.disposition, 'succeeded');
+    assertValidTerminalReceipt(recovered.receipt);
+    assert.equal(effects.filter((boundary) => boundary === crashBoundary).length, 1);
+    assert.equal(value.taskPort.closeCalls, 1);
+    assert.equal(command(value.root, ['status', '--porcelain']), '');
+  });
+}
+
+for (const cut of [
+  { name: 'intent', matches: (record) => record.boundary === 'candidate_apply' && record.phase === 'intent' },
+  { name: 'observed postcondition', matches: (record) =>
+    record.boundary === 'candidate_apply' && record.phase === 'observed' },
+  { name: 'terminal receipt', matches: (record) => record.kind === 'terminal_receipt' },
+]) {
+  test(`async journal ${cut.name} response loss recovers from its durable idempotency key`, async (t) => {
+    const value = fixture(t);
+    const ports = asyncPorts(value, { loseAfterAppend: cut.matches });
+    const effects = [];
+    await assert.rejects(runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      hooks: { beforeEffect(boundary) { effects.push(boundary); } },
+    }), /journal response loss/u);
+    const recovered = await runFinalizationAsync({
+      plan: value.plan, repositoryRoot: value.root, gitExecutable: git,
+      taskPort: ports.taskPort, journalPort: ports.journalPort, capabilities: value.capabilities,
+      hooks: { beforeEffect(boundary) { effects.push(boundary); } },
+    });
+    assert.equal(recovered.disposition, 'succeeded');
+    assertValidTerminalReceipt(recovered.receipt);
+    assert.equal(effects.filter((boundary) => boundary === 'candidate_apply').length, 1);
+    const records = await ports.journalPort.read(value.plan.finalizationId);
+    assert.equal(records.filter((record) => cut.matches(record)).length, 1);
+    assert.equal(value.taskPort.closeCalls, 1);
+  });
+}

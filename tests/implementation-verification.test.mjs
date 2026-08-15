@@ -90,6 +90,15 @@ test('exact matching pass receipts complete the candidate gate and duplicates fa
   assert.throws(() => evaluateVerificationGate({
     requirements, receipts: [receipts[0], { ...receipts[0], receiptId: 'check_receipt_3' }], currentBinding: binding,
   }), /duplicated/u);
+
+  const advanced = { ...binding, snapshotRevision: binding.snapshotRevision + 2 };
+  assert.equal(evaluateVerificationGate({ requirements, receipts, currentBinding: advanced }).disposition,
+    'passed');
+  assert.equal(evaluateVerificationGate({
+    requirements,
+    receipts,
+    currentBinding: { ...advanced, controlGeneration: binding.controlGeneration + 1 },
+  }).disposition, 'incomplete');
 });
 
 test('resource receipts and namespaces bind exact controller-created identities', () => {
